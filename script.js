@@ -1,33 +1,31 @@
-/* ═══════════════════════════════════════════════════════════
-   TWIN LAKES HOA — script.js
-   ═══════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════
+   TWIN LAKES AT FLOYDS FORK — script.js
+   ═══════════════════════════════════════════════════════ */
 
-/**
- * Switch between pages.
- * Called from nav links and buttons throughout the site.
- */
 function go(pageName) {
-  document.querySelectorAll('.page').forEach(function(page) {
-    page.classList.remove('active');
+  document.querySelectorAll('.page').forEach(function(p) {
+    p.classList.remove('active');
   });
-  document.querySelectorAll('.nav-links a').forEach(function(link) {
-    link.classList.remove('active');
+  document.querySelectorAll('.nav-links a').forEach(function(a) {
+    a.classList.remove('active');
   });
 
-  var targetPage = document.getElementById('page-' + pageName);
-  var targetNav  = document.getElementById('nav-' + pageName);
+  var page = document.getElementById('page-' + pageName);
+  var link = document.getElementById('nav-' + pageName);
+  if (page) page.classList.add('active');
+  if (link) link.classList.add('active');
 
-  if (targetPage) targetPage.classList.add('active');
-  if (targetNav)  targetNav.classList.add('active');
+  var navLinks = document.getElementById('nav-links');
+  if (navLinks) navLinks.classList.remove('open');
 
   window.scrollTo(0, 0);
 }
 
-/**
- * Handle contact form submission.
- * Currently shows a success message.
- * When you connect Formspree, this function will POST to their endpoint.
- */
+function toggleMenu() {
+  var navLinks = document.getElementById('nav-links');
+  if (navLinks) navLinks.classList.toggle('open');
+}
+
 function submitForm() {
   var name    = document.getElementById('f-name').value.trim();
   var email   = document.getElementById('f-email').value.trim();
@@ -38,10 +36,7 @@ function submitForm() {
     return;
   }
 
-  /* ── FORMSPREE INTEGRATION (add later) ──────────────────────
-     When you sign up at formspree.io and get your form ID,
-     replace the success block below with a fetch() call:
-
+  /* ── FORMSPREE (wire up later) ─────────────────────────
      fetch('https://formspree.io/f/YOUR_FORM_ID', {
        method: 'POST',
        headers: { 'Content-Type': 'application/json' },
@@ -54,28 +49,21 @@ function submitForm() {
          message: message
        })
      })
-     .then(function(response) {
-       if (response.ok) { showSuccess(); }
-       else { alert('Something went wrong. Please try again.'); }
-     })
-     .catch(function() {
-       alert('Could not send message. Please check your connection.');
-     });
-
-     And remove the showSuccess() call directly below.
-  ── ─────────────────────────────────────────────────────── */
+     .then(function(r) { if (r.ok) showSuccess(); })
+     .catch(function()  { alert('Could not send. Please try again.'); });
+     Remove showSuccess() below once Formspree is connected.
+  ── ──────────────────────────────────────────────────── */
 
   showSuccess();
 }
 
 function showSuccess() {
-  var successMsg = document.getElementById('success-msg');
-  if (successMsg) successMsg.style.display = 'block';
-
-  document.getElementById('f-name').value    = '';
-  document.getElementById('f-addr').value    = '';
-  document.getElementById('f-email').value   = '';
-  document.getElementById('f-subject').value = '';
-  document.getElementById('f-message').value = '';
-  document.getElementById('f-to').selectedIndex = 0;
+  var msg = document.getElementById('success-msg');
+  if (msg) msg.style.display = 'block';
+  ['f-name','f-addr','f-email','f-subject','f-message'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  var sel = document.getElementById('f-to');
+  if (sel) sel.selectedIndex = 0;
 }
