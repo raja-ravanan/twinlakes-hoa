@@ -12,7 +12,7 @@ exports.handler = async (event) => {
     const response = await client.messages.create({
       model: "claude-haiku-4-5-20251001",
       max_tokens: 512,
-      ssystem: `You are a friendly HOA assistant for Twin Lakes at Floyds Fork, 
+      system: `You are a friendly HOA assistant for Twin Lakes at Floyds Fork, 
 a premier lakeside community in Louisville, Kentucky (Floyds Fork area).
 Keep answers concise, warm, and helpful. If unsure, direct to Eddie Douglas or the board.
 
