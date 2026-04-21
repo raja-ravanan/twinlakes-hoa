@@ -79,3 +79,61 @@ function showSuccess() {
   var sel = document.getElementById('f-to');
   if (sel) sel.selectedIndex = 0;
 }
+// Chat Widget
+const chatMessages = [];
+
+document.getElementById("chat-toggle").onclick = () => {
+  document.getElementById("chat-box").style.display = "flex";
+  document.getElementById("chat-toggle").style.display = "none";
+};
+
+document.getElementById("chat-close").onclick = () => {
+  document.getElementById("chat-box").style.display = "none";
+  document.getElementById("chat-toggle").style.display = "block";
+};
+
+async function sendMessage() {
+  const input = document.getElementById("chat-input");
+  const text = input.value.trim();
+  if (!text) return;
+
+  chatMessages.push({ role: "user", content: text });
+  appendMessage("you", text);
+  input.value = "";
+
+  // Show typing indicator
+  const typing = document.createElement("div");
+  typing.id = "typing";
+  typing.className = "chat-bubble assistant";
+  typing.textContent = "Typing...";
+  document.getElementById("chat-messages").appendChild(typing);
+
+  try {
+    const res = await fetch("/.netlify/functions/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ messages: chatMessages }),
+    });
+    const data = await res.json();
+    document.getElementById("typing").remove();
+    chatMessages.push({ role: "assistant", content: data.reply });
+    appendMessage("assistant", data.reply);
+  } catch (err) {
+    document.getElementById("typing").remove();
+    appendMessage("assistant", "Sorry, something went wrong. Please try again.");
+  }
+}
+
+function appendMessage(sender, text) {
+  const div = document.createElement("div");
+  div.className = `chat-bubble ${sender}`;
+  div.textContent = text;
+  const container = document.getElementById("chat-messages");
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+document.getElementById("chat-send").onclick = sendMessage;
+document.getElementById("chat-input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") sendMessage();
+});
