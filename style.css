@@ -407,6 +407,14 @@ footer { background: var(--navy-dark); color: rgba(250,247,242,0.6); text-align:
   gap: 8px;
   height: 300px;
 }
+
+.chat-bubble p { margin: 0 0 6px 0; }
+.chat-bubble p:last-child { margin-bottom: 0; }
+.chat-bubble strong { font-weight: 600; }
+.chat-bubble ul, .chat-bubble ol { margin: 4px 0; padding-left: 18px; }
+.chat-bubble li { margin-bottom: 2px; }
+.chat-bubble a { color: #2c5f2e; }
+
 .chat-bubble {
   padding: 8px 12px;
   border-radius: 12px;

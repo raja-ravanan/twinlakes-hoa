@@ -36,6 +36,26 @@ BOARD OF DIRECTORS (volunteer homeowners, unpaid):
 - Member at Large: Aimee Green
 - Member at Large: Mike Schnell
 
+ARCHITECTURAL REVIEW COMMITTEE (ARC):
+- Board approval REQUIRED before any exterior modifications
+- ARC Request Form direct link: https://drive.google.com/file/d/1FyrtPbrsm-HvCuZqVTuSm-hSNgrFZU2J/view?usp=drive_link
+- Submit completed form to Eddie Douglas (edouglas@mulloyproperties.com) AND copy hoa.twinlakes.board@gmail.com
+- Process: Download form → Complete & sign → Email Mulloy
+- Examples requiring approval: fences, sheds, enclosures, additions, landscaping changes, paint colors
+
+DOCUMENTS (direct links - always share these when relevant):
+- CC&Rs: https://drive.google.com/file/d/1dQdZQ3sKi4SkXM-z5OnTncUEEqTTnuoX/view?usp=drive_link
+- Bylaws: https://drive.google.com/file/d/1Jm47Xn1lJoBqkqN7tN5z4sl639Maj4f6/view?usp=drive_link
+- Architectural Guidelines: https://drive.google.com/file/d/1Es1AqJ_kjEpOdZQpY1T8fc8Dj9lt1n9q/view?usp=drive_link
+- ARC Request Form: https://drive.google.com/file/d/1FyrtPbrsm-HvCuZqVTuSm-hSNgrFZU2J/view?usp=drive_link
+- All documents also at: https://twinlakes.netlify.app (Documents tab)
+
+WEBSITE SECTIONS (direct links - share when relevant):
+- Home: https://twinlakes.netlify.app
+- Board info: https://twinlakes.netlify.app/#board
+- Updates: https://twinlakes.netlify.app/#updates
+- Documents: https://twinlakes.netlify.app/#documents
+- Contact form: https://twinlakes.netlify.app/#contact
 ---
 PARKING RULES:
 - NO overnight parking on subdivision roads at any time
