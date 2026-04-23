@@ -80,60 +80,107 @@ function showSuccess() {
   if (sel) sel.selectedIndex = 0;
 }
 // Chat Widget
-const chatMessages = [];
+// ============================================
+// CHAT WIDGET — Replace existing chat code
+// in script.js with this entire block
+// ============================================
 
-document.getElementById("chat-toggle").onclick = () => {
-  document.getElementById("chat-box").style.display = "flex";
-  document.getElementById("chat-toggle").style.display = "none";
-};
+document.addEventListener("DOMContentLoaded", () => {
+  const chatMessages = [];
 
-document.getElementById("chat-close").onclick = () => {
-  document.getElementById("chat-box").style.display = "none";
-  document.getElementById("chat-toggle").style.display = "block";
-};
+  const chatBox = document.getElementById("chat-box");
+  const chatToggle = document.getElementById("chat-toggle");
+  const chatClose = document.getElementById("chat-close");
+  const chatInput = document.getElementById("chat-input");
+  const chatSend = document.getElementById("chat-send");
+  const messagesContainer = document.getElementById("chat-messages");
 
-async function sendMessage() {
-  const input = document.getElementById("chat-input");
-  const text = input.value.trim();
-  if (!text) return;
+  // Open chat
+  chatToggle.addEventListener("click", () => {
+    chatBox.style.display = "flex";
+    chatToggle.style.display = "none";
+    chatInput.focus();
+  });
 
-  chatMessages.push({ role: "user", content: text });
-  appendMessage("you", text);
-  input.value = "";
+  // Close chat
+  chatClose.addEventListener("click", () => {
+    chatBox.style.display = "none";
+    chatToggle.style.display = "flex";
+  });
 
-  // Show typing indicator
-  const typing = document.createElement("div");
-  typing.id = "typing";
-  typing.className = "chat-bubble assistant";
-  typing.textContent = "Typing...";
-  document.getElementById("chat-messages").appendChild(typing);
+  // Send on button click
+  chatSend.addEventListener("click", sendMessage);
 
-  try {
-    const res = await fetch("/.netlify/functions/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: chatMessages }),
-    });
-    const data = await res.json();
-    document.getElementById("typing").remove();
-    chatMessages.push({ role: "assistant", content: data.reply });
-    appendMessage("assistant", data.reply);
-  } catch (err) {
-    document.getElementById("typing").remove();
-    appendMessage("assistant", "Sorry, something went wrong. Please try again.");
+  // Send on Enter key
+  chatInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  });
+
+  async function sendMessage() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    // Add user message
+    chatMessages.push({ role: "user", content: text });
+    appendMessage("you", text);
+    chatInput.value = "";
+    chatSend.disabled = true;
+
+    // Show typing indicator
+    const typingEl = document.createElement("div");
+    typingEl.id = "typing-indicator";
+    typingEl.className = "chat-bubble assistant";
+    typingEl.innerHTML = `
+      <div class="typing-indicator">
+        <span></span><span></span><span></span>
+      </div>`;
+    messagesContainer.appendChild(typingEl);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+    try {
+      const res = await fetch("/.netlify/functions/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: chatMessages }),
+      });
+
+      const data = await res.json();
+      document.getElementById("typing-indicator")?.remove();
+
+      if (data.reply) {
+        chatMessages.push({ role: "assistant", content: data.reply });
+        appendMessage("assistant", data.reply);
+      } else {
+        appendMessage("assistant", "Sorry, something went wrong. Please try again or contact Eddie Douglas at edouglas@mulloyproperties.com.");
+      }
+    } catch (err) {
+      document.getElementById("typing-indicator")?.remove();
+      appendMessage("assistant", "Unable to connect. Please try again or email edouglas@mulloyproperties.com.");
+    }
+
+    chatSend.disabled = false;
+    chatInput.focus();
   }
-}
 
-function appendMessage(sender, text) {
-  const div = document.createElement("div");
-  div.className = `chat-bubble ${sender}`;
-  div.textContent = text;
-  const container = document.getElementById("chat-messages");
-  container.appendChild(div);
-  container.scrollTop = container.scrollHeight;
-}
+  function appendMessage(sender, text) {
+    const div = document.createElement("div");
+    div.className = `chat-bubble ${sender}`;
 
-document.getElementById("chat-send").onclick = sendMessage;
-document.getElementById("chat-input").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") sendMessage();
+    if (sender === "assistant" && typeof marked !== "undefined") {
+      div.innerHTML = marked.parse(text);
+      // Open all links in new tab
+      div.querySelectorAll("a").forEach(a => {
+        a.target = "_blank";
+        a.rel = "noopener noreferrer";
+      });
+    } else {
+      div.textContent = text;
+    }
+
+    messagesContainer.appendChild(div);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+  }
 });

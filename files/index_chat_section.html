@@ -1,0 +1,35 @@
+<!-- Add this in <head> alongside your other scripts -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+
+<!-- Replace your existing chat widget div with this -->
+<!-- Chat Widget -->
+<div id="chat-widget">
+  <button id="chat-toggle">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+    Ask a Question
+  </button>
+  <div id="chat-box">
+    <div id="chat-header">
+      <div id="chat-header-left">
+        <div id="chat-avatar">TL</div>
+        <div>
+          <div id="chat-title">Twin Lakes Assistant</div>
+          <div id="chat-subtitle">HOA Community Helper</div>
+        </div>
+      </div>
+      <button id="chat-close" aria-label="Close chat">✕</button>
+    </div>
+    <div id="chat-messages">
+      <div class="chat-bubble assistant welcome-bubble">
+        <strong>Welcome to Twin Lakes! 👋</strong><br>
+        I can help with rules, documents, board info, maintenance schedules, and more. How can I assist you today?
+      </div>
+    </div>
+    <div id="chat-input-area">
+      <input type="text" id="chat-input" placeholder="Ask about dues, rules, amenities..." autocomplete="off"/>
+      <button id="chat-send" aria-label="Send message">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+      </button>
+    </div>
+  </div>
+</div>
