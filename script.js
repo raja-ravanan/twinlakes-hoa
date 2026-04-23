@@ -36,10 +36,6 @@ function submitForm() {
 
   /* ── FORMSPREE INTEGRATION ─────────────────────────────
      Sign up at formspree.io, create a form, get your form ID.
-     Formspree supports multiple email recipients — set up
-     two forms (one for Mulloy, one for Board) or use one
-     form with routing based on the sendTo value.
-
      Replace YOUR_FORM_ID below with your actual form ID,
      then uncomment this block and remove showSuccess() call.
 
@@ -64,7 +60,7 @@ function submitForm() {
   .then(function(r) { if (r.ok) { showSuccess(); } else { alert('Something went wrong. Please try again.'); } })
   .catch(function() { alert('Could not send. Please check your connection.'); });
   return;
-  ── ──────────────────────────────────────────────────── */
+  ───────────────────────────────────────────────────────── */
 
   showSuccess();
 }
@@ -79,39 +75,40 @@ function showSuccess() {
   var sel = document.getElementById('f-to');
   if (sel) sel.selectedIndex = 0;
 }
-// Chat Widget
-// ============================================
-// CHAT WIDGET — Replace existing chat code
-// in script.js with this entire block
-// ============================================
+
+/* ═══════════════════════════════════════════════════════
+   CHAT WIDGET
+   ═══════════════════════════════════════════════════════ */
 
 document.addEventListener("DOMContentLoaded", () => {
   const chatMessages = [];
 
-  const chatBox = document.getElementById("chat-box");
-  const chatToggle = document.getElementById("chat-toggle");
-  const chatClose = document.getElementById("chat-close");
-  const chatInput = document.getElementById("chat-input");
-  const chatSend = document.getElementById("chat-send");
-  const messagesContainer = document.getElementById("chat-messages");
+  const chatBox        = document.getElementById("chat-box");
+  const chatToggle     = document.getElementById("chat-toggle");
+  const chatClose      = document.getElementById("chat-close");
+  const chatInput      = document.getElementById("chat-input");
+  const chatSend       = document.getElementById("chat-send");
+  const msgContainer   = document.getElementById("chat-messages");
+
+  // Ensure chat is hidden on load
+  chatBox.style.display    = "none";
+  chatToggle.style.display = "flex";
 
   // Open chat
   chatToggle.addEventListener("click", () => {
-    chatBox.style.display = "flex";
+    chatBox.style.display    = "flex";
     chatToggle.style.display = "none";
     chatInput.focus();
   });
 
   // Close chat
   chatClose.addEventListener("click", () => {
-    chatBox.style.display = "none";
+    chatBox.style.display    = "none";
     chatToggle.style.display = "flex";
   });
 
-  // Send on button click
+  // Send on button click or Enter key
   chatSend.addEventListener("click", sendMessage);
-
-  // Send on Enter key
   chatInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -123,7 +120,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const text = chatInput.value.trim();
     if (!text) return;
 
-    // Add user message
     chatMessages.push({ role: "user", content: text });
     appendMessage("you", text);
     chatInput.value = "";
@@ -131,22 +127,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Show typing indicator
     const typingEl = document.createElement("div");
-    typingEl.id = "typing-indicator";
+    typingEl.id        = "typing-indicator";
     typingEl.className = "chat-bubble assistant";
-    typingEl.innerHTML = `
-      <div class="typing-indicator">
-        <span></span><span></span><span></span>
-      </div>`;
-    messagesContainer.appendChild(typingEl);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    typingEl.innerHTML = `<div class="typing-indicator"><span></span><span></span><span></span></div>`;
+    msgContainer.appendChild(typingEl);
+    msgContainer.scrollTop = msgContainer.scrollHeight;
 
     try {
-      const res = await fetch("/.netlify/functions/chat", {
-        method: "POST",
+      const res  = await fetch("/.netlify/functions/chat", {
+        method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: chatMessages }),
+        body:    JSON.stringify({ messages: chatMessages }),
       });
-
       const data = await res.json();
       document.getElementById("typing-indicator")?.remove();
 
@@ -166,21 +158,20 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function appendMessage(sender, text) {
-    const div = document.createElement("div");
-    div.className = `chat-bubble ${sender}`;
+    const div       = document.createElement("div");
+    div.className   = `chat-bubble ${sender}`;
 
     if (sender === "assistant" && typeof marked !== "undefined") {
       div.innerHTML = marked.parse(text);
-      // Open all links in new tab
       div.querySelectorAll("a").forEach(a => {
         a.target = "_blank";
-        a.rel = "noopener noreferrer";
+        a.rel    = "noopener noreferrer";
       });
     } else {
       div.textContent = text;
     }
 
-    messagesContainer.appendChild(div);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    msgContainer.appendChild(div);
+    msgContainer.scrollTop = msgContainer.scrollHeight;
   }
 });
