@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>HOA Inbox Digest — Board Only</title>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: Georgia, 'Times New Roman', serif;
+      background: #0F2D4A;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      padding: 48px 40px;
+      max-width: 520px;
+      width: 100%;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.3);
+      border-top: 4px solid #C9A84C;
+      text-align: center;
+    }
+    .logo-mark {
+      width: 64px; height: 64px;
+      background: linear-gradient(135deg, #1B4B7A, #0F2D4A);
+      border-radius: 50%;
+      border: 2px solid #C9A84C;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px;
+      font-family: Georgia, serif;
+      font-size: 22px;
+      font-style: italic;
+      color: #C9A84C;
+    }
+    .eyebrow {
+      font-size: 11px;
+      font-family: sans-serif;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #C9A84C;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 26px;
+      color: #1B4B7A;
+      font-weight: normal;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      font-size: 15px;
+      color: #5a6a7a;
+      font-style: italic;
+      margin-bottom: 32px;
+    }
+    .info-box {
+      background: #F8F7F4;
+      border: 1px solid #ddd5c4;
+      border-left: 3px solid #1B4B7A;
+      border-radius: 4px;
+      padding: 16px 20px;
+      margin-bottom: 28px;
+      text-align: left;
+      font-size: 14px;
+      font-family: sans-serif;
+      color: #2c3e50;
+      line-height: 1.7;
+    }
+    .info-box strong { color: #1B4B7A; }
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+    label {
+      display: block;
+      font-size: 11px;
+      font-family: sans-serif;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #2c3e50;
+      margin-bottom: 7px;
+    }
+    input[type="password"] {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 15px;
+      font-family: sans-serif;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    input[type="password"]:focus { border-color: #C9A84C; }
+    button {
+      width: 100%;
+      background: linear-gradient(135deg, #1B4B7A, #0F2D4A);
+      color: #C9A84C;
+      border: none;
+      padding: 16px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-family: sans-serif;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    button:hover { background: linear-gradient(135deg, #C9A84C, #B8973E); color: #1B4B7A; }
+    button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    #status {
+      margin-top: 24px;
+      padding: 16px;
+      border-radius: 8px;
+      font-family: sans-serif;
+      font-size: 14px;
+      display: none;
+      text-align: left;
+      line-height: 1.7;
+    }
+    #status.loading {
+      display: block;
+      background: #EEF3F8;
+      border: 1px solid #c0d4e8;
+      color: #1B4B7A;
+    }
+    #status.success {
+      display: block;
+      background: #e8f5ee;
+      border: 1px solid #9fe1cb;
+      color: #085041;
+    }
+    #status.error {
+      display: block;
+      background: #fdf0f0;
+      border: 1px solid #f5c6c6;
+      color: #6b1a1a;
+    }
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid #1B4B7A;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .warning {
+      margin-top: 20px;
+      font-size: 12px;
+      font-family: sans-serif;
+      color: #999;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo-mark">TL</div>
+    <div class="eyebrow">Board Members Only</div>
+    <h1>HOA Inbox Digest</h1>
+    <p class="subtitle">AI-powered email summary for Twin Lakes board</p>
+
+    <div class="info-box">
+      <strong>What this does:</strong><br/>
+      Reads all emails in the HOA inbox, categorizes them by type (ARC, Maintenance, Violations, etc.), and emails a formatted summary to all 6 board members.
+      <br/><br/>
+      <strong>Note:</strong> This may take 1–2 minutes to process all emails.
+    </div>
+
+    <div class="form-group">
+      <label for="secret">Board Access Code</label>
+      <input type="password" id="secret" placeholder="Enter board access code"/>
+    </div>
+
+    <button id="btn" onclick="runDigest()">
+      Generate &amp; Send Digest
+    </button>
+
+    <div id="status"></div>
+
+    <p class="warning">⚠️ This page is for board members only. Do not share the URL or access code.</p>
+  </div>
+
+  <script>
+    async function runDigest() {
+      const secret = document.getElementById("secret").value.trim();
+      if (!secret) {
+        alert("Please enter the board access code.");
+        return;
+      }
+
+      const btn = document.getElementById("btn");
+      const status = document.getElementById("status");
+
+      btn.disabled = true;
+      btn.textContent = "Processing...";
+      status.className = "loading";
+      status.innerHTML = '<span class="spinner"></span> Reading HOA inbox and analyzing emails with Claude... This takes 1–2 minutes.';
+
+      try {
+        const res = await fetch("/.netlify/functions/email-digest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ secret }),
+        });
+
+        const data = await res.json();
+
+        if (res.ok && data.success) {
+          status.className = "success";
+          status.innerHTML = `
+            ✅ <strong>Digest sent successfully!</strong><br/>
+            📧 ${data.emailsAnalyzed} emails analyzed<br/>
+            📨 Summary emailed to all board members<br/>
+            Check your inbox at hoa.twinlakes.board@gmail.com
+          `;
+          btn.textContent = "Generate & Send Digest";
+        } else {
+          throw new Error(data.error || "Unknown error");
+        }
+      } catch (err) {
+        status.className = "error";
+        status.innerHTML = `❌ <strong>Error:</strong> ${err.message}`;
+        btn.textContent = "Generate & Send Digest";
+      }
+
+      btn.disabled = false;
+    }
+
+    // Allow Enter key
+    document.getElementById("secret").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") runDigest();
+    });
+  </script>
+</body>
+</html>
