@@ -10,6 +10,336 @@
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
+  <style>
+    /* ── ANNOUNCEMENT BANNER ── */
+    .announcement-bar {
+      background: linear-gradient(90deg, #1B4B7A, #0F2D4A);
+      border-bottom: 2px solid #C9A84C;
+      position: relative;
+      z-index: 99;
+    }
+    .announcement-bar-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 2.5rem;
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+    }
+    .announcement-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px 10px 0;
+      cursor: pointer;
+      position: relative;
+      border-right: 1px solid rgba(201,168,76,0.2);
+      margin-right: 20px;
+    }
+    .announcement-item:last-child { border-right: none; margin-right: 0; }
+    .ann-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      animation: pulse-dot 2s infinite;
+    }
+    .ann-dot.urgent { background: #e74c3c; }
+    .ann-dot.info   { background: #C9A84C; }
+    .ann-dot.good   { background: #27ae60; }
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: 0.5; transform: scale(1.3); }
+    }
+    .ann-text {
+      font-size: 12.5px;
+      font-family: sans-serif;
+      color: rgba(250,247,242,0.85);
+      white-space: nowrap;
+    }
+    .ann-text strong { color: #C9A84C; }
+    .ann-chevron {
+      font-size: 10px;
+      color: rgba(201,168,76,0.6);
+      margin-left: 4px;
+      transition: transform 0.2s;
+    }
+    .announcement-item:hover .ann-chevron { transform: rotate(180deg); }
+
+    /* Dropdown */
+    .ann-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      min-width: 320px;
+      background: #fff;
+      border-radius: 0 0 8px 8px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+      border: 1px solid rgba(201,168,76,0.25);
+      border-top: 3px solid #C9A84C;
+      z-index: 200;
+      padding: 16px;
+    }
+    .announcement-item:hover .ann-dropdown { display: block; }
+    .ann-dropdown-title {
+      font-size: 11px;
+      font-family: sans-serif;
+      font-weight: 700;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #C9A84C;
+      margin-bottom: 10px;
+    }
+    .ann-dropdown-body {
+      font-size: 13.5px;
+      font-family: sans-serif;
+      color: #2c3e50;
+      line-height: 1.7;
+    }
+    .ann-dropdown-body strong { color: #1B4B7A; }
+    .ann-dropdown-body ul { padding-left: 16px; margin: 6px 0; }
+    .ann-dropdown-body li { margin-bottom: 4px; }
+    .ann-dropdown-footer {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #eee;
+      font-size: 11px;
+      color: #999;
+      font-family: sans-serif;
+    }
+
+    /* ── QUICK ACTIONS ── */
+    .quick-actions {
+      background: var(--cream);
+      border-bottom: 1px solid var(--cream-border);
+      padding: 0;
+    }
+    .quick-actions-inner {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: flex;
+      align-items: stretch;
+    }
+    .qa-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 22px 16px;
+      text-decoration: none;
+      border-right: 1px solid var(--cream-border);
+      cursor: pointer;
+      transition: background 0.2s;
+      background: none;
+      border-top: none;
+      border-bottom: none;
+      border-left: none;
+      font-family: inherit;
+    }
+    .qa-item:last-child { border-right: none; }
+    .qa-item:hover { background: var(--navy-light); }
+    .qa-icon {
+      width: 36px; height: 36px;
+      background: var(--navy-light);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--navy-soft);
+      transition: background 0.2s;
+    }
+    .qa-item:hover .qa-icon { background: var(--navy); }
+    .qa-item:hover .qa-icon svg { stroke: var(--cream); }
+    .qa-icon svg { width: 17px; height: 17px; stroke: var(--navy); }
+    .qa-label {
+      font-size: 12px;
+      font-family: sans-serif;
+      font-weight: 600;
+      color: var(--navy);
+      letter-spacing: 0.3px;
+      text-align: center;
+    }
+
+    /* ── FAQ ── */
+    .faq-section { background: var(--bg-soft); padding: 72px 2.5rem; }
+    .faq-inner { max-width: 1100px; margin: 0 auto; }
+    .faq-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 40px; }
+    .faq-item {
+      background: var(--white);
+      border: 1px solid var(--cream-border);
+      border-radius: 4px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+    .faq-item:hover { border-color: var(--gold-border); }
+    .faq-question {
+      width: 100%;
+      background: none;
+      border: none;
+      padding: 18px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      text-align: left;
+      font-size: 15px;
+      font-family: Georgia, serif;
+      color: var(--navy);
+      font-weight: normal;
+      line-height: 1.4;
+    }
+    .faq-question:hover { background: var(--navy-light); }
+    .faq-chevron {
+      width: 20px; height: 20px;
+      flex-shrink: 0;
+      margin-left: 12px;
+      transition: transform 0.25s;
+      color: var(--gold);
+    }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+    .faq-answer {
+      display: none;
+      padding: 0 20px 18px;
+      font-size: 14px;
+      font-family: sans-serif;
+      color: var(--text-s);
+      line-height: 1.75;
+      border-top: 1px solid var(--cream-border);
+      padding-top: 14px;
+    }
+    .faq-item.open .faq-answer { display: block; }
+    .faq-answer a { color: var(--navy); font-weight: 600; }
+    .faq-answer strong { color: var(--navy); }
+
+    /* ── STATS BAR ── */
+    .stats-bar {
+      background: var(--navy-dark);
+      border-top: 1px solid rgba(201,168,76,0.2);
+      border-bottom: 1px solid rgba(201,168,76,0.2);
+    }
+    .stats-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: center;
+      padding: 0 2.5rem;
+    }
+    .stat-item {
+      flex: 1; text-align: center;
+      padding: 28px 20px;
+      border-right: 1px solid rgba(201,168,76,0.15);
+    }
+    .stat-item:last-child { border-right: none; }
+    .stat-num {
+      font-size: 32px;
+      font-family: Georgia, serif;
+      color: var(--gold);
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+    .stat-label {
+      font-size: 12px;
+      font-family: sans-serif;
+      color: rgba(250,247,242,0.55);
+      letter-spacing: 1px;
+      text-transform: uppercase;
+    }
+
+    /* ── NEW RESIDENT ── */
+    .new-resident-band {
+      background: linear-gradient(135deg, var(--gold-light), #fff);
+      border-top: 1px solid var(--gold-border);
+      border-bottom: 1px solid var(--gold-border);
+      padding: 56px 2.5rem;
+    }
+    .new-resident-inner {
+      max-width: 1100px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 2fr; gap: 56px; align-items: center;
+    }
+    .new-resident-left h2 {
+      font-size: clamp(22px,2.5vw,32px);
+      color: var(--navy);
+      font-weight: normal;
+      margin-bottom: 12px;
+    }
+    .new-resident-left p {
+      font-size: 15px; color: var(--text-m);
+      font-family: sans-serif; line-height: 1.7;
+    }
+    .new-resident-steps {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    }
+    .nr-step {
+      background: var(--white);
+      border: 1px solid var(--gold-border);
+      border-radius: 4px;
+      padding: 18px;
+      display: flex; gap: 14px; align-items: flex-start;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      text-decoration: none;
+    }
+    .nr-step:hover {
+      border-color: var(--navy);
+      box-shadow: 0 4px 16px rgba(27,75,122,0.1);
+    }
+    .nr-num {
+      width: 28px; height: 28px;
+      background: var(--navy);
+      color: var(--gold);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700;
+      font-family: sans-serif;
+      flex-shrink: 0;
+    }
+    .nr-text strong {
+      display: block; font-size: 14px;
+      font-family: sans-serif; color: var(--navy);
+      margin-bottom: 3px;
+    }
+    .nr-text span {
+      font-size: 12.5px; font-family: sans-serif;
+      color: var(--text-m); line-height: 1.5;
+    }
+
+    /* ── VENDOR DIRECTORY ── */
+    .vendor-section { padding: 72px 2.5rem; max-width: 1100px; margin: 0 auto; }
+    .vendor-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 16px; margin-top: 36px; }
+    .vendor-card {
+      background: var(--white);
+      border: 1px solid var(--cream-border);
+      border-radius: 4px;
+      padding: 22px 24px;
+      border-left: 3px solid var(--navy);
+    }
+    .vendor-category {
+      font-size: 10px; font-family: sans-serif;
+      font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--gold-dark);
+      margin-bottom: 6px;
+    }
+    .vendor-name { font-size: 18px; color: var(--navy); margin-bottom: 4px; }
+    .vendor-scope { font-size: 13px; font-family: sans-serif; color: var(--text-m); margin-bottom: 10px; line-height: 1.5; }
+    .vendor-detail { font-size: 13px; font-family: sans-serif; color: var(--text-s); display: flex; gap: 6px; align-items: center; margin-bottom: 4px; }
+    .vendor-detail svg { width: 13px; height: 13px; stroke: var(--gold-dark); flex-shrink: 0; }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 768px) {
+      .faq-grid { grid-template-columns: 1fr; }
+      .new-resident-inner { grid-template-columns: 1fr; gap: 28px; }
+      .new-resident-steps { grid-template-columns: 1fr; }
+      .stats-inner { flex-wrap: wrap; }
+      .stat-item { flex: 0 0 50%; border-right: none; border-bottom: 1px solid rgba(201,168,76,0.15); }
+      .quick-actions-inner { flex-wrap: wrap; }
+      .qa-item { flex: 0 0 33.33%; border-bottom: 1px solid var(--cream-border); }
+      .announcement-bar-inner { flex-direction: column; padding: 0 1.5rem; }
+      .announcement-item { border-right: none; border-bottom: 1px solid rgba(201,168,76,0.1); padding: 10px 0; margin-right: 0; }
+      .ann-dropdown { min-width: 280px; }
+    }
+    @media (max-width: 480px) {
+      .qa-item { flex: 0 0 50%; }
+      .stat-item { flex: 0 0 100%; }
+    }
+  </style>
 </head>
 <body>
 
@@ -31,6 +361,99 @@
 
   <!-- ═══════════════════════════════════════════ HOME -->
   <div id="page-home" class="page active">
+
+    <!-- ANNOUNCEMENT BANNER -->
+    <div class="announcement-bar">
+      <div class="announcement-bar-inner">
+
+        <div class="announcement-item">
+          <div class="ann-dot urgent"></div>
+          <span class="ann-text"><strong>Irrigation:</strong> System activation underway — expect wet areas near pond perimeter</span>
+          <span class="ann-chevron">▼</span>
+          <div class="ann-dropdown">
+            <div class="ann-dropdown-title">🔧 Irrigation Update</div>
+            <div class="ann-dropdown-body">
+              <strong>Spring 2026 Irrigation Startup</strong><br/>
+              The irrigation system is being activated on the North pond perimeter. Underground pipe damage has been identified in several areas and repairs are in progress.
+              <ul>
+                <li>Expect wet or muddy areas near pond edges</li>
+                <li>Some sprinkler heads may be misaligned temporarily</li>
+                <li>Contractor working through affected zones this week</li>
+                <li>Residents: please report missed or broken heads within 12 hours</li>
+              </ul>
+              <strong>Report issues:</strong> edouglas@mulloyproperties.com
+            </div>
+            <div class="ann-dropdown-footer">Last updated: April 2026</div>
+          </div>
+        </div>
+
+        <div class="announcement-item">
+          <div class="ann-dot urgent"></div>
+          <span class="ann-text"><strong>Reminder:</strong> No overnight parking on subdivision roads — CC&Rs violation</span>
+          <span class="ann-chevron">▼</span>
+          <div class="ann-dropdown">
+            <div class="ann-dropdown-title">🚗 Parking Reminder</div>
+            <div class="ann-dropdown-body">
+              <strong>No Overnight Street Parking</strong><br/>
+              This is a frequent violation in the community. All vehicles must be parked in garages or driveways overnight.
+              <ul>
+                <li>No vehicles on subdivision roads between 10 PM – 6 AM</li>
+                <li>Especially critical during snow events for plowing access</li>
+                <li>Violations reported to Mulloy for enforcement</li>
+                <li>Repeat violations may result in fines per CC&Rs</li>
+              </ul>
+              Questions? Contact Eddie Douglas at Mulloy Properties.
+            </div>
+            <div class="ann-dropdown-footer">Per CC&Rs — enforced year-round</div>
+          </div>
+        </div>
+
+        <div class="announcement-item">
+          <div class="ann-dot info"></div>
+          <span class="ann-text"><strong>ARC:</strong> Submit requests before starting any exterior work</span>
+          <span class="ann-chevron">▼</span>
+          <div class="ann-dropdown">
+            <div class="ann-dropdown-title">🏗️ ARC Reminder</div>
+            <div class="ann-dropdown-body">
+              <strong>Board Approval Required First</strong><br/>
+              All exterior modifications require ARC approval before work begins. Recent approvals include fences, garden beds, deck staining, and handrails.
+              <ul>
+                <li>Download ARC form from the Documents tab</li>
+                <li>Email to edouglas@mulloyproperties.com</li>
+                <li>Copy hoa.twinlakes.board@gmail.com</li>
+                <li>Board typically responds within 7–10 days</li>
+              </ul>
+              <strong>Starting work without approval may require removal at your expense.</strong>
+            </div>
+            <div class="ann-dropdown-footer">Per Architectural Guidelines</div>
+          </div>
+        </div>
+
+        <div class="announcement-item">
+          <div class="ann-dot good"></div>
+          <span class="ann-text"><strong>Lawn care:</strong> TruGreen spring treatments begin April</span>
+          <span class="ann-chevron">▼</span>
+          <div class="ann-dropdown">
+            <div class="ann-dropdown-title">🌿 Spring Lawn Care</div>
+            <div class="ann-dropdown-body">
+              <strong>2026 Lawn Treatment Schedule Started</strong><br/>
+              TruGreen has begun spring treatments for Garden Homes.
+              <ul>
+                <li>Fertilizer application — April</li>
+                <li>Broadleaf weed control — April</li>
+                <li>Crabgrass pre-emergent — April</li>
+                <li>30 mowings scheduled April–November</li>
+              </ul>
+              Aphix handling common areas and entrances on the same schedule. Questions about your lawn? Contact Mulloy Properties.
+            </div>
+            <div class="ann-dropdown-footer">2026 Season — Garden Homes Only</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- HERO -->
     <div class="hero-wrap">
       <div class="hero-left">
         <div class="hero-eyebrow">
@@ -50,6 +473,37 @@
       </div>
     </div>
 
+    <!-- QUICK ACTIONS -->
+    <div class="quick-actions">
+      <div class="quick-actions-inner">
+        <button class="qa-item" onclick="go('documents')">
+          <div class="qa-icon"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div>
+          <span class="qa-label">Submit ARC Request</span>
+        </button>
+        <button class="qa-item" onclick="go('contact')">
+          <div class="qa-icon"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div>
+          <span class="qa-label">Contact Board</span>
+        </button>
+        <button class="qa-item" onclick="go('documents')">
+          <div class="qa-icon"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg></div>
+          <span class="qa-label">View CC&Rs &amp; Rules</span>
+        </button>
+        <button class="qa-item" onclick="go('updates')">
+          <div class="qa-icon"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
+          <span class="qa-label">Maintenance Schedule</span>
+        </button>
+        <a class="qa-item" href="https://www.facebook.com/share/g/1bh4nL3BUi/" target="_blank" rel="noopener noreferrer">
+          <div class="qa-icon"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+          <span class="qa-label">Residents Facebook</span>
+        </a>
+        <button class="qa-item" onclick="go('contact')">
+          <div class="qa-icon"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg></div>
+          <span class="qa-label">Call Mulloy Properties</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- GOLD STRIP -->
     <div class="gold-strip">
       <div class="gold-strip-inner">
         <div class="gs-item">
@@ -69,6 +523,7 @@
       </div>
     </div>
 
+    <!-- SPLIT / POND PHOTO -->
     <div class="split">
       <div class="split-vis" style="padding:0;overflow:hidden;border-radius:4px;">
         <img src="pond.jpg" alt="Twin Lakes pond view"
@@ -79,27 +534,221 @@
         <h2>A gracious place to call home</h2>
         <p>Twin Lakes at Floyds Fork is a distinguished community in Louisville, Kentucky &mdash; where tranquil lakeside living meets the warmth of a close-knit neighborhood.</p>
         <ul class="feature-list">
-          <li><div class="feat-diamond"></div>Beautifully maintained common areas and landscaping</li>
-          <li><div class="feat-diamond"></div>Responsive board and professional property management</li>
-          <li><div class="feat-diamond"></div>Community guidelines that protect your investment</li>
+          <li><div class="feat-diamond"></div>Two scenic ponds with maintained fountains and landscaping</li>
+          <li><div class="feat-diamond"></div>Responsive board and professional property management by Mulloy</li>
+          <li><div class="feat-diamond"></div>Community guidelines that protect your investment and property values</li>
           <li><div class="feat-diamond"></div>A welcoming neighborhood for all stages of life</li>
         </ul>
       </div>
     </div>
 
-    <div class="divider"></div>
+    <!-- STATS BAR -->
+    <div class="stats-bar">
+      <div class="stats-inner">
+        <div class="stat-item">
+          <div class="stat-num">2</div>
+          <div class="stat-label">Scenic Ponds</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">6</div>
+          <div class="stat-label">Board Members</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">30</div>
+          <div class="stat-label">Mowings / Year</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">269</div>
+          <div class="stat-label">Emails Handled</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-num">10+</div>
+          <div class="stat-label">ARC Requests / Year</div>
+        </div>
+      </div>
+    </div>
 
+    <!-- WHAT WE OFFER -->
+    <div class="divider"></div>
     <section>
       <div class="sec-label">What we offer</div>
       <h2 class="sec-title">Here to serve our community</h2>
       <p class="sec-sub">The Twin Lakes HOA board works year-round to keep the neighborhood safe, beautiful, and well-maintained.</p>
       <div class="card-grid">
-        <div class="card"><div class="card-num">01</div><h3>Neighborhood upkeep</h3><p>Regular landscaping, irrigation maintenance, and pond care keep Twin Lakes looking its best year-round.</p></div>
-        <div class="card"><div class="card-num">02</div><h3>Community standards</h3><p>Our CC&amp;Rs and guidelines ensure the beauty and property values of Twin Lakes are preserved for everyone.</p></div>
-        <div class="card"><div class="card-num">03</div><h3>Stay informed</h3><p>Check our updates page for upcoming work schedules, community notices, and board announcements.</p></div>
+        <div class="card"><div class="card-num">01</div><h3>Neighborhood upkeep</h3><p>Regular landscaping via TruGreen and Aphix, irrigation maintenance, and pond fountain care keep Twin Lakes looking its best year-round.</p></div>
+        <div class="card"><div class="card-num">02</div><h3>Community standards</h3><p>Our CC&amp;Rs and Architectural Guidelines ensure the beauty and property values of Twin Lakes are preserved for everyone.</p></div>
+        <div class="card"><div class="card-num">03</div><h3>Stay informed</h3><p>Check our Updates page for maintenance schedules, community notices, and board announcements — or ask our AI assistant below.</p></div>
       </div>
     </section>
 
+    <!-- NEW RESIDENT -->
+    <div class="new-resident-band">
+      <div class="new-resident-inner">
+        <div class="new-resident-left">
+          <div class="sec-label">New to Twin Lakes?</div>
+          <h2>Welcome to the neighborhood</h2>
+          <p>Everything you need to get started as a Twin Lakes homeowner. We&rsquo;re glad you&rsquo;re here.</p>
+        </div>
+        <div class="new-resident-steps">
+          <a class="nr-step" href="https://drive.google.com/file/d/1dQdZQ3sKi4SkXM-z5OnTncUEEqTTnuoX/view?usp=drive_link" target="_blank">
+            <div class="nr-num">1</div>
+            <div class="nr-text"><strong>Read the CC&Rs</strong><span>Understand community rules and your rights as a homeowner</span></div>
+          </a>
+          <a class="nr-step" href="https://drive.google.com/file/d/1Es1AqJ_kjEpOdZQpY1T8fc8Dj9lt1n9q/view?usp=drive_link" target="_blank">
+            <div class="nr-num">2</div>
+            <div class="nr-text"><strong>Review ARC Guidelines</strong><span>Required before any exterior modification to your home</span></div>
+          </a>
+          <a class="nr-step" href="https://www.facebook.com/share/g/1bh4nL3BUi/" target="_blank">
+            <div class="nr-num">3</div>
+            <div class="nr-text"><strong>Join Facebook Group</strong><span>Connect with neighbors in our private residents-only group</span></div>
+          </a>
+          <button class="nr-step" onclick="go('contact')" style="text-align:left;">
+            <div class="nr-num">4</div>
+            <div class="nr-text"><strong>Say Hello to the Board</strong><span>Introduce yourself or ask any questions via our contact form</span></div>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- FAQ -->
+    <div class="faq-section">
+      <div class="faq-inner">
+        <div class="sec-label">Common Questions</div>
+        <h2 class="sec-title">Frequently Asked Questions</h2>
+        <p class="sec-sub">Quick answers to the most common questions from Twin Lakes residents.</p>
+        <div class="faq-grid">
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              Do I need approval before making changes to my home?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              <strong>Yes — always get ARC approval before starting any exterior work.</strong> This includes fences, sheds, decks, landscaping changes, paint colors, additions, and enclosures. Download the ARC Request Form from the <a href="#" onclick="go('documents')">Documents page</a>, complete it, and email to <a href="mailto:edouglas@mulloyproperties.com">edouglas@mulloyproperties.com</a> copying the board. Starting work without approval may require removal at your expense.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              Can I park on the street overnight?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              <strong>No.</strong> Overnight parking on subdivision roads is not permitted at any time per our CC&Rs. All vehicles must be in garages or driveways overnight. This is especially important during potential snow events so plowing crews can clear roads efficiently. Violations are reported to Mulloy Properties for enforcement.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              Who handles snow removal and when does it start?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              The HOA contractor begins snow removal after <strong>3 inches of accumulation</strong>. De-icing is applied for icy conditions regardless of snow depth. The HOA clears all community and subdivision roads — contractors begin within 24 hours of snowfall. <strong>Your responsibility:</strong> driveways, aprons, walkways, patios, decks, and personal steps. Report missed spots within 12 hours to Eddie Douglas.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              Who mows my lawn and when does it start?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              <strong>TruGreen</strong> handles lawn treatments and mowing for Garden Homes — 30 scheduled mowings April through November, weather dependent. This includes trimming and edging up to the sidewalk. <strong>Aphix</strong> handles common areas and entrances. If you have a lawn concern or missed mowing, contact Eddie Douglas at <a href="mailto:edouglas@mulloyproperties.com">edouglas@mulloyproperties.com</a>.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              How do I build a garbage can enclosure?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              You must first <strong>obtain ARC approval</strong>. Enclosures must be placed in side or rear yards, use approved materials (brick, stone, stucco, or painted wood), have a functioning closable door, and match or harmonize with your home's colors. Unfinished plywood, corrugated metal, and plastic panels are not permitted. See the Updates page for full dos and don'ts.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              How do I contact the HOA board or property manager?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              For all requests — ARC, maintenance, billing, violations — contact <strong>Eddie Douglas at Mulloy Properties:</strong> <a href="mailto:edouglas@mulloyproperties.com">edouglas@mulloyproperties.com</a> or (502) 498-2411, and copy <a href="mailto:hoa.twinlakes.board@gmail.com">hoa.twinlakes.board@gmail.com</a> so the board stays informed. You can also use our <a href="#" onclick="go('contact')">contact form</a>. Response time is typically 2–3 business days.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              Can I paint the exterior of my home?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              <strong>Yes, but ARC approval is required first.</strong> Submit an ARC request with your proposed color swatches or samples. The board reviews for compatibility with the neighborhood aesthetic. Recent paint and staining requests have generally been approved when colors harmonize with the home's existing materials. Allow 7–10 days for board review.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              How do I join the residents Facebook group?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              Visit our <a href="https://www.facebook.com/share/g/1bh4nL3BUi/" target="_blank">private Facebook group</a> and click "Request to Join." Joining requests are reviewed against the resident directory by the HOA board before approval — this keeps the group residents-only. If your request isn't approved within a few days, reach out to the board via the contact form.
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- VENDOR DIRECTORY -->
+    <div class="vendor-section">
+      <div class="sec-label">Service Providers</div>
+      <h2 class="sec-title">Community Vendors</h2>
+      <p class="sec-sub">The contractors and service providers maintaining Twin Lakes at Floyds Fork.</p>
+      <div class="vendor-grid">
+        <div class="vendor-card">
+          <div class="vendor-category">Lawn Treatments</div>
+          <div class="vendor-name">TruGreen</div>
+          <div class="vendor-scope">Fertilizer, weed control, and crabgrass pre-emergent — Garden Homes only</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> 6 treatment visits, April – December</div>
+        </div>
+        <div class="vendor-card">
+          <div class="vendor-category">Mowing &amp; Common Areas</div>
+          <div class="vendor-name">Aphix</div>
+          <div class="vendor-scope">Turf applications for common areas and entrances; mowing for Garden Homes</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> 30 mowings, April – November</div>
+        </div>
+        <div class="vendor-card">
+          <div class="vendor-category">Property Management</div>
+          <div class="vendor-name">Mulloy Properties</div>
+          <div class="vendor-scope">Day-to-day management, resident communications, vendor coordination, billing</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg> Eddie Douglas — (502) 498-2411</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg> edouglas@mulloyproperties.com</div>
+        </div>
+        <div class="vendor-card">
+          <div class="vendor-category">Snow Removal</div>
+          <div class="vendor-name">Snow Contractor</div>
+          <div class="vendor-scope">Plowing and de-icing of all subdivision roads and common areas</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Begins after 3&rdquo; accumulation, within 24 hrs</div>
+        </div>
+        <div class="vendor-card">
+          <div class="vendor-category">Pond &amp; Irrigation</div>
+          <div class="vendor-name">Pond &amp; Irrigation Contractor</div>
+          <div class="vendor-scope">Fountain maintenance, filter cleaning, irrigation startup/shutdown, pipe repairs</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> Spring startup &amp; fall shutdown annually</div>
+        </div>
+        <div class="vendor-card">
+          <div class="vendor-category">Tree &amp; Sidewalk</div>
+          <div class="vendor-name">General Maintenance</div>
+          <div class="vendor-scope">Tree trimming (storm damage), sidewalk crack repair and sealing</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg> Oak Lane corridor &amp; Lakeside Drive</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CTA BAND -->
     <div class="cta-band">
       <div class="cta-logo-mark">TL</div>
       <h2>Have a question or concern?</h2>
@@ -112,7 +761,7 @@
       <div class="footer-divider"></div>
       <p>Louisville, Kentucky &nbsp;&middot;&nbsp; Managed by Mulloy Properties</p>
       <p class="footer-tagline">A premier lakeside community</p>
-      <p class="footer-copy">&copy; 2025 Twin Lakes at Floyds Fork HOA. All rights reserved.</p>
+      <p class="footer-copy">&copy; 2026 Twin Lakes at Floyds Fork HOA. All rights reserved.</p>
     </footer>
   </div>
 
@@ -133,7 +782,6 @@
         <div class="board-card"><div class="avatar">MS</div><div><div class="board-role">Member at Large</div><div class="board-name">Mike Schnell</div></div></div>
       </div>
       <div class="board-note">To reach the board, please use our <a href="#" onclick="go('contact')">contact form</a>. For property management matters, contact Mulloy Properties directly.</div>
-
       <div class="committees-section">
         <div class="sec-label" style="margin-bottom:12px;">Committees</div>
         <h2 style="font-size:22px;font-weight:normal;color:var(--navy);margin-bottom:12px;">Community Committees</h2>
@@ -152,7 +800,7 @@
       <img src="logo.png" alt="Twin Lakes at Floyds Fork" class="footer-logo" />
       <div class="footer-divider"></div>
       <p>Louisville, Kentucky &nbsp;&middot;&nbsp; Managed by Mulloy Properties</p>
-      <p class="footer-copy">&copy; 2025 Twin Lakes at Floyds Fork HOA. All rights reserved.</p>
+      <p class="footer-copy">&copy; 2026 Twin Lakes at Floyds Fork HOA. All rights reserved.</p>
     </footer>
   </div>
 
@@ -164,16 +812,13 @@
         <h1 class="sec-title">Community Updates</h1>
         <p class="sec-sub">Upcoming maintenance schedules, community notices, and important announcements for Twin Lakes at Floyds Fork.</p>
       </section>
-
       <section>
         <div class="notices-grid">
-
           <div class="notice-card notice-warning">
             <div class="notice-badge">Important Notice</div>
             <h3>No Overnight Street Parking</h3>
             <p>No vehicles are to be parked overnight on subdivision roads at any time. This is especially critical during potential snow events to allow for efficient plowing and salting. Vehicles must be parked overnight in garages or driveways. Overnight parking on community roads violates our CC&amp;Rs.</p>
           </div>
-
           <div class="notice-card notice-info">
             <div class="notice-badge">Snow Policy</div>
             <h3>Snow &amp; Ice Removal Policy</h3>
@@ -184,44 +829,32 @@
               <div class="notice-detail-row"><span class="nd-label">Response Time</span><span>Contractors begin within 24 hours of snowfall. Residents report missed spots within 12 hours.</span></div>
             </div>
           </div>
-
           <div class="notice-card notice-gold">
             <div class="notice-badge">Trash &amp; Recycling</div>
             <h3>Garbage Can Enclosure Guidelines</h3>
             <div class="dos-donts">
               <div class="dos-col">
-                <div class="dos-header">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                  Do&rsquo;s
-                </div>
+                <div class="dos-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>Do&rsquo;s</div>
                 <ul>
                   <li>Obtain ARC approval before construction</li>
                   <li>Place in side or rear yards to minimize visibility</li>
-                  <li>Fully conceal all garbage cans</li>
                   <li>Use approved materials: brick, stone, stucco, or painted wood</li>
                   <li>Install a functioning closable door or gate</li>
-                  <li>Keep doors closed when not in use</li>
                   <li>Match or harmonize colors with your home</li>
                 </ul>
               </div>
               <div class="donts-col">
-                <div class="donts-header">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  Don&rsquo;ts
-                </div>
+                <div class="donts-header"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Don&rsquo;ts</div>
                 <ul>
                   <li>Do not build without ARC approval</li>
-                  <li>Do not place where highly visible from streets</li>
                   <li>Do not use unfinished plywood, corrugated metal, or plastic panels</li>
                   <li>Do not use bare soil, mulch, or grass as base</li>
-                  <li>Do not leave doors open</li>
-                  <li>Do not use inconsistent designs or clashing colors</li>
+                  <li>Do not leave doors open when not in use</li>
                   <li>Do not ignore violation notices</li>
                 </ul>
               </div>
             </div>
           </div>
-
         </div>
 
         <div class="schedule-section">
@@ -232,23 +865,20 @@
           </div>
           <table>
             <thead>
-              <tr>
-                <th style="width:130px;">Date</th>
-                <th>Activity</th>
-                <th style="width:160px;">Area</th>
-                <th style="width:110px;">Status</th>
-              </tr>
+              <tr><th style="width:130px;">Date</th><th>Activity</th><th style="width:160px;">Area</th><th style="width:110px;">Status</th></tr>
             </thead>
             <tbody>
-              <tr><td><strong>Apr 2025</strong></td><td>Lawn mowing and edging &mdash; full community</td><td>All common areas</td><td><span class="badge badge-blue">Scheduled</span></td></tr>
-              <tr><td><strong>Apr 2025</strong></td><td>Irrigation system spring startup and inspection</td><td>North pond perimeter</td><td><span class="badge badge-blue">Scheduled</span></td></tr>
-              <tr><td><strong>Apr 2025</strong></td><td>Mulch refresh around entry monuments</td><td>Main entrance</td><td><span class="badge badge-blue">Scheduled</span></td></tr>
-              <tr><td><strong>Apr 2025</strong></td><td>Pond fountain maintenance and filter cleaning</td><td>South pond</td><td><span class="badge badge-gold">In Progress</span></td></tr>
-              <tr><td><strong>May 2025</strong></td><td>Tree trimming &mdash; storm damage follow-up</td><td>Oak Lane corridor</td><td><span class="badge badge-muted">Pending</span></td></tr>
-              <tr><td><strong>May 2025</strong></td><td>Sidewalk crack repair and sealing</td><td>Lakeside Drive</td><td><span class="badge badge-muted">Pending</span></td></tr>
+              <tr><td><strong>Apr 2026</strong></td><td>Lawn mowing and edging &mdash; full community</td><td>All common areas</td><td><span class="badge badge-blue">Scheduled</span></td></tr>
+              <tr><td><strong>Apr 2026</strong></td><td>Irrigation system spring startup and inspection</td><td>North pond perimeter</td><td><span class="badge badge-gold">In Progress</span></td></tr>
+              <tr><td><strong>Apr 2026</strong></td><td>Underground pipe damage repair</td><td>Pond perimeter</td><td><span class="badge badge-gold">In Progress</span></td></tr>
+              <tr><td><strong>Apr 2026</strong></td><td>Mulch refresh around entry monuments</td><td>Main entrance</td><td><span class="badge badge-blue">Scheduled</span></td></tr>
+              <tr><td><strong>Apr 2026</strong></td><td>Pond fountain maintenance and filter cleaning</td><td>South pond</td><td><span class="badge badge-gold">In Progress</span></td></tr>
+              <tr><td><strong>May 2026</strong></td><td>Tree trimming &mdash; storm damage follow-up</td><td>Oak Lane corridor</td><td><span class="badge badge-muted">Pending</span></td></tr>
+              <tr><td><strong>May 2026</strong></td><td>Sidewalk crack repair and sealing</td><td>Lakeside Drive</td><td><span class="badge badge-muted">Pending</span></td></tr>
+              <tr><td><strong>May 2026</strong></td><td>Patriot common area landscaping correction</td><td>Patriot common area</td><td><span class="badge badge-muted">Pending</span></td></tr>
             </tbody>
           </table>
-          <p class="table-note">Exact dates confirmed with vendors closer to service. Last updated: April 2025. Questions? <a href="#" onclick="go('contact')">Contact us.</a></p>
+          <p class="table-note">Exact dates confirmed with vendors closer to service. Last updated: April 2026. Questions? <a href="#" onclick="go('contact')">Contact us.</a></p>
         </div>
 
         <div class="lawn-calendar">
@@ -257,7 +887,6 @@
             <h2 class="lawn-cal-title">2026 Lawn Care Calendar</h2>
             <p class="lawn-cal-sub">Scheduled lawn treatments and maintenance services for Twin Lakes at Floyds Fork.</p>
           </div>
-
           <div class="lawn-provider">
             <div class="provider-badge provider-green">TruGreen</div>
             <div class="provider-desc">Lawn Treatments &mdash; Garden Homes Only</div>
@@ -302,7 +931,6 @@
               </tbody>
             </table>
           </div>
-
           <div class="lawn-provider" style="margin-top:28px;">
             <div class="provider-badge provider-blue">Aphix</div>
             <div class="provider-desc">Lawn Treatments &mdash; Common Areas &amp; Entrances</div>
@@ -310,13 +938,7 @@
           <div class="lawn-table-wrap">
             <table class="lawn-table">
               <thead>
-                <tr>
-                  <th>April</th>
-                  <th>May &ndash; June</th>
-                  <th>Aug &ndash; Sept</th>
-                  <th>Oct &ndash; Nov</th>
-                  <th>Nov &ndash; Dec</th>
-                </tr>
+                <tr><th>April</th><th>May &ndash; June</th><th>Aug &ndash; Sept</th><th>Oct &ndash; Nov</th><th>Nov &ndash; Dec</th></tr>
               </thead>
               <tbody>
                 <tr>
@@ -329,7 +951,6 @@
               </tbody>
             </table>
           </div>
-
           <div class="lawn-mowing-card">
             <div class="mowing-num">30</div>
             <div class="mowing-info">
@@ -338,14 +959,13 @@
             </div>
           </div>
         </div>
-
       </section>
     </div>
     <footer>
       <img src="logo.png" alt="Twin Lakes at Floyds Fork" class="footer-logo" />
       <div class="footer-divider"></div>
       <p>Louisville, Kentucky &nbsp;&middot;&nbsp; Managed by Mulloy Properties</p>
-      <p class="footer-copy">&copy; 2025 Twin Lakes at Floyds Fork HOA. All rights reserved.</p>
+      <p class="footer-copy">&copy; 2026 Twin Lakes at Floyds Fork HOA. All rights reserved.</p>
     </footer>
   </div>
 
@@ -357,7 +977,6 @@
       <p class="sec-sub">Official governing documents, guidelines, and forms for Twin Lakes at Floyds Fork residents. All documents open in a new tab.</p>
     </section>
     <section class="docs-body">
-
       <div class="doc-section">
         <div class="doc-section-header">
           <div class="doc-section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#1B4B7A" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
@@ -376,7 +995,6 @@
           </div>
         </div>
       </div>
-
       <div class="doc-section">
         <div class="doc-section-header">
           <div class="doc-section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#1B4B7A" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg></div>
@@ -390,7 +1008,6 @@
           </div>
         </div>
       </div>
-
       <div class="doc-section">
         <div class="doc-section-header">
           <div class="doc-section-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#1B4B7A" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></div>
@@ -403,10 +1020,8 @@
               <h3>ARC Request Form</h3>
               <p>Download, complete, and submit this form to Mulloy Properties for any exterior modification requiring board approval.</p>
               <div class="doc-steps">
-                <span class="doc-step">1. Download</span>
-                <span class="doc-arrow">&rarr;</span>
-                <span class="doc-step">2. Complete &amp; sign</span>
-                <span class="doc-arrow">&rarr;</span>
+                <span class="doc-step">1. Download</span><span class="doc-arrow">&rarr;</span>
+                <span class="doc-step">2. Complete &amp; sign</span><span class="doc-arrow">&rarr;</span>
                 <span class="doc-step">3. Email Mulloy</span>
               </div>
             </div>
@@ -418,18 +1033,16 @@
           <p>After completing the form, email it to Eddie Douglas at Mulloy Properties &mdash; <strong>edouglas@mulloyproperties.com</strong> &mdash; and copy <strong>hoa.twinlakes.board@gmail.com</strong>. Board approval is required before beginning any work.</p>
         </div>
       </div>
-
       <div class="doc-missing">
         <div class="doc-missing-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#8B6914" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
         <div><h3>Meeting Minutes &amp; Additional Documents</h3><p>Meeting minutes and additional community documents will be posted here as they become available. <a href="#" onclick="go('contact')">Contact the board</a> for specific documents.</p></div>
       </div>
-
     </section>
     <footer>
       <img src="logo.png" alt="Twin Lakes at Floyds Fork" class="footer-logo" />
       <div class="footer-divider"></div>
       <p>Louisville, Kentucky &nbsp;&middot;&nbsp; Managed by Mulloy Properties</p>
-      <p class="footer-copy">&copy; 2025 Twin Lakes at Floyds Fork HOA. All rights reserved.</p>
+      <p class="footer-copy">&copy; 2026 Twin Lakes at Floyds Fork HOA. All rights reserved.</p>
     </footer>
   </div>
 
@@ -440,15 +1053,12 @@
       <h1 class="sec-title">Contact Us</h1>
       <p class="sec-sub">Reach out to our property manager or the board for questions, concerns, or requests.</p>
     </section>
-
     <section style="padding-top:8px;padding-bottom:24px;">
       <div class="comm-flow">
         <div class="sec-label" style="margin-bottom:16px;">How communication works</div>
         <div class="flow-wrap">
           <div class="flow-node flow-residents">
-            <div class="flow-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#1B4B7A" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-            </div>
+            <div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#1B4B7A" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></div>
             <div class="flow-label">Residents</div>
             <div class="flow-sub">That&rsquo;s you</div>
           </div>
@@ -457,9 +1067,7 @@
             <div class="flow-arrow-label">All requests &amp;<br>questions</div>
           </div>
           <div class="flow-node flow-manager">
-            <div class="flow-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#FAF7F2" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-            </div>
+            <div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF7F2" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></div>
             <div class="flow-label">Eddie Douglas</div>
             <div class="flow-sub">Mulloy Properties<br>edouglas@mulloyproperties.com</div>
           </div>
@@ -468,9 +1076,7 @@
             <div class="flow-arrow-label">Stays informed</div>
           </div>
           <div class="flow-node flow-board">
-            <div class="flow-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#FAF7F2" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            </div>
+            <div class="flow-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#FAF7F2" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
             <div class="flow-label">HOA Board</div>
             <div class="flow-sub">hoa.twinlakes.board<br>@gmail.com</div>
           </div>
@@ -481,7 +1087,6 @@
         </div>
       </div>
     </section>
-
     <section style="padding-top:0;">
       <div class="contact-grid">
         <div class="contact-info">
@@ -520,9 +1125,7 @@
             For governance questions and community concerns, use the message form to reach the board directly.
           </div>
           <div class="facebook-card">
-            <div class="fb-icon">
-              <svg viewBox="0 0 24 24" fill="#1B4B7A" xmlns="http://www.w3.org/2000/svg"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-            </div>
+            <div class="fb-icon"><svg viewBox="0 0 24 24" fill="#1B4B7A"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg></div>
             <div class="fb-info">
               <strong>Residents Facebook Group</strong>
               <p>A private, verified residents-only group for neighbors to connect. Joining requests are reviewed against the resident directory by the HOA before approval.</p>
@@ -530,9 +1133,7 @@
             </div>
           </div>
           <div class="arc-shortcut">
-            <div class="arc-sc-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            </div>
+            <div class="arc-sc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></div>
             <div>
               <strong>Submitting an ARC Request?</strong>
               <p>Planning exterior modifications? Download the ARC form, complete it, and email to Eddie Douglas copying the board.</p>
@@ -540,7 +1141,6 @@
             </div>
           </div>
         </div>
-
         <div>
           <div class="form-card">
             <h3>Send a message</h3>
@@ -560,20 +1160,16 @@
             <div class="form-group"><label for="f-message">Message</label><textarea id="f-message" placeholder="Describe your question or concern..."></textarea></div>
             <button class="form-submit" onclick="submitForm()">Send Message</button>
             <p class="form-note">Your message will be sent to the recipient selected above.</p>
-            <div class="success-msg" id="success-msg">
-              <strong>Message sent!</strong>
-              Thank you. We&rsquo;ll be in touch within 2&ndash;3 business days.
-            </div>
+            <div class="success-msg" id="success-msg"><strong>Message sent!</strong> Thank you. We&rsquo;ll be in touch within 2&ndash;3 business days.</div>
           </div>
         </div>
       </div>
     </section>
-
     <footer>
       <img src="logo.png" alt="Twin Lakes at Floyds Fork" class="footer-logo" />
       <div class="footer-divider"></div>
       <p>Louisville, Kentucky &nbsp;&middot;&nbsp; Managed by Mulloy Properties</p>
-      <p class="footer-copy">&copy; 2025 Twin Lakes at Floyds Fork HOA. All rights reserved.</p>
+      <p class="footer-copy">&copy; 2026 Twin Lakes at Floyds Fork HOA. All rights reserved.</p>
     </footer>
   </div>
 
@@ -610,5 +1206,13 @@
   </div>
 
   <script src="script.js"></script>
+  <script>
+    function toggleFaq(btn) {
+      const item = btn.closest('.faq-item');
+      const isOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+      if (!isOpen) item.classList.add('open');
+    }
+  </script>
 </body>
 </html>
