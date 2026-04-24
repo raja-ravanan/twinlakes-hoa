@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/9.1.6/marked.min.js"></script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Twin Lakes at Floyds Fork — Louisville, Kentucky</title>
@@ -70,10 +69,11 @@
       </div>
     </div>
 
-    <div class="split-vis" style="padding:0;overflow:hidden;min-height:340px;">
-  <img src="pond.jpg" alt="Twin Lakes pond view" 
-       style="width:100%;height:100%;object-fit:cover;display:block;border-radius:4px;" />
-</div>
+    <div class="split">
+      <div class="split-vis" style="padding:0;overflow:hidden;border-radius:4px;">
+        <img src="pond.jpg" alt="Twin Lakes pond view"
+             style="width:100%;height:100%;min-height:380px;object-fit:cover;object-position:center;display:block;" />
+      </div>
       <div class="split-text">
         <div class="sec-label">Our neighborhood</div>
         <h2>A gracious place to call home</h2>
@@ -166,7 +166,6 @@
       </section>
 
       <section>
-        <!-- NOTICES -->
         <div class="notices-grid">
 
           <div class="notice-card notice-warning">
@@ -225,7 +224,6 @@
 
         </div>
 
-        <!-- WORK SCHEDULE -->
         <div class="schedule-section">
           <div class="schedule-header">
             <div class="sec-label">Upcoming Work</div>
@@ -253,7 +251,6 @@
           <p class="table-note">Exact dates confirmed with vendors closer to service. Last updated: April 2025. Questions? <a href="#" onclick="go('contact')">Contact us.</a></p>
         </div>
 
-        <!-- LAWN CARE CALENDAR -->
         <div class="lawn-calendar">
           <div class="lawn-cal-header">
             <div class="sec-label">Annual Operations</div>
@@ -580,39 +577,38 @@
     </footer>
   </div>
 
-  
   <!-- Chat Widget -->
-<!-- Chat Widget -->
-<div id="chat-widget">
-  <button id="chat-toggle">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-    Ask a Question
-  </button>
-  <div id="chat-box" style="display:none;">
-    <div id="chat-header">
-      <div id="chat-header-left">
-        <div id="chat-avatar">TL</div>
-        <div>
-          <div id="chat-title">Twin Lakes Assistant</div>
-          <div id="chat-subtitle">HOA Community Helper</div>
+  <div id="chat-widget">
+    <button id="chat-toggle">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+      Ask a Question
+    </button>
+    <div id="chat-box" style="display:none;">
+      <div id="chat-header">
+        <div id="chat-header-left">
+          <div id="chat-avatar">TL</div>
+          <div>
+            <div id="chat-title">Twin Lakes Assistant</div>
+            <div id="chat-subtitle">HOA Community Helper</div>
+          </div>
+        </div>
+        <button id="chat-close" aria-label="Close chat">✕</button>
+      </div>
+      <div id="chat-messages">
+        <div class="chat-bubble assistant welcome-bubble">
+          <strong>Welcome to Twin Lakes! 👋</strong><br>
+          I can help with rules, documents, board info, maintenance schedules, and more. How can I assist you today?
         </div>
       </div>
-      <button id="chat-close" aria-label="Close chat">✕</button>
-    </div>
-    <div id="chat-messages">
-      <div class="chat-bubble assistant welcome-bubble">
-        <strong>Welcome to Twin Lakes! 👋</strong><br>
-        I can help with rules, documents, board info, maintenance schedules, and more. How can I assist you today?
+      <div id="chat-input-area">
+        <input type="text" id="chat-input" placeholder="Ask about dues, rules, amenities..." autocomplete="off"/>
+        <button id="chat-send" aria-label="Send message">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+        </button>
       </div>
     </div>
-    <div id="chat-input-area">
-      <input type="text" id="chat-input" placeholder="Ask about dues, rules, amenities..." autocomplete="off"/>
-      <button id="chat-send" aria-label="Send message">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-      </button>
-    </div>
   </div>
-</div>
+
   <script src="script.js"></script>
 </body>
 </html>
