@@ -1,5 +1,11 @@
 [functions]
   directory = "netlify/functions"
 
-[functions.chat]
+[functions.scan-inbox]
+  timeout = 300
+
+[functions.board-api]
   timeout = 30
+
+[functions.email-digest]
+  timeout = 300
