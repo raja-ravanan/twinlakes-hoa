@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Board Portal — Twin Lakes HOA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet"/>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Georgia, serif; background: #0F2D4A; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+    .card { background:#fff; border-radius:16px; padding:48px 40px; max-width:440px; width:100%; box-shadow:0 24px 64px rgba(0,0,0,0.3); border-top:4px solid #C9A84C; text-align:center; }
+    .logo { width:64px; height:64px; background:linear-gradient(135deg,#1B4B7A,#0F2D4A); border-radius:50%; border:2px solid #C9A84C; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:22px; font-style:italic; color:#C9A84C; font-family:Georgia,serif; }
+    .eyebrow { font-size:11px; font-family:sans-serif; letter-spacing:3px; text-transform:uppercase; color:#C9A84C; margin-bottom:8px; }
+    h1 { font-size:26px; color:#1B4B7A; font-weight:normal; margin-bottom:6px; }
+    .subtitle { font-size:14px; color:#5a6a7a; font-style:italic; margin-bottom:32px; }
+    .notice { background:#FBF8F0; border:1px solid #dfc07a; border-left:3px solid #C9A84C; border-radius:4px; padding:12px 16px; margin-bottom:24px; font-size:13px; font-family:sans-serif; color:#5a4a1a; text-align:left; line-height:1.6; }
+    .form-group { margin-bottom:18px; text-align:left; }
+    label { display:block; font-size:11px; font-family:sans-serif; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#2c3e50; margin-bottom:7px; }
+    input { width:100%; padding:12px 14px; border:1px solid #ddd; border-radius:6px; font-size:15px; font-family:sans-serif; outline:none; transition:border-color 0.2s; }
+    input:focus { border-color:#C9A84C; }
+    button { width:100%; background:linear-gradient(135deg,#1B4B7A,#0F2D4A); color:#C9A84C; border:none; padding:16px; border-radius:8px; font-size:15px; font-family:sans-serif; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; margin-top:8px; }
+    button:hover { background:linear-gradient(135deg,#C9A84C,#B8973E); color:#1B4B7A; }
+    .error { background:#fdf0f0; border:1px solid #f5c6c6; border-radius:6px; padding:12px; font-size:13px; font-family:sans-serif; color:#6b1a1a; margin-top:16px; display:none; }
+    .back-link { margin-top:20px; font-size:13px; font-family:sans-serif; color:#999; }
+    .back-link a { color:#1B4B7A; text-decoration:none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">TL</div>
+    <div class="eyebrow">Board Members Only</div>
+    <h1>Board Portal</h1>
+    <p class="subtitle">Twin Lakes at Floyds Fork HOA</p>
+    <div class="notice">🔒 This portal is restricted to the 6 board members of Twin Lakes HOA. Unauthorized access is prohibited.</div>
+    <div class="form-group">
+      <label>Username</label>
+      <input type="text" id="username" placeholder="e.g. raja" autocomplete="username"/>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="Your board password" autocomplete="current-password"/>
+    </div>
+    <button onclick="login()">Sign In to Board Portal</button>
+    <div class="error" id="error">Invalid username or password. Please try again.</div>
+    <p class="back-link"><a href="/">← Back to Twin Lakes website</a></p>
+  </div>
+  <script>
+    document.getElementById("password").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
+    async function login() {
+      const username = document.getElementById("username").value.trim().toLowerCase();
+      const password = document.getElementById("password").value;
+      const errEl = document.getElementById("error");
+      errEl.style.display = "none";
+      try {
+        const res = await fetch("/.netlify/functions/board-api", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "login", username, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.token) {
+          localStorage.setItem("board_token", data.token);
+          localStorage.setItem("board_user", JSON.stringify({ username, name: data.name, role: data.role, isAdmin: data.isAdmin }));
+          window.location.href = "/board.html";
+        } else {
+          errEl.style.display = "block";
+        }
+      } catch {
+        errEl.style.display = "block";
+        errEl.textContent = "Connection error. Please try again.";
+      }
+    }
+  </script>
+</body>
+</html>

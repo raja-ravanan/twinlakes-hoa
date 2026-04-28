@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Board Portal — Twin Lakes HOA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --navy:#1B4B7A; --navy-dark:#0F2D4A; --gold:#C9A84C; --gold-light:#F5EDD6;
+      --cream:#FAF7F2; --text:#12202e; --text-m:#5a6a7a; --white:#fff;
+      --red:#e74c3c; --yellow:#f39c12; --green:#27ae60; --red-light:#fdf0f0;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Georgia, serif; background:#F0EDE8; color:var(--text); min-height:100vh; }
+
+    /* ── TOP BAR ── */
+    .topbar { background:var(--navy-dark); border-bottom:2px solid var(--gold); padding:0 24px; display:flex; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+    .topbar-left { display:flex; align-items:center; gap:16px; padding:12px 0; }
+    .topbar-logo { font-family:'Great Vibes',cursive; font-size:22px; color:var(--gold); }
+    .topbar-title { font-size:13px; font-family:sans-serif; color:rgba(255,255,255,0.6); letter-spacing:1px; text-transform:uppercase; }
+    .topbar-right { display:flex; align-items:center; gap:16px; }
+    .user-badge { font-size:13px; font-family:sans-serif; color:rgba(255,255,255,0.7); }
+    .user-badge strong { color:var(--gold); }
+    .last-scan { font-size:11px; font-family:sans-serif; color:rgba(255,255,255,0.4); }
+    .btn-scan { background:var(--gold); color:var(--navy-dark); border:none; padding:8px 18px; border-radius:6px; font-size:12px; font-family:sans-serif; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; }
+    .btn-scan:hover { background:#B8973E; }
+    .btn-scan:disabled { opacity:0.5; cursor:not-allowed; }
+    .btn-logout { background:none; border:1px solid rgba(255,255,255,0.2); color:rgba(255,255,255,0.6); padding:7px 14px; border-radius:6px; font-size:12px; font-family:sans-serif; cursor:pointer; }
+    .btn-logout:hover { border-color:var(--gold); color:var(--gold); }
+
+    /* ── LAYOUT ── */
+    .main { max-width:1300px; margin:0 auto; padding:24px; }
+
+    /* ── STATS ROW ── */
+    .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:24px; }
+    .stat-card { background:var(--white); border-radius:8px; padding:20px; border:1px solid #ddd; border-left:4px solid var(--navy); }
+    .stat-card.urgent { border-left-color:var(--red); }
+    .stat-card.warning { border-left-color:var(--yellow); }
+    .stat-card.good { border-left-color:var(--green); }
+    .stat-num { font-size:32px; font-family:sans-serif; font-weight:700; color:var(--navy); line-height:1; }
+    .stat-card.urgent .stat-num { color:var(--red); }
+    .stat-label { font-size:12px; font-family:sans-serif; color:var(--text-m); margin-top:4px; text-transform:uppercase; letter-spacing:0.5px; }
+
+    /* ── TABS ── */
+    .tabs { display:flex; gap:4px; margin-bottom:20px; background:var(--white); border-radius:8px; padding:6px; border:1px solid #ddd; width:fit-content; }
+    .tab { padding:10px 24px; border-radius:6px; font-family:sans-serif; font-size:14px; font-weight:600; cursor:pointer; border:none; background:none; color:var(--text-m); transition:all 0.2s; position:relative; }
+    .tab.active { background:var(--navy); color:var(--white); }
+    .tab-badge { background:var(--red); color:#fff; border-radius:10px; padding:2px 7px; font-size:10px; font-weight:700; margin-left:6px; }
+    .tab.active .tab-badge { background:var(--gold); color:var(--navy-dark); }
+
+    /* ── FILTER BAR ── */
+    .filter-bar { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
+    .filter-select { padding:8px 12px; border:1px solid #ddd; border-radius:6px; font-size:13px; font-family:sans-serif; background:var(--white); color:var(--text); outline:none; cursor:pointer; }
+    .search-input { padding:8px 14px; border:1px solid #ddd; border-radius:6px; font-size:13px; font-family:sans-serif; outline:none; flex:1; min-width:200px; }
+    .search-input:focus, .filter-select:focus { border-color:var(--gold); }
+
+    /* ── ARC CARD ── */
+    .arc-card { background:var(--white); border-radius:10px; border:1px solid #ddd; margin-bottom:16px; overflow:hidden; transition:box-shadow 0.2s; }
+    .arc-card:hover { box-shadow:0 4px 20px rgba(0,0,0,0.08); }
+    .arc-card.archived { opacity:0.6; }
+    .arc-header { padding:18px 20px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; cursor:pointer; }
+    .arc-header:hover { background:#FAFAFA; }
+    .arc-meta { flex:1; }
+    .arc-id-row { display:flex; align-items:center; gap:10px; margin-bottom:6px; flex-wrap:wrap; }
+    .arc-id { font-size:13px; font-family:sans-serif; font-weight:700; color:var(--navy); }
+    .arc-type-badge { font-size:11px; font-family:sans-serif; font-weight:600; padding:3px 10px; border-radius:12px; background:var(--navy); color:var(--white); letter-spacing:0.5px; }
+    .age-badge { font-size:11px; font-family:sans-serif; font-weight:600; padding:3px 10px; border-radius:12px; }
+    .age-red { background:#fdf0f0; color:var(--red); }
+    .age-yellow { background:#fef9e7; color:#b7770d; }
+    .age-green { background:#eafaf1; color:var(--green); }
+    .arc-name { font-size:17px; color:var(--navy); margin-bottom:2px; }
+    .arc-address { font-size:13px; font-family:sans-serif; color:var(--text-m); }
+    .arc-date { font-size:12px; font-family:sans-serif; color:var(--text-m); margin-top:4px; }
+    .arc-status-col { text-align:right; flex-shrink:0; }
+    .status-badge { font-size:12px; font-family:sans-serif; font-weight:700; padding:5px 14px; border-radius:20px; display:inline-block; }
+    .status-Open { background:#EEF3F8; color:var(--navy); }
+    .status-Approved { background:#eafaf1; color:var(--green); }
+    .status-Denied { background:#fdf0f0; color:var(--red); }
+    .status-Conditional { background:#fef9e7; color:#b7770d; }
+    .status-Tie { background:#f3e5f5; color:#6a1b9a; }
+    .conflict-flag { font-size:11px; font-family:sans-serif; background:#fef9e7; color:#b7770d; border:1px solid #f0d060; padding:3px 10px; border-radius:12px; margin-top:6px; display:inline-block; }
+
+    /* ── ARC BODY ── */
+    .arc-body { border-top:1px solid #eee; padding:20px; display:none; }
+    .arc-body.open { display:block; }
+
+    /* AI Summary */
+    .ai-summary-box { background:linear-gradient(135deg,#f0f4ff,#e8f0fe); border:1px solid #c5d5f5; border-radius:8px; padding:16px 20px; margin-bottom:18px; }
+    .ai-label { font-size:10px; font-family:sans-serif; font-weight:700; letter-spacing:2px; text-transform:uppercase; color:#1a56c4; margin-bottom:8px; display:flex; align-items:center; gap:6px; }
+    .ai-warning { font-size:11px; font-family:sans-serif; color:#666; font-style:italic; margin-top:8px; padding-top:8px; border-top:1px solid #c5d5f5; }
+    .ai-summary-text { font-size:14px; font-family:sans-serif; color:#1a1a2e; line-height:1.7; }
+    .ai-rec { display:inline-block; font-size:12px; font-family:sans-serif; font-weight:700; padding:4px 14px; border-radius:12px; margin-top:10px; }
+    .ai-rec-Approve { background:#eafaf1; color:var(--green); }
+    .ai-rec-Deny { background:#fdf0f0; color:var(--red); }
+    .ai-rec-Conditional { background:#fef9e7; color:#b7770d; }
+    .expand-analysis { font-size:12px; font-family:sans-serif; color:var(--navy); cursor:pointer; margin-top:10px; background:none; border:none; text-decoration:underline; padding:0; }
+    .analysis-detail { display:none; margin-top:14px; padding-top:14px; border-top:1px solid #c5d5f5; }
+    .analysis-detail.open { display:block; }
+    .analysis-section { margin-bottom:12px; }
+    .analysis-section strong { display:block; font-size:12px; font-family:sans-serif; font-weight:700; color:var(--navy); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px; }
+    .analysis-section p { font-size:13px; font-family:sans-serif; color:#333; line-height:1.6; }
+    .pros-cons { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:10px; }
+    .pros-box, .cons-box { border-radius:6px; padding:12px; }
+    .pros-box { background:#eafaf1; border:1px solid #a9dfbf; }
+    .cons-box { background:#fdf0f0; border:1px solid #f5b7b1; }
+    .pros-box strong { color:var(--green); font-size:11px; font-family:sans-serif; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+    .cons-box strong { color:var(--red); font-size:11px; font-family:sans-serif; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+    .pros-cons li { font-size:12px; font-family:sans-serif; color:#333; margin-top:4px; line-height:1.5; padding-left:12px; list-style:disc; }
+
+    /* Attachments */
+    .attachments-section { margin-bottom:18px; }
+    .attachments-title { font-size:12px; font-family:sans-serif; font-weight:700; color:var(--text-m); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:10px; }
+    .attachment-grid { display:flex; gap:10px; flex-wrap:wrap; }
+    .attachment-btn { display:flex; align-items:center; gap:8px; background:var(--navy); color:var(--white); padding:8px 14px; border-radius:6px; font-size:12px; font-family:sans-serif; text-decoration:none; transition:background 0.2s; }
+    .attachment-btn:hover { background:#C9A84C; color:var(--navy-dark); }
+    .no-attachments { font-size:13px; font-family:sans-serif; color:var(--text-m); font-style:italic; }
+
+    /* Vote section */
+    .vote-section { background:#FAFAFA; border-radius:8px; padding:16px 20px; margin-bottom:18px; border:1px solid #eee; }
+    .vote-title { font-size:12px; font-family:sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-m); margin-bottom:14px; }
+    .vote-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:16px; }
+    .vote-member { display:flex; flex-direction:column; align-items:center; gap:4px; padding:10px; background:var(--white); border-radius:6px; border:1px solid #eee; }
+    .vote-member-name { font-size:12px; font-family:sans-serif; font-weight:600; color:var(--navy); }
+    .vote-member-vote { font-size:12px; font-family:sans-serif; padding:3px 10px; border-radius:10px; }
+    .vote-Approve { background:#eafaf1; color:var(--green); font-weight:700; }
+    .vote-Deny { background:#fdf0f0; color:var(--red); font-weight:700; }
+    .vote-Conditional { background:#fef9e7; color:#b7770d; font-weight:700; }
+    .vote-Pending { background:#f5f5f5; color:#999; }
+    .vote-counter { font-size:13px; font-family:sans-serif; color:var(--text-m); margin-bottom:14px; }
+    .vote-counter strong { color:var(--navy); }
+
+    /* My vote buttons */
+    .my-vote-section { border-top:1px solid #eee; padding-top:14px; }
+    .my-vote-label { font-size:12px; font-family:sans-serif; font-weight:700; color:var(--navy); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px; }
+    .vote-buttons { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; }
+    .btn-vote { padding:9px 18px; border-radius:6px; font-size:13px; font-family:sans-serif; font-weight:600; cursor:pointer; border:2px solid transparent; transition:all 0.2s; }
+    .btn-approve { background:#eafaf1; color:var(--green); border-color:#a9dfbf; }
+    .btn-approve:hover, .btn-approve.selected { background:var(--green); color:#fff; border-color:var(--green); }
+    .btn-deny { background:#fdf0f0; color:var(--red); border-color:#f5b7b1; }
+    .btn-deny:hover, .btn-deny.selected { background:var(--red); color:#fff; border-color:var(--red); }
+    .btn-conditional { background:#fef9e7; color:#b7770d; border-color:#f0d060; }
+    .btn-conditional:hover, .btn-conditional.selected { background:#f39c12; color:#fff; border-color:#f39c12; }
+    .conditions-area { display:none; margin-bottom:12px; }
+    .conditions-area.show { display:block; }
+    .conditions-area textarea { width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:6px; font-size:13px; font-family:sans-serif; outline:none; resize:vertical; min-height:80px; }
+    .conditions-area textarea:focus { border-color:var(--gold); }
+    .private-note-area textarea { width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:6px; font-size:13px; font-family:sans-serif; outline:none; resize:vertical; min-height:60px; margin-top:8px; }
+    .private-note-label { font-size:12px; font-family:sans-serif; color:var(--text-m); margin-top:10px; margin-bottom:4px; }
+    .btn-submit-vote { background:var(--navy); color:var(--gold); border:none; padding:10px 24px; border-radius:6px; font-size:13px; font-family:sans-serif; font-weight:700; cursor:pointer; transition:all 0.2s; margin-top:10px; }
+    .btn-submit-vote:hover { background:var(--gold); color:var(--navy-dark); }
+
+    /* Notify Mulloy */
+    .notify-section { background:linear-gradient(135deg,#F5EDD6,#FBF8F0); border:1px solid #dfc07a; border-radius:8px; padding:16px 20px; margin-bottom:18px; }
+    .notify-title { font-size:13px; font-family:sans-serif; font-weight:700; color:#8B6914; margin-bottom:10px; }
+    .notify-desc { font-size:13px; font-family:sans-serif; color:#5a4a1a; line-height:1.6; margin-bottom:12px; }
+    .btn-notify { background:var(--navy); color:var(--gold); border:none; padding:10px 20px; border-radius:6px; font-size:13px; font-family:sans-serif; font-weight:700; cursor:pointer; }
+    .btn-notify:hover { background:var(--gold); color:var(--navy-dark); }
+    .btn-notify.sent { background:#27ae60; color:#fff; cursor:default; }
+
+    /* Email Preview Modal */
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:500; align-items:center; justify-content:center; padding:24px; }
+    .modal-overlay.show { display:flex; }
+    .modal { background:var(--white); border-radius:12px; max-width:600px; width:100%; max-height:85vh; overflow-y:auto; box-shadow:0 24px 64px rgba(0,0,0,0.3); }
+    .modal-header { background:var(--navy-dark); color:var(--white); padding:18px 24px; border-radius:12px 12px 0 0; display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--gold); position:sticky; top:0; }
+    .modal-header h3 { font-size:16px; font-weight:normal; }
+    .modal-close { background:none; border:none; color:rgba(255,255,255,0.6); font-size:20px; cursor:pointer; }
+    .modal-body { padding:24px; }
+    .email-field { margin-bottom:16px; }
+    .email-field label { display:block; font-size:11px; font-family:sans-serif; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-m); margin-bottom:6px; }
+    .email-field input, .email-field textarea { width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:6px; font-size:13px; font-family:sans-serif; outline:none; }
+    .email-field input:focus, .email-field textarea:focus { border-color:var(--gold); }
+    .email-field textarea { min-height:200px; resize:vertical; }
+    .modal-footer { padding:16px 24px; border-top:1px solid #eee; display:flex; gap:10px; justify-content:flex-end; background:#FAFAFA; border-radius:0 0 12px 12px; }
+    .btn-send { background:var(--navy); color:var(--gold); border:none; padding:12px 28px; border-radius:6px; font-size:14px; font-family:sans-serif; font-weight:700; cursor:pointer; }
+    .btn-cancel { background:none; border:1px solid #ddd; padding:12px 20px; border-radius:6px; font-size:14px; font-family:sans-serif; cursor:pointer; color:var(--text-m); }
+
+    /* Violation Card */
+    .vio-card { background:var(--white); border-radius:10px; border:1px solid #ddd; margin-bottom:16px; overflow:hidden; }
+    .vio-header { padding:18px 20px; display:flex; justify-content:space-between; align-items:flex-start; gap:16px; cursor:pointer; }
+    .vio-header:hover { background:#FAFAFA; }
+    .vio-body { border-top:1px solid #eee; padding:20px; display:none; }
+    .vio-body.open { display:block; }
+    .vio-type-badge { font-size:11px; font-family:sans-serif; font-weight:600; padding:3px 10px; border-radius:12px; background:#fdf0f0; color:var(--red); }
+    .status-select { padding:7px 12px; border:1px solid #ddd; border-radius:6px; font-size:13px; font-family:sans-serif; outline:none; cursor:pointer; }
+    .status-select:focus { border-color:var(--gold); }
+    .comments-section { margin-top:16px; }
+    .comment-item { background:#F8F7F4; border-radius:6px; padding:10px 14px; margin-bottom:8px; }
+    .comment-author { font-size:12px; font-family:sans-serif; font-weight:700; color:var(--navy); }
+    .comment-time { font-size:11px; font-family:sans-serif; color:var(--text-m); margin-left:8px; }
+    .comment-text { font-size:13px; font-family:sans-serif; color:var(--text); margin-top:4px; line-height:1.5; }
+    .add-comment { display:flex; gap:10px; margin-top:12px; }
+    .add-comment input { flex:1; padding:9px 12px; border:1px solid #ddd; border-radius:6px; font-size:13px; font-family:sans-serif; outline:none; }
+    .add-comment input:focus { border-color:var(--gold); }
+    .btn-comment { background:var(--navy); color:var(--gold); border:none; padding:9px 18px; border-radius:6px; font-size:13px; font-family:sans-serif; font-weight:600; cursor:pointer; white-space:nowrap; }
+
+    /* Other Items */
+    .other-card { background:var(--white); border-radius:8px; border:1px solid #ddd; padding:18px 20px; margin-bottom:12px; display:flex; gap:16px; align-items:flex-start; }
+    .other-category { font-size:10px; font-family:sans-serif; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; padding:4px 10px; border-radius:10px; background:var(--navy); color:var(--white); white-space:nowrap; flex-shrink:0; }
+    .other-content { flex:1; }
+    .other-subject { font-size:15px; color:var(--navy); margin-bottom:4px; }
+    .other-from { font-size:12px; font-family:sans-serif; color:var(--text-m); margin-bottom:8px; }
+    .other-summary { font-size:13px; font-family:sans-serif; color:var(--text); line-height:1.6; }
+
+    /* Activity log */
+    .activity-panel { background:var(--white); border-radius:10px; border:1px solid #ddd; padding:20px; margin-top:24px; }
+    .activity-title { font-size:13px; font-family:sans-serif; font-weight:700; color:var(--text-m); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:14px; }
+    .activity-item { display:flex; gap:14px; padding:8px 0; border-bottom:1px solid #f5f5f5; align-items:flex-start; }
+    .activity-item:last-child { border-bottom:none; }
+    .activity-dot { width:8px; height:8px; border-radius:50%; background:var(--gold); flex-shrink:0; margin-top:5px; }
+    .activity-text { font-size:13px; font-family:sans-serif; color:var(--text); line-height:1.5; }
+    .activity-time { font-size:11px; font-family:sans-serif; color:var(--text-m); white-space:nowrap; flex-shrink:0; }
+
+    /* Loading / Empty */
+    .loading { text-align:center; padding:48px; font-family:sans-serif; color:var(--text-m); }
+    .spinner { width:40px; height:40px; border:3px solid #ddd; border-top-color:var(--navy); border-radius:50%; animation:spin 0.8s linear infinite; margin:0 auto 16px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .empty-state { text-align:center; padding:48px; font-family:sans-serif; color:var(--text-m); }
+    .empty-state svg { width:48px; height:48px; stroke:#ddd; margin-bottom:16px; }
+    .empty-title { font-size:16px; color:var(--navy); margin-bottom:8px; }
+
+    /* Toast */
+    .toast { position:fixed; bottom:24px; right:24px; background:var(--navy-dark); color:var(--white); padding:14px 20px; border-radius:8px; font-family:sans-serif; font-size:14px; border-left:4px solid var(--gold); z-index:999; display:none; animation:slideUp 0.3s ease; }
+    .toast.show { display:block; }
+    .toast.success { border-left-color:var(--green); }
+    .toast.error { border-left-color:var(--red); }
+    @keyframes slideUp { from { transform:translateY(20px); opacity:0; } to { transform:translateY(0); opacity:1; } }
+
+    /* Scan overlay */
+    .scan-overlay { display:none; position:fixed; inset:0; background:rgba(15,45,74,0.85); z-index:600; flex-direction:column; align-items:center; justify-content:center; color:var(--white); font-family:sans-serif; }
+    .scan-overlay.show { display:flex; }
+    .scan-spinner { width:56px; height:56px; border:4px solid rgba(255,255,255,0.2); border-top-color:var(--gold); border-radius:50%; animation:spin 0.8s linear infinite; margin-bottom:24px; }
+    .scan-text { font-size:18px; margin-bottom:8px; }
+    .scan-sub { font-size:13px; color:rgba(255,255,255,0.6); }
+
+    /* Archived section */
+    .archived-toggle { font-size:13px; font-family:sans-serif; color:var(--navy); cursor:pointer; background:none; border:none; text-decoration:underline; margin:16px 0 8px; display:block; }
+    .archived-section { display:none; }
+    .archived-section.show { display:block; }
+
+    @media (max-width:768px) {
+      .stats-row { grid-template-columns:repeat(2,1fr); }
+      .vote-grid { grid-template-columns:repeat(2,1fr); }
+      .pros-cons { grid-template-columns:1fr; }
+      .topbar { flex-wrap:wrap; gap:8px; padding:12px; }
+      .main { padding:16px; }
+    }
+    @media (max-width:480px) {
+      .stats-row { grid-template-columns:1fr 1fr; }
+      .tabs { width:100%; }
+      .tab { flex:1; text-align:center; padding:10px 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="topbar-logo">Twin Lakes</div>
+    <div class="topbar-title">Board Portal</div>
+  </div>
+  <div class="topbar-right">
+    <div>
+      <div class="user-badge">Logged in as <strong id="userName">...</strong> · <span id="userRole">...</span></div>
+      <div class="last-scan" id="lastScan">Last scan: never</div>
+    </div>
+    <button class="btn-scan" id="scanBtn" style="display:none" onclick="runScan()">🔄 Scan Inbox</button>
+    <button class="btn-logout" onclick="logout()">Sign Out</button>
+  </div>
+</div>
+
+<!-- Scan Overlay -->
+<div class="scan-overlay" id="scanOverlay">
+  <div class="scan-spinner"></div>
+  <div class="scan-text">Scanning HOA Inbox...</div>
+  <div class="scan-sub">Claude is reading and categorizing emails. This may take 2–3 minutes.</div>
+</div>
+
+<!-- Main Content -->
+<div class="main">
+
+  <!-- Stats Row -->
+  <div class="stats-row" id="statsRow">
+    <div class="stat-card urgent"><div class="stat-num" id="statOpenARC">—</div><div class="stat-label">Open ARC Requests</div></div>
+    <div class="stat-card warning"><div class="stat-num" id="statOpenVio">—</div><div class="stat-label">Open Violations</div></div>
+    <div class="stat-card"><div class="stat-num" id="statPendingVotes">—</div><div class="stat-label">Awaiting My Vote</div></div>
+    <div class="stat-card good"><div class="stat-num" id="statResolved">—</div><div class="stat-label">Resolved This Month</div></div>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('arc')">🏗️ ARC Requests <span class="tab-badge" id="arcBadge">0</span></button>
+    <button class="tab" onclick="switchTab('violations')">⚠️ Violations <span class="tab-badge" id="vioBadge">0</span></button>
+    <button class="tab" onclick="switchTab('other')">📂 Other Items <span class="tab-badge" id="othBadge">0</span></button>
+    <button class="tab" onclick="switchTab('activity')">📋 Activity Log</button>
+  </div>
+
+  <!-- Filter Bar -->
+  <div class="filter-bar">
+    <input type="text" class="search-input" id="searchInput" placeholder="Search by name, address, or ID..." oninput="filterItems()"/>
+    <select class="filter-select" id="statusFilter" onchange="filterItems()">
+      <option value="all">All Statuses</option>
+      <option value="Open" selected>Open</option>
+      <option value="Approved">Approved</option>
+      <option value="Denied">Denied</option>
+      <option value="Tie">Tie</option>
+    </select>
+    <select class="filter-select" id="typeFilter" onchange="filterItems()">
+      <option value="all">All Types</option>
+      <option value="Fence">Fence</option>
+      <option value="Deck">Deck</option>
+      <option value="Landscaping">Landscaping</option>
+      <option value="Paint">Paint</option>
+      <option value="Lighting">Lighting</option>
+      <option value="Other">Other</option>
+    </select>
+  </div>
+
+  <!-- Tab Panels -->
+  <div id="tab-arc">
+    <div id="arcList"><div class="loading"><div class="spinner"></div>Loading ARC requests...</div></div>
+    <button class="archived-toggle" onclick="toggleArchived('arc')" id="arcArchiveBtn" style="display:none">▶ Show archived requests (90+ days old)</button>
+    <div class="archived-section" id="arcArchived"></div>
+  </div>
+
+  <div id="tab-violations" style="display:none">
+    <div id="vioList"><div class="loading"><div class="spinner"></div>Loading violations...</div></div>
+  </div>
+
+  <div id="tab-other" style="display:none">
+    <div id="othList"><div class="loading"><div class="spinner"></div>Loading other items...</div></div>
+  </div>
+
+  <div id="tab-activity" style="display:none">
+    <div class="activity-panel">
+      <div class="activity-title">Recent Activity</div>
+      <div id="activityList"><div class="loading"><div class="spinner"></div></div></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Email Preview Modal -->
+<div class="modal-overlay" id="emailModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Email Preview — Notify Mulloy Properties</h3>
+      <button class="modal-close" onclick="closeEmailModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="email-field"><label>To</label><input type="text" id="emailTo" value="edouglas@mulloyproperties.com"/></div>
+      <div class="email-field"><label>Subject</label><input type="text" id="emailSubject"/></div>
+      <div class="email-field"><label>Message</label><textarea id="emailBody"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeEmailModal()">Cancel</button>
+      <button class="btn-send" onclick="sendNotification()">Send to Mulloy</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+  // ── State ─────────────────────────────────────────────
+  let dashData = { arcs: [], violations: [], others: [], activity: [] };
+  let currentUser = null;
+  let currentEmailItemId = null;
+  let selectedVotes = {};
+
+  // ── Init ──────────────────────────────────────────────
+  window.addEventListener("DOMContentLoaded", () => {
+    const token = localStorage.getItem("board_token");
+    const user = localStorage.getItem("board_user");
+    if (!token || !user) { window.location.href = "/board-login.html"; return; }
+    currentUser = JSON.parse(user);
+    document.getElementById("userName").textContent = currentUser.name;
+    document.getElementById("userRole").textContent = currentUser.role;
+    if (currentUser.isAdmin) document.getElementById("scanBtn").style.display = "flex";
+    loadDashboard();
+    const ls = localStorage.getItem("lastScan");
+    if (ls) document.getElementById("lastScan").textContent = "Last scan: " + new Date(ls).toLocaleString();
+  });
+
+  function logout() {
+    localStorage.removeItem("board_token"); localStorage.removeItem("board_user");
+    window.location.href = "/board-login.html";
+  }
+
+  async function api(body) {
+    const token = localStorage.getItem("board_token");
+    const res = await fetch("/.netlify/functions/board-api", {
+      method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(body)
+    });
+    if (res.status === 401) { logout(); return null; }
+    return res.json();
+  }
+
+  // ── Load Dashboard ────────────────────────────────────
+  async function loadDashboard() {
+    const data = await api({ action: "getDashboard" });
+    if (!data) return;
+    dashData = data;
+    renderAll();
+    updateStats();
+  }
+
+  function updateStats() {
+    const openARCs = dashData.arcs.filter(a => a.final_status === "Open" || !a.final_status).length;
+    const openVios = dashData.violations.filter(v => v.status === "Open").length;
+    const pendingMyVote = dashData.arcs.filter(a => {
+      const myVoteKey = currentUser.username + "_vote";
+      return (!a[myVoteKey] || a[myVoteKey] === "") && (a.final_status === "Open" || !a.final_status);
+    }).length;
+    const resolved = dashData.arcs.filter(a => {
+      const d = new Date(a.date_received);
+      const now = new Date();
+      return (a.final_status === "Approved" || a.final_status === "Denied") &&
+             d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).length;
+
+    document.getElementById("statOpenARC").textContent = openARCs;
+    document.getElementById("statOpenVio").textContent = openVios;
+    document.getElementById("statPendingVotes").textContent = pendingMyVote;
+    document.getElementById("statResolved").textContent = resolved;
+    document.getElementById("arcBadge").textContent = openARCs;
+    document.getElementById("vioBadge").textContent = openVios;
+    document.getElementById("othBadge").textContent = dashData.others.filter(o => o.needs_attention === "yes").length;
+  }
+
+  // ── Tabs ──────────────────────────────────────────────
+  function switchTab(tab) {
+    ["arc","violations","other","activity"].forEach(t => {
+      document.getElementById("tab-" + (t === "violations" ? "violations" : t === "other" ? "other" : t === "activity" ? "activity" : "arc")).style.display = t === tab ? "block" : "none";
+    });
+    document.querySelectorAll(".tab").forEach((el, i) => el.classList.toggle("active", ["arc","violations","other","activity"][i] === tab));
+    document.getElementById("filter-bar") && (document.getElementById("filter-bar").style.display = tab === "arc" ? "flex" : "none");
+  }
+
+  // ── Render All ────────────────────────────────────────
+  function renderAll() {
+    renderARCs(dashData.arcs);
+    renderViolations(dashData.violations);
+    renderOthers(dashData.others);
+    renderActivity(dashData.activity);
+  }
+
+  // ── ARC Rendering ─────────────────────────────────────
+  function renderARCs(arcs) {
+    const active = arcs.filter(a => {
+      const days = parseInt(a.days_open) || 0;
+      return days <= 90;
+    });
+    const archived = arcs.filter(a => parseInt(a.days_open) > 90);
+
+    document.getElementById("arcList").innerHTML = active.length
+      ? active.map(renderARCCard).join("")
+      : '<div class="empty-state"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><div class="empty-title">No ARC requests found</div><p>Scan the inbox to load new requests.</p></div>';
+
+    if (archived.length > 0) {
+      document.getElementById("arcArchiveBtn").style.display = "block";
+      document.getElementById("arcArchived").innerHTML = archived.map(a => renderARCCard(a, true)).join("");
+    }
+  }
+
+  function renderARCCard(arc, isArchived = false) {
+    const myVoteKey = currentUser.username + "_vote";
+    const myVote = arc[myVoteKey] || "";
+    const days = parseInt(arc.days_open) || 0;
+    const ageClass = days > 14 ? "age-red" : days > 7 ? "age-yellow" : "age-green";
+    const ageText = days === 0 ? "Today" : days === 1 ? "1 day" : `${days} days`;
+    const status = arc.final_status || "Open";
+    const isMajority = status === "Approved" || status === "Denied";
+    const attachments = arc.attachment_urls ? arc.attachment_urls.split(",").filter(u => u.trim()) : [];
+
+    const memberVotes = [
+      { key: "tony", name: "Tony" }, { key: "yashu", name: "Yashu" },
+      { key: "ramana", name: "Ramana" }, { key: "raja", name: "Raja" },
+      { key: "aimee", name: "Aimee" }, { key: "mike", name: "Mike" }
+    ].map(m => {
+      const v = arc[m.key + "_vote"] || "Pending";
+      return `<div class="vote-member"><div class="vote-member-name">${m.name}</div><div class="vote-member-vote vote-${v}">${v}</div></div>`;
+    }).join("");
+
+    const voteCount = parseInt(arc.vote_count) || 0;
+
+    return `
+<div class="arc-card ${isArchived ? 'archived' : ''}" id="arc-${arc.id}">
+  <div class="arc-header" onclick="toggleCard('arc-body-${arc.id}')">
+    <div class="arc-meta">
+      <div class="arc-id-row">
+        <span class="arc-id">${arc.id}</span>
+        <span class="arc-type-badge">${arc.request_type || "Request"}</span>
+        <span class="age-badge ${ageClass}">${ageText} old</span>
+        ${arc.conflict_flag === "yes" ? '<span class="conflict-flag">⚠️ Conflict Check</span>' : ""}
+      </div>
+      <div class="arc-name">${arc.homeowner_name || "Unknown"}</div>
+      <div class="arc-address">📍 ${arc.address || "Unknown address"}</div>
+      <div class="arc-date">Received: ${arc.date_received ? new Date(arc.date_received).toLocaleDateString() : "Unknown"} · ${arc.email_subject || ""}</div>
+    </div>
+    <div class="arc-status-col">
+      <span class="status-badge status-${status.replace(/\s.*/,'')}">${status}</span>
+      <div style="font-size:12px;font-family:sans-serif;color:var(--text-m);margin-top:6px;">${voteCount}/6 votes</div>
+      ${myVote ? `<div style="font-size:11px;font-family:sans-serif;margin-top:4px;color:var(--text-m)">Your vote: <strong>${myVote}</strong></div>` : ""}
+    </div>
+  </div>
+
+  <div class="arc-body" id="arc-body-${arc.id}">
+
+    <!-- AI Summary -->
+    <div class="ai-summary-box">
+      <div class="ai-label">🤖 AI Summary <span style="font-weight:normal;font-style:italic;color:#666;font-size:10px;">— Generated by Claude AI</span></div>
+      <div class="ai-summary-text">${arc.ai_summary || "No AI summary available."}</div>
+      <span class="ai-rec ai-rec-${arc.ai_recommendation}">${arc.ai_recommendation ? "AI Suggests: " + arc.ai_recommendation : ""}</span>
+      <div><button class="expand-analysis" onclick="toggleAnalysis('analysis-${arc.id}')">▶ Show full analysis with pros & cons</button></div>
+      <div class="analysis-detail" id="analysis-${arc.id}">
+        <div class="analysis-section"><strong>Reasoning</strong><p>${arc.ai_reasoning || "N/A"}</p></div>
+        <div class="pros-cons">
+          <div class="pros-box"><strong>✓ Pros</strong><ul>${(arc.ai_pros || "").split(",").filter(p=>p.trim()).map(p => `<li>${p.trim()}</li>`).join("") || "<li>N/A</li>"}</ul></div>
+          <div class="cons-box"><strong>✕ Cons</strong><ul>${(arc.ai_cons || "").split(",").filter(c=>c.trim()).map(c => `<li>${c.trim()}</li>`).join("") || "<li>N/A</li>"}</ul></div>
+        </div>
+      </div>
+      <div class="ai-warning">⚠️ This analysis is AI-generated for board review only. The board makes all final decisions.</div>
+    </div>
+
+    <!-- Attachments -->
+    <div class="attachments-section">
+      <div class="attachments-title">📎 Attachments & Drive Folder</div>
+      <div class="attachment-grid">
+        ${arc.drive_folder_url ? `<a href="${arc.drive_folder_url}" target="_blank" class="attachment-btn">📁 View Drive Folder</a>` : ""}
+        ${attachments.map((url, i) => `<a href="${url.trim()}" target="_blank" class="attachment-btn">📄 Attachment ${i+1}</a>`).join("")}
+        ${!arc.drive_folder_url && attachments.length === 0 ? '<span class="no-attachments">No attachments found</span>' : ""}
+      </div>
+    </div>
+
+    <!-- Vote Tracker -->
+    <div class="vote-section">
+      <div class="vote-title">Board Votes (${voteCount}/6 cast — 4 needed for majority)</div>
+      <div class="vote-grid">${memberVotes}</div>
+      <div class="vote-counter">Approve: <strong>${[arc.tony_vote,arc.yashu_vote,arc.ramana_vote,arc.raja_vote,arc.aimee_vote,arc.mike_vote].filter(v=>v==="Approve"||v==="Conditional").length}</strong> · Deny: <strong>${[arc.tony_vote,arc.yashu_vote,arc.ramana_vote,arc.raja_vote,arc.aimee_vote,arc.mike_vote].filter(v=>v==="Deny").length}</strong> · Pending: <strong>${[arc.tony_vote,arc.yashu_vote,arc.ramana_vote,arc.raja_vote,arc.aimee_vote,arc.mike_vote].filter(v=>!v||v==="").length}</strong></div>
+
+      <!-- My Vote -->
+      <div class="my-vote-section">
+        <div class="my-vote-label">Your Vote ${myVote ? `(Current: ${myVote} — you can change)` : ""}</div>
+        <div class="vote-buttons">
+          <button class="btn-vote btn-approve ${myVote==='Approve'?'selected':''}" onclick="selectVote('${arc.id}','Approve')">✅ Approve</button>
+          <button class="btn-vote btn-deny ${myVote==='Deny'?'selected':''}" onclick="selectVote('${arc.id}','Deny')">❌ Deny</button>
+          <button class="btn-vote btn-conditional ${myVote==='Conditional'?'selected':''}" onclick="selectVote('${arc.id}','Conditional')">📋 Approve with Conditions</button>
+        </div>
+        <div class="conditions-area ${myVote==='Conditional'?'show':''}" id="cond-${arc.id}">
+          <textarea placeholder="Enter conditions for approval..." id="condtext-${arc.id}">${arc[currentUser.username+"_conditions"]||""}</textarea>
+        </div>
+        <div class="private-note-label">Private note (only you can see this):</div>
+        <div class="private-note-area"><textarea placeholder="Add a private note..." id="note-${arc.id}">${arc[currentUser.username+"_note"]||""}</textarea></div>
+        <button class="btn-submit-vote" onclick="submitVote('${arc.id}')">Submit Vote</button>
+      </div>
+    </div>
+
+    <!-- Notify Mulloy (shows when majority reached) -->
+    ${isMajority ? `
+    <div class="notify-section">
+      <div class="notify-title">✅ Majority Reached — Decision: ${status}</div>
+      <div class="notify-desc">The board has reached a majority decision. Click below to preview and send the notification email to Mulloy Properties, who will forward to the homeowner.</div>
+      <button class="btn-notify ${arc.notified_mulloy==='Yes'?'sent':''}" onclick="openEmailModal('${arc.id}')">${arc.notified_mulloy==='Yes'?'✓ Notification Sent':'📧 Notify Mulloy'}</button>
+    </div>` : ""}
+
+  </div>
+</div>`;
+  }
+
+  // ── Violation Rendering ───────────────────────────────
+  function renderViolations(violations) {
+    document.getElementById("vioList").innerHTML = violations.length
+      ? violations.map(renderVioCard).join("")
+      : '<div class="empty-state"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><div class="empty-title">No violations found</div></div>';
+  }
+
+  function renderVioCard(vio) {
+    let comments = [];
+    try { comments = JSON.parse(vio.comments_json || "[]"); } catch {}
+    const commentsHtml = comments.map(c => `
+      <div class="comment-item">
+        <span class="comment-author">${c.author}</span>
+        <span class="comment-time">${new Date(c.timestamp).toLocaleString()}</span>
+        <div class="comment-text">${c.text}</div>
+      </div>`).join("");
+
+    return `
+<div class="vio-card" id="vio-${vio.id}">
+  <div class="vio-header" onclick="toggleCard('vio-body-${vio.id}')">
+    <div class="arc-meta">
+      <div class="arc-id-row">
+        <span class="arc-id">${vio.id}</span>
+        <span class="vio-type-badge">${vio.violation_type || "Violation"}</span>
+      </div>
+      <div class="arc-name">${vio.homeowner_name || "Unknown"}</div>
+      <div class="arc-address">📍 ${vio.address || "Unknown"}</div>
+      <div class="arc-date">${vio.date_received ? new Date(vio.date_received).toLocaleDateString() : ""} · ${vio.email_subject || ""}</div>
+    </div>
+    <div class="arc-status-col">
+      <span class="status-badge status-${vio.status || 'Open'}">${vio.status || "Open"}</span>
+    </div>
+  </div>
+  <div class="vio-body" id="vio-body-${vio.id}">
+    <div class="ai-summary-box">
+      <div class="ai-label">🤖 AI Summary</div>
+      <div class="ai-summary-text">${vio.ai_summary || "No summary available."}</div>
+      ${vio.ai_suggestion ? `<div style="margin-top:10px;font-size:13px;font-family:sans-serif;color:#555;"><strong>Suggested Action:</strong> ${vio.ai_suggestion}</div>` : ""}
+      <div class="ai-warning">⚠️ AI-generated — for board review only.</div>
+    </div>
+    ${vio.drive_folder_url ? `<div class="attachments-section"><div class="attachments-title">📎 Drive</div><a href="${vio.drive_folder_url}" target="_blank" class="attachment-btn">📁 View Drive Folder</a></div>` : ""}
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <label style="font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);">STATUS:</label>
+      <select class="status-select" onchange="updateStatus('${vio.id}','violation',this.value)">
+        <option ${vio.status==='Open'?'selected':''}>Open</option>
+        <option ${vio.status==='In Progress'?'selected':''}>In Progress</option>
+        <option ${vio.status==='Closed'?'selected':''}>Closed</option>
+      </select>
+    </div>
+    <div class="comments-section">
+      <div class="attachments-title">Comments</div>
+      <div id="comments-${vio.id}">${commentsHtml || '<p style="font-size:13px;font-family:sans-serif;color:var(--text-m);font-style:italic;">No comments yet.</p>'}</div>
+      <div class="add-comment">
+        <input type="text" id="commentInput-${vio.id}" placeholder="Add a comment..." onkeydown="if(event.key==='Enter')addComment('${vio.id}')"/>
+        <button class="btn-comment" onclick="addComment('${vio.id}')">Add</button>
+      </div>
+    </div>
+  </div>
+</div>`;
+  }
+
+  // ── Other Items Rendering ─────────────────────────────
+  function renderOthers(others) {
+    const attention = others.filter(o => o.needs_attention === "yes");
+    document.getElementById("othList").innerHTML = attention.length
+      ? attention.map(o => `
+<div class="other-card">
+  <span class="other-category">${o.category || "Other"}</span>
+  <div class="other-content">
+    <div class="other-subject">${o.subject || "No subject"}</div>
+    <div class="other-from">From: ${o.from || "Unknown"} · ${o.date_received ? new Date(o.date_received).toLocaleDateString() : ""}</div>
+    <div class="other-summary">${o.ai_summary || "No summary."}</div>
+  </div>
+</div>`).join("")
+      : '<div class="empty-state"><div class="empty-title">No items needing attention</div></div>';
+  }
+
+  // ── Activity Rendering ────────────────────────────────
+  function renderActivity(rows) {
+    document.getElementById("activityList").innerHTML = rows && rows.length
+      ? rows.slice(0, 30).map(row => `
+<div class="activity-item">
+  <div class="activity-dot"></div>
+  <div class="activity-text"><strong>${row[1] || "Unknown"}</strong> ${formatAction(row[2] || "")} on <strong>${row[3] || "-"}</strong>${row[5] ? ` — ${row[5]}` : ""}</div>
+  <div class="activity-time">${row[0] ? new Date(row[0]).toLocaleString() : ""}</div>
+</div>`).join("")
+      : '<p style="font-size:13px;font-family:sans-serif;color:var(--text-m);">No activity yet.</p>';
+  }
+
+  function formatAction(action) {
+    const map = { voted_Approve: "voted ✅ Approve", voted_Deny: "voted ❌ Deny", voted_Conditional: "voted 📋 Conditional", added_comment: "added a comment", viewed_dashboard: "viewed the dashboard", notified_mulloy: "sent Mulloy notification", status_changed_to_Open: "set status to Open", status_changed_to_Closed: "closed", status_changed_to_In_Progress: "set to In Progress" };
+    return map[action] || action.replace(/_/g, " ");
+  }
+
+  // ── UI Interactions ────────────────────────────────────
+  function toggleCard(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle("open");
+  }
+
+  function toggleAnalysis(id) {
+    const el = document.getElementById(id);
+    el.classList.toggle("open");
+    const btn = el.previousElementSibling;
+    btn.textContent = el.classList.contains("open") ? "▼ Hide analysis" : "▶ Show full analysis with pros & cons";
+  }
+
+  function toggleArchived(type) {
+    const el = document.getElementById(type + "Archived");
+    const btn = document.getElementById(type + "ArchiveBtn");
+    el.classList.toggle("show");
+    btn.textContent = el.classList.contains("show") ? "▼ Hide archived requests" : "▶ Show archived requests (90+ days old)";
+  }
+
+  function selectVote(arcId, vote) {
+    selectedVotes[arcId] = vote;
+    const condArea = document.getElementById("cond-" + arcId);
+    condArea.classList.toggle("show", vote === "Conditional");
+    document.querySelectorAll(`#arc-${arcId} .btn-vote`).forEach(btn => btn.classList.remove("selected"));
+    event.target.classList.add("selected");
+  }
+
+  async function submitVote(arcId) {
+    const vote = selectedVotes[arcId];
+    if (!vote) { showToast("Please select a vote first", "error"); return; }
+    const conditions = document.getElementById("condtext-" + arcId)?.value || "";
+    const note = document.getElementById("note-" + arcId)?.value || "";
+    const data = await api({ action: "castVote", data: { itemId: arcId, vote, conditions, note } });
+    if (!data) return;
+    showToast(`Vote submitted: ${vote}`, "success");
+    if (data.newStatus && data.newStatus !== "Open") showToast(`🎉 Majority reached! Status: ${data.newStatus}`, "success");
+    await loadDashboard();
+  }
+
+  async function addComment(vioId) {
+    const input = document.getElementById("commentInput-" + vioId);
+    const comment = input.value.trim();
+    if (!comment) return;
+    const data = await api({ action: "addComment", data: { itemId: vioId, comment } });
+    if (!data) return;
+    input.value = "";
+    const commentsDiv = document.getElementById("comments-" + vioId);
+    commentsDiv.innerHTML = data.comments.map(c => `
+      <div class="comment-item">
+        <span class="comment-author">${c.author}</span>
+        <span class="comment-time">${new Date(c.timestamp).toLocaleString()}</span>
+        <div class="comment-text">${c.text}</div>
+      </div>`).join("");
+    showToast("Comment added", "success");
+  }
+
+  async function updateStatus(itemId, itemType, status) {
+    await api({ action: "updateStatus", data: { itemId, itemType, status } });
+    showToast("Status updated to " + status, "success");
+  }
+
+  // ── Email Modal ───────────────────────────────────────
+  async function openEmailModal(arcId) {
+    currentEmailItemId = arcId;
+    const data = await api({ action: "getEmailPreview", data: { itemId: arcId } });
+    if (!data) return;
+    document.getElementById("emailTo").value = data.to;
+    document.getElementById("emailSubject").value = data.subject;
+    document.getElementById("emailBody").value = data.body;
+    document.getElementById("emailModal").classList.add("show");
+  }
+
+  function closeEmailModal() {
+    document.getElementById("emailModal").classList.remove("show");
+    currentEmailItemId = null;
+  }
+
+  async function sendNotification() {
+    const subject = document.getElementById("emailSubject").value;
+    const emailBody = document.getElementById("emailBody").value;
+    const data = await api({ action: "sendNotification", data: { itemId: currentEmailItemId, subject, emailBody } });
+    if (!data) return;
+    showToast("Email sent to Mulloy Properties!", "success");
+    closeEmailModal();
+    await loadDashboard();
+  }
+
+  // ── Scan Inbox ────────────────────────────────────────
+  async function runScan() {
+    document.getElementById("scanOverlay").classList.add("show");
+    document.getElementById("scanBtn").disabled = true;
+    try {
+      const res = await fetch("/.netlify/functions/scan-inbox", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ secret: prompt("Enter admin secret:") })
+      });
+      const data = await res.json();
+      if (data.success) {
+        localStorage.setItem("lastScan", new Date().toISOString());
+        document.getElementById("lastScan").textContent = "Last scan: " + new Date().toLocaleString();
+        showToast(`✅ ${data.message}`, "success");
+        await loadDashboard();
+      } else { showToast("Scan error: " + data.error, "error"); }
+    } catch (e) { showToast("Scan failed: " + e.message, "error"); }
+    document.getElementById("scanOverlay").classList.remove("show");
+    document.getElementById("scanBtn").disabled = false;
+  }
+
+  // ── Filter ────────────────────────────────────────────
+  function filterItems() {
+    const search = document.getElementById("searchInput").value.toLowerCase();
+    const status = document.getElementById("statusFilter").value;
+    const type = document.getElementById("typeFilter").value;
+    const filtered = dashData.arcs.filter(a => {
+      const matchSearch = !search || (a.homeowner_name + a.address + a.id + a.request_type).toLowerCase().includes(search);
+      const matchStatus = status === "all" || (a.final_status || "Open") === status;
+      const matchType = type === "all" || a.request_type === type;
+      return matchSearch && matchStatus && matchType;
+    });
+    renderARCs(filtered);
+  }
+
+  // ── Toast ─────────────────────────────────────────────
+  function showToast(msg, type = "success") {
+    const t = document.getElementById("toast");
+    t.textContent = msg; t.className = `toast show ${type}`;
+    setTimeout(() => t.classList.remove("show"), 4000);
+  }
+</script>
+</body>
+</html>
