@@ -321,102 +321,110 @@ exports.handler = async (event) => {
       getExistingIds(googleToken, "Other_Items", "A")
     ]);
 
-    // Fetch emails
-    console.log("Fetching emails...");
-    const messages = await listMessages(gmailToken, 150);
+    // Fetch emails — last 90 days, max 30 at a time
+    const { daysBack = 90, maxEmails = 30 } = JSON.parse(event.body || "{}");
+    console.log(`Fetching last ${maxEmails} emails from past ${daysBack} days...`);
+    const after = Math.floor((Date.now() - daysBack * 24 * 60 * 60 * 1000) / 1000);
+    const q = encodeURIComponent(`in:inbox after:${after}`);
+    const listRes = await httpsReq("GET", "gmail.googleapis.com",
+      `/gmail/v1/users/me/messages?maxResults=${maxEmails}&q=${q}`,
+      { Authorization: `Bearer ${gmailToken}` });
+    const messages = JSON.parse(listRes.body).messages || [];
+    console.log(`Found ${messages.length} emails to process`);
+
     const results = { arc: 0, violation: 0, other: 0, skipped: 0 };
+    const allIds = new Set([...existingArcIds, ...existingVioIds, ...existingOthIds]);
 
-    for (const msgRef of messages.slice(0, 150)) {
-      try {
-        const msg = await getMessage(gmailToken, msgRef.id);
-        const headers = msg.payload?.headers || [];
-        const emailData = {
-          id: msgRef.id,
-          from: getHeader(headers, "From"),
-          subject: getHeader(headers, "Subject"),
-          date: getHeader(headers, "Date"),
-          body: decodeBody(msg)
-        };
+    // Process in parallel batches of 5
+    const BATCH_SIZE = 5;
+    for (let i = 0; i < messages.length; i += BATCH_SIZE) {
+      const batch = messages.slice(i, i + BATCH_SIZE);
+      console.log(`Processing batch ${Math.floor(i/BATCH_SIZE)+1}/${Math.ceil(messages.length/BATCH_SIZE)}`);
 
-        // Skip if no meaningful content
-        if (!emailData.subject && !emailData.body) { results.skipped++; continue; }
+      await Promise.all(batch.map(async (msgRef) => {
+        try {
+          const msg = await getMessage(gmailToken, msgRef.id);
+          const headers = msg.payload?.headers || [];
+          const emailData = {
+            id: msgRef.id,
+            from: getHeader(headers, "From"),
+            subject: getHeader(headers, "Subject"),
+            date: getHeader(headers, "Date"),
+            body: decodeBody(msg)
+          };
 
-        const category = await categorizeEmail(emailData);
-        const analysis = await analyzeWithClaude(emailData, category);
+          if (!emailData.subject && !emailData.body) { results.skipped++; return; }
 
-        // Skip Other items that don't need attention
-        if (category === "Other" && analysis.needs_attention === "no") { results.skipped++; continue; }
+          // Categorize and analyze in parallel
+          const category = await categorizeEmail(emailData);
+          const analysis = await analyzeWithClaude(emailData, category);
 
-        const address = analysis.address || analysis.homeowner_name || "Unknown";
-        const allIds = new Set([...existingArcIds, ...existingVioIds, ...existingOthIds]);
-        const itemId = generateId(category, address, allIds);
+          if (category === "Other" && analysis.needs_attention === "no") { results.skipped++; return; }
 
-        // Get attachments
-        const attachments = getAttachments(msg);
-        const attachmentUrls = [];
+          const address = analysis.address || analysis.homeowner_name || "Unknown";
+          const itemId = generateId(category, address, allIds);
+          allIds.add(itemId);
 
-        if (category === "ARC" || attachments.length > 0) {
-          // Create Drive folder for this item
-          const folderName = `${itemId} — ${address.slice(0, 40)}`;
-          const parentFolder = category === "ARC" ? arcYearFolder : category === "Violation" ? vioYearFolder : othYearFolder;
-          const itemFolder = await createDriveFolder(googleToken, folderName, parentFolder);
+          const attachments = getAttachments(msg);
+          const attachmentUrls = [];
 
-          // Upload attachments
-          for (const att of attachments) {
-            try {
-              const attData = await downloadAttachment(gmailToken, msgRef.id, att.attachmentId);
-              const url = await uploadFileToDrive(googleToken, att.filename, att.mimeType, attData, itemFolder);
-              attachmentUrls.push(url);
-            } catch (e) { console.log(`Attachment error: ${e.message}`); }
-          }
+          if (category === "ARC" || attachments.length > 0) {
+            const folderName = `${itemId} — ${address.slice(0, 40)}`;
+            const parentFolder = category === "ARC" ? arcYearFolder : category === "Violation" ? vioYearFolder : othYearFolder;
+            const itemFolder = await createDriveFolder(googleToken, folderName, parentFolder);
 
-          // Save AI summary to Drive
-          const summaryText = `TWIN LAKES HOA — AI SUMMARY\n⚠️ AI GENERATED — FOR BOARD REVIEW ONLY\n\nItem ID: ${itemId}\nDate: ${emailData.date}\nFrom: ${emailData.from}\nSubject: ${emailData.subject}\n\nSUMMARY:\n${analysis.ai_summary}\n\nRECOMMENDATION: ${analysis.ai_recommendation || analysis.ai_suggestion}\n\nREASONING:\n${analysis.ai_reasoning || analysis.ai_suggestion}\n\nPROS: ${analysis.ai_pros || "N/A"}\nCONS: ${analysis.ai_cons || "N/A"}\n\nGenerated: ${new Date().toISOString()}`;
-          await uploadTextToDrive(googleToken, "ai_summary.txt", summaryText, itemFolder);
+            // Upload attachments in parallel
+            await Promise.all(attachments.map(async (att) => {
+              try {
+                const attData = await downloadAttachment(gmailToken, msgRef.id, att.attachmentId);
+                const url = await uploadFileToDrive(googleToken, att.filename, att.mimeType, attData, itemFolder);
+                attachmentUrls.push(url);
+              } catch (e) { console.log(`Attachment error: ${e.message}`); }
+            }));
 
-          const folderUrl = `https://drive.google.com/drive/folders/${itemFolder}`;
+            const summaryText = `TWIN LAKES HOA — AI SUMMARY\n⚠️ AI GENERATED — FOR BOARD REVIEW ONLY\n\nItem ID: ${itemId}\nDate: ${emailData.date}\nFrom: ${emailData.from}\nSubject: ${emailData.subject}\n\nSUMMARY:\n${analysis.ai_summary}\n\nRECOMMENDATION: ${analysis.ai_recommendation || analysis.ai_suggestion}\n\nREASONING:\n${analysis.ai_reasoning || analysis.ai_suggestion}\n\nPROS: ${analysis.ai_pros || "N/A"}\nCONS: ${analysis.ai_cons || "N/A"}\n\nGenerated: ${new Date().toISOString()}`;
+            await uploadTextToDrive(googleToken, "ai_summary.txt", summaryText, itemFolder);
+            const folderUrl = `https://drive.google.com/drive/folders/${itemFolder}`;
 
-          if (category === "ARC") {
-            await sheetsAppend(googleToken, "ARC_Requests", [
-              itemId, emailData.date, analysis.homeowner_name || "", analysis.homeowner_email || "",
-              analysis.address || "", analysis.request_type || "", analysis.description || "",
-              emailData.subject, folderUrl, attachmentUrls.join(", "),
-              analysis.ai_summary || "", analysis.ai_recommendation || "", analysis.ai_reasoning || "",
-              analysis.ai_pros || "", analysis.ai_cons || "",
-              "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "",
-              "0", "Open", "", "No", "", "0", analysis.conflict_flag || "no"
+            if (category === "ARC") {
+              await sheetsAppend(googleToken, "ARC_Requests", [
+                itemId, emailData.date, analysis.homeowner_name || "", analysis.homeowner_email || "",
+                analysis.address || "", analysis.request_type || "", analysis.description || "",
+                emailData.subject, folderUrl, attachmentUrls.join(", "),
+                analysis.ai_summary || "", analysis.ai_recommendation || "", analysis.ai_reasoning || "",
+                analysis.ai_pros || "", analysis.ai_cons || "",
+                "","","","","","","","","","","","","","","","","","","","","","",
+                "0","Open","","No","","0", analysis.conflict_flag || "no"
+              ]);
+              existingArcIds.add(itemId);
+              results.arc++;
+            } else if (category === "Violation") {
+              await sheetsAppend(googleToken, "Violations", [
+                itemId, emailData.date, analysis.homeowner_name || "", analysis.homeowner_email || "",
+                analysis.address || "", analysis.violation_type || "", analysis.description || "",
+                emailData.subject, folderUrl, analysis.ai_summary || "", analysis.ai_suggestion || "",
+                "Open", "[]", "0"
+              ]);
+              existingVioIds.add(itemId);
+              results.violation++;
+            }
+          } else {
+            await sheetsAppend(googleToken, "Other_Items", [
+              itemId, emailData.date, analysis.from || emailData.from, emailData.subject,
+              analysis.category || "Other", analysis.ai_summary || "",
+              "Open", "", analysis.needs_attention || "yes"
             ]);
-            existingArcIds.add(itemId);
-            results.arc++;
-          } else if (category === "Violation") {
-            await sheetsAppend(googleToken, "Violations", [
-              itemId, emailData.date, analysis.homeowner_name || "", analysis.homeowner_email || "",
-              analysis.address || "", analysis.violation_type || "", analysis.description || "",
-              emailData.subject, folderUrl, analysis.ai_summary || "", analysis.ai_suggestion || "",
-              "Open", "[]", "0"
-            ]);
-            existingVioIds.add(itemId);
-            results.violation++;
+            existingOthIds.add(itemId);
+            results.other++;
           }
-        } else {
-          // Other items - no folder needed if no attachments
-          await sheetsAppend(googleToken, "Other_Items", [
-            itemId, emailData.date, analysis.from || emailData.from, emailData.subject,
-            analysis.category || "Other", analysis.ai_summary || "",
-            "Open", "", analysis.needs_attention || "yes"
-          ]);
-          existingOthIds.add(itemId);
-          results.other++;
+        } catch (e) {
+          console.log(`Error processing message: ${e.message}`);
+          results.skipped++;
         }
-
-        allIds.add(itemId);
-
-      } catch (e) {
-        console.log(`Error processing message: ${e.message}`);
-        results.skipped++;
-      }
+      }));
     }
 
+    console.log(`Done: ${JSON.stringify(results)}`);
     return {
       statusCode: 200,
       body: JSON.stringify({ success: true, results, message: `Processed: ${results.arc} ARC, ${results.violation} violations, ${results.other} other, ${results.skipped} skipped` })

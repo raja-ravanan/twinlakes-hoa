@@ -265,7 +265,16 @@
       <div class="user-badge">Logged in as <strong id="userName">...</strong> · <span id="userRole">...</span></div>
       <div class="last-scan" id="lastScan">Last scan: never</div>
     </div>
-    <button class="btn-scan" id="scanBtn" style="display:none" onclick="runScan()">🔄 Scan Inbox</button>
+    <div style="position:relative;display:none" id="scanBtnWrap">
+      <button class="btn-scan" id="scanBtn" onclick="runScan(30,20)">🔄 Scan Inbox</button>
+      <button class="btn-scan" style="padding:8px 10px;margin-left:2px;border-radius:0 6px 6px 0;border-left:1px solid rgba(255,255,255,0.3)" onclick="document.getElementById('scanMenu').classList.toggle('show')">▾</button>
+      <div id="scanMenu" style="display:none;position:absolute;right:0;top:100%;background:#fff;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,0.2);padding:8px;min-width:200px;z-index:200;margin-top:4px;">
+        <div style="font-size:11px;font-family:sans-serif;font-weight:700;color:#999;padding:4px 8px;text-transform:uppercase;letter-spacing:1px;">Scan Options</div>
+        <button onclick="runScan(7,20);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Last 7 days (20 emails)</button>
+        <button onclick="runScan(30,20);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Last 30 days (20 emails)</button>
+        <button onclick="runScan(90,30);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Last 90 days (30 emails)</button>
+      </div>
+    </div>
     <button class="btn-logout" onclick="logout()">Sign Out</button>
   </div>
 </div>
@@ -378,7 +387,7 @@
     currentUser = JSON.parse(user);
     document.getElementById("userName").textContent = currentUser.name;
     document.getElementById("userRole").textContent = currentUser.role;
-    if (currentUser.isAdmin) document.getElementById("scanBtn").style.display = "flex";
+    if (currentUser.isAdmin) document.getElementById("scanBtnWrap").style.display = "flex";
     loadDashboard();
     const ls = localStorage.getItem("lastScan");
     if (ls) document.getElementById("lastScan").textContent = "Last scan: " + new Date(ls).toLocaleString();
@@ -754,13 +763,15 @@
   }
 
   // ── Scan Inbox ────────────────────────────────────────
-  async function runScan() {
+  async function runScan(daysBack = 30, maxEmails = 20) {
+    const secret = prompt("Enter admin secret:");
+    if (!secret) return;
     document.getElementById("scanOverlay").classList.add("show");
     document.getElementById("scanBtn").disabled = true;
     try {
       const res = await fetch("/.netlify/functions/scan-inbox", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ secret: prompt("Enter admin secret:") })
+        body: JSON.stringify({ secret, daysBack, maxEmails })
       });
       const data = await res.json();
       if (data.success) {
@@ -768,7 +779,7 @@
         document.getElementById("lastScan").textContent = "Last scan: " + new Date().toLocaleString();
         showToast(`✅ ${data.message}`, "success");
         await loadDashboard();
-      } else { showToast("Scan error: " + data.error, "error"); }
+      } else { showToast("Scan error: " + (data.error || "Unknown error"), "error"); }
     } catch (e) { showToast("Scan failed: " + e.message, "error"); }
     document.getElementById("scanOverlay").classList.remove("show");
     document.getElementById("scanBtn").disabled = false;
