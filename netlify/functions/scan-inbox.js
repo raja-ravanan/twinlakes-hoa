@@ -360,7 +360,7 @@ async function getResidentByEmail(token, email) {
     if (!residentCache) {
       const SHEET_ID = process.env.RESIDENT_SHEET_ID;
       const r = await httpsReq("GET", "sheets.googleapis.com",
-        `/v4/spreadsheets/${SHEET_ID}/values/A:F`,
+        `/v4/spreadsheets/${SHEET_ID}/values/A:D`,
         { Authorization: `Bearer ${token}` });
       const rows = JSON.parse(r.body).values || [];
       residentCache = rows.slice(1); // Skip header
@@ -368,11 +368,14 @@ async function getResidentByEmail(token, email) {
     }
     if (!email) return null;
     const emailLower = email.toLowerCase();
-    const match = residentCache.find(row => 
-      (row[2] || "").toLowerCase().includes(emailLower) || // email column
-      emailLower.includes((row[2] || "").toLowerCase())
-    );
-    if (match) return { name: match[0] || "", address: match[1] || "", email: match[2] || "" };
+    const match = residentCache.find(row => {
+      const rowEmails = (row[3] || "").toLowerCase(); // Column D = Email (may have multiple)
+      return rowEmails.includes(emailLower) || emailLower.includes(rowEmails.split(";")[0].trim());
+    });
+    if (match) {
+      const fullAddress = `${(match[1] || "").trim()} ${(match[2] || "").trim()}`.trim();
+      return { name: match[0] || "", address: fullAddress, email: (match[3] || "").split(";")[0].trim() };
+    }
   } catch(e) { console.log("Resident lookup error:", e.message); }
   return null;
 }
@@ -384,8 +387,11 @@ async function getResidentByAddress(token, address) {
     const addrLower = address.toLowerCase();
     const houseNum = addrLower.match(/\b(1[0-9]{4})\b/)?.[0];
     if (!houseNum) return null;
-    const match = residentCache.find(row => (row[1] || "").toLowerCase().includes(houseNum));
-    if (match) return { name: match[0] || "", address: match[1] || "", email: match[2] || "" };
+    const match = residentCache.find(row => (row[1] || "").toString().trim() === houseNum);
+    if (match) {
+      const fullAddress = `${(match[1] || "").trim()} ${(match[2] || "").trim()}`.trim();
+      return { name: match[0] || "", address: fullAddress, email: (match[3] || "").split(";")[0].trim() };
+    }
   } catch(e) {}
   return null;
 }
@@ -463,17 +469,17 @@ exports.handler = async (event) => {
             body: decodeBody(msg)
           };
 
-          if (!emailData.subject && !emailData.body) { results.skipped++; return; }
+          if (!emailData.subject && !emailData.body) { results.skipped++; continue; }
           
           // Skip if already processed in this run
-          if (processedGmailIds.has(msgRef.id)) { results.skipped++; return; }
+          if (processedGmailIds.has(msgRef.id)) { results.skipped++; continue; }
           processedGmailIds.add(msgRef.id);
 
           // Categorize and analyze in parallel
           const category = await categorizeEmail(emailData);
           const analysis = await analyzeWithClaude(emailData, category);
 
-          if (category === "Other" && analysis.needs_attention === "no") { results.skipped++; return; }
+          if (category === "Other" && analysis.needs_attention === "no") { results.skipped++; continue; }
 
           // Extract address from analysis - prefer numeric address for ID generation
           const address = analysis.address || "";
@@ -497,7 +503,7 @@ exports.handler = async (event) => {
           const attachments = getAttachments(msg);
           const attachmentUrls = [];
 
-          if (category === "ARC" || attachments.length > 0) {
+          if (category === "ARC" || category === "Violation") {
             const folderName = `${itemId} — ${address.slice(0, 40)}`;
             const parentFolder = category === "ARC" ? arcYearFolder : category === "Violation" ? vioYearFolder : othYearFolder;
             console.log(`Creating Drive folder: ${folderName} in parent ${parentFolder}`);
