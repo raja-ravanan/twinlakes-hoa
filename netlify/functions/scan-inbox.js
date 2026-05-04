@@ -272,13 +272,19 @@ You MUST respond with ONLY a valid JSON object, no other text:
   "attention_reason": "Specific reason board needs to act, or empty if no action needed"
 }`;
 
+  const isForwarded = emailData.isForwarded ? "YES - this email was forwarded by a board member or Mulloy Properties. The HOMEOWNER is the original sender buried in the email chain, NOT the board member who forwarded it." : "NO - direct email from homeowner";
+  
   const userPrompt = `Analyze this HOA email carefully and extract all details:
 
-FROM: ${emailData.from}
+FROM (may be forwarded): ${emailData.from}
+ORIGINAL SENDER (if different): ${emailData.originalFrom || emailData.from}
+IS FORWARDED EMAIL: ${isForwarded}
 DATE: ${emailData.date}
 SUBJECT: ${emailData.subject}
 BODY:
 ${emailData.body}
+
+IMPORTANT: If this is a forwarded email, the homeowner is the ORIGINAL author at the bottom of the chain, NOT the board member or Eddie Douglas who forwarded it. Extract the homeowner name and email from the original message.
 
 Remember: Return ONLY valid JSON, nothing else.`;
 
@@ -396,6 +402,63 @@ async function getResidentByAddress(token, address) {
   return null;
 }
 
+
+// ── Extract original sender from forwarded email chain ────
+function extractOriginalSender(emailData) {
+  const body = emailData.body || "";
+  const from = emailData.from || "";
+  
+  // Board member emails to exclude as senders
+  const boardEmails = [
+    "tonybackert@gmail.com", "12.yashumb@gmail.com", "mschnell194@gmail.com",
+    "ramana.nar@yahoo.com", "ratgreen13@gmail.com", "rraja14@gmail.com",
+    "hoa.twinlakes.board@gmail.com", "edouglas@mulloyproperties.com",
+    "peterfotos@yahoo.com"
+  ];
+  
+  const fromEmail = (from.match(/[\w.-]+@[\w.-]+\.\w+/) || [""])[0].toLowerCase();
+  const isBoardOrMulloy = boardEmails.some(b => fromEmail.includes(b.split("@")[0]));
+  
+  if (!isBoardOrMulloy) {
+    // Email is directly from homeowner
+    return { from: emailData.from, isForwarded: false };
+  }
+  
+  // This is forwarded - find original sender in body
+  // Look for patterns like "From: Name <email>" in the email body
+  const fromPatterns = [
+    /From:\s*([^<\n]+)<([^>]+)>/gi,
+    /From:\s*([^\n]+@[^\n]+)/gi,
+  ];
+  
+  const foundSenders = [];
+  for (const pattern of fromPatterns) {
+    let match;
+    while ((match = pattern.exec(body)) !== null) {
+      const name = match[1]?.trim() || "";
+      const email = (match[2] || match[1] || "").trim();
+      const emailAddr = (email.match(/[\w.-]+@[\w.-]+\.\w+/) || [""])[0].toLowerCase();
+      if (emailAddr && !boardEmails.some(b => emailAddr.includes(b.split("@")[0]))) {
+        foundSenders.push({ name, email: emailAddr });
+      }
+    }
+  }
+  
+  if (foundSenders.length > 0) {
+    const orig = foundSenders[foundSenders.length - 1]; // Last = original
+    console.log(`Found original sender: ${orig.name} <${orig.email}>`);
+    return { from: `${orig.name} <${orig.email}>`, isForwarded: true, originalEmail: orig.email, originalName: orig.name };
+  }
+  
+  return { from: emailData.from, isForwarded: isBoardOrMulloy };
+}
+
+// ── Dedup key: use ARC number from subject if present ─────
+function extractArcNumber(subject) {
+  const match = (subject || "").match(/ARC[-–]?\s*(\d{5})/i);
+  return match ? match[1] : null;
+}
+
 // ── Main Handler ──────────────────────────────────────────
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST")
@@ -461,12 +524,29 @@ exports.handler = async (event) => {
         try {
           const msg = await getMessage(gmailToken, msgRef.id);
           const headers = msg.payload?.headers || [];
+          const rawFrom = getHeader(headers, "From");
+          const subject = getHeader(headers, "Subject");
+          const body = decodeBody(msg);
+          
+          // Extract original sender from forwarded chains
+          const senderInfo = extractOriginalSender({ from: rawFrom, body, subject });
+          
+          // Dedup by ARC number in subject to prevent counting same request multiple times
+          const arcNum = extractArcNumber(subject);
+          if (arcNum && allIds.has("ARC-" + arcNum)) {
+            console.log(`Skipping duplicate ARC-${arcNum} from forwarded email`);
+            results.skipped++;
+            continue;
+          }
+          
           const emailData = {
             id: msgRef.id,
-            from: getHeader(headers, "From"),
-            subject: getHeader(headers, "Subject"),
+            from: senderInfo.from,
+            originalFrom: rawFrom,
+            subject,
             date: getHeader(headers, "Date"),
-            body: decodeBody(msg)
+            body,
+            isForwarded: senderInfo.isForwarded
           };
 
           if (!emailData.subject && !emailData.body) { results.skipped++; continue; }
