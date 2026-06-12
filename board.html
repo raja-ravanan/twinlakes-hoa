@@ -302,6 +302,7 @@
     <button class="tab active" onclick="switchTab('arc')">🏗️ ARC Requests <span class="tab-badge" id="arcBadge">0</span></button>
     <button class="tab" onclick="switchTab('violations')">⚠️ Violations <span class="tab-badge" id="vioBadge">0</span></button>
     <button class="tab" onclick="switchTab('other')">📂 Other Items <span class="tab-badge" id="othBadge">0</span></button>
+    <button class="tab" onclick="switchTab('requests')">📨 Resident Requests <span class="tab-badge" id="reqBadge">0</span></button>
     <button class="tab" onclick="switchTab('activity')">📋 Activity Log</button>
   </div>
 
@@ -341,6 +342,48 @@
     <div id="othList"><div class="loading"><div class="spinner"></div>Loading other items...</div></div>
   </div>
 
+  <div id="tab-requests" style="display:none">
+    <!-- Counters -->
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+      <div style="background:#fff;border:1px solid #e5e0d8;border-radius:10px;padding:12px 18px;min-width:110px;">
+        <div style="font-size:24px;font-weight:800;color:var(--navy);" id="reqStatNew">0</div>
+        <div style="font-size:11px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;">New</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e5e0d8;border-radius:10px;padding:12px 18px;min-width:110px;">
+        <div style="font-size:24px;font-weight:800;color:var(--gold);" id="reqStatProgress">0</div>
+        <div style="font-size:11px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;">In Progress</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e5e0d8;border-radius:10px;padding:12px 18px;min-width:110px;">
+        <div style="font-size:24px;font-weight:800;color:#3a7d44;" id="reqStatResolved">0</div>
+        <div style="font-size:11px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;">Resolved</div>
+      </div>
+      <div style="background:#fff;border:1px solid #e5e0d8;border-radius:10px;padding:12px 18px;min-width:110px;">
+        <div style="font-size:24px;font-weight:800;color:var(--text-d);" id="reqStatTotal">0</div>
+        <div style="font-size:11px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;">Total</div>
+      </div>
+    </div>
+    <!-- Filters -->
+    <div class="filter-bar" style="display:flex;">
+      <input type="text" class="search-input" id="reqSearch" placeholder="Search by name, address, subject, or ID..." oninput="renderRequests()"/>
+      <select class="filter-select" id="reqStatusFilter" onchange="renderRequests()">
+        <option value="all">All Statuses</option>
+        <option value="New">New</option>
+        <option value="In Progress">In Progress</option>
+        <option value="Resolved">Resolved</option>
+      </select>
+      <select class="filter-select" id="reqTypeFilter" onchange="renderRequests()">
+        <option value="all">All Types</option>
+        <option value="ARC">ARC</option>
+        <option value="Landscaping">Landscaping</option>
+        <option value="Irrigation">Irrigation</option>
+        <option value="Common Area / Repair">Common Area / Repair</option>
+        <option value="Violation / Complaint">Violation / Complaint</option>
+        <option value="General">General</option>
+      </select>
+    </div>
+    <div id="reqList"><div class="loading"><div class="spinner"></div>Loading resident requests...</div></div>
+  </div>
+
   <div id="tab-activity" style="display:none">
     <div class="activity-panel">
       <div class="activity-title">Recent Activity</div>
@@ -374,7 +417,7 @@
 
 <script>
   // ── State ─────────────────────────────────────────────
-  let dashData = { arcs: [], violations: [], others: [], activity: [] };
+  let dashData = { arcs: [], violations: [], others: [], requests: [], activity: [] };
   let currentUser = null;
   let currentEmailItemId = null;
   let selectedVotes = {};
@@ -438,14 +481,24 @@
     document.getElementById("arcBadge").textContent = openARCs;
     document.getElementById("vioBadge").textContent = openVios;
     document.getElementById("othBadge").textContent = dashData.others.filter(o => o.needs_attention === "yes").length;
+
+    const reqs = dashData.requests || [];
+    const newCount = reqs.filter(r => !r.status || r.status === "New").length;
+    document.getElementById("reqStatNew").textContent = newCount;
+    document.getElementById("reqStatProgress").textContent = reqs.filter(r => r.status === "In Progress").length;
+    document.getElementById("reqStatResolved").textContent = reqs.filter(r => r.status === "Resolved").length;
+    document.getElementById("reqStatTotal").textContent = reqs.length;
+    document.getElementById("reqBadge").textContent = newCount;
   }
 
   // ── Tabs ──────────────────────────────────────────────
   function switchTab(tab) {
-    ["arc","violations","other","activity"].forEach(t => {
-      document.getElementById("tab-" + (t === "violations" ? "violations" : t === "other" ? "other" : t === "activity" ? "activity" : "arc")).style.display = t === tab ? "block" : "none";
+    const tabs = ["arc","violations","other","requests","activity"];
+    tabs.forEach(t => {
+      const el = document.getElementById("tab-" + t);
+      if (el) el.style.display = t === tab ? "block" : "none";
     });
-    document.querySelectorAll(".tab").forEach((el, i) => el.classList.toggle("active", ["arc","violations","other","activity"][i] === tab));
+    document.querySelectorAll(".tab").forEach((el, i) => el.classList.toggle("active", tabs[i] === tab));
     document.getElementById("filter-bar") && (document.getElementById("filter-bar").style.display = tab === "arc" ? "flex" : "none");
   }
 
@@ -454,6 +507,7 @@
     renderARCs(dashData.arcs);
     renderViolations(dashData.violations);
     renderOthers(dashData.others);
+    renderRequests();
     renderActivity(dashData.activity);
   }
 
@@ -657,6 +711,115 @@
       : '<div class="empty-state"><div class="empty-title">No items needing attention</div></div>';
   }
 
+  // ── Resident Requests Rendering ───────────────────────
+  function renderRequests() {
+    const reqs = (dashData.requests || []).slice().reverse(); // newest first
+    const q = (document.getElementById("reqSearch")?.value || "").toLowerCase();
+    const sf = document.getElementById("reqStatusFilter")?.value || "all";
+    const tf = document.getElementById("reqTypeFilter")?.value || "all";
+
+    const filtered = reqs.filter(r => {
+      const status = r.status || "New";
+      if (sf !== "all" && status !== sf) return false;
+      if (tf !== "all" && r.request_type !== tf) return false;
+      if (q) {
+        const hay = `${r.id} ${r.name} ${r.address} ${r.subject} ${r.description}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    document.getElementById("reqList").innerHTML = filtered.length
+      ? filtered.map(renderRequestCard).join("")
+      : '<div class="empty-state"><div class="empty-title">No resident requests found</div></div>';
+  }
+
+  function escapeHtml(s) {
+    return String(s || "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+  }
+
+  function renderRequestCard(r) {
+    const status = r.status || "New";
+    let notes = [];
+    try { notes = JSON.parse(r.board_notes || "[]"); } catch {}
+    const notesHtml = notes.map(n => `
+      <div class="comment-item">
+        <span class="comment-author">${escapeHtml(n.author)}</span>
+        <span class="comment-time">${new Date(n.timestamp).toLocaleString()}</span>
+        <div class="comment-text">${escapeHtml(n.text)}</div>
+      </div>`).join("");
+
+    return `
+<div class="vio-card" id="req-${r.id}">
+  <div class="vio-header" onclick="toggleCard('req-body-${r.id}')">
+    <div class="arc-meta">
+      <div class="arc-id-row">
+        <span class="arc-id">${r.id}</span>
+        <span class="vio-type-badge">${escapeHtml(r.request_type || "General")}</span>
+      </div>
+      <div class="arc-name">${escapeHtml(r.name || "Unknown")}</div>
+      <div class="arc-address">📍 ${escapeHtml(r.address || "Not provided")}</div>
+      <div class="arc-date">${r.date_received ? new Date(r.date_received).toLocaleDateString() : ""} · ${escapeHtml(r.subject || "")}</div>
+    </div>
+    <div class="arc-status-col">
+      <span class="status-badge status-${status === "Resolved" ? "Approved" : status === "In Progress" ? "Open" : "Open"}">${status}</span>
+    </div>
+  </div>
+  <div class="vio-body" id="req-body-${r.id}">
+    <div class="ai-summary-box">
+      <div class="ai-label">✉️ Resident's Message</div>
+      <div class="ai-summary-text">${escapeHtml(r.description || "")}</div>
+      <div style="margin-top:10px;font-size:13px;font-family:sans-serif;color:#555;"><strong>Contact:</strong> ${escapeHtml(r.email || "")}${r.sent_to ? ` · <strong>Sent to:</strong> ${escapeHtml(r.sent_to)}` : ""}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
+      <label style="font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);">STATUS:</label>
+      <select class="status-select" onchange="updateRequestStatus('${r.id}',this.value)">
+        <option ${status==='New'?'selected':''}>New</option>
+        <option ${status==='In Progress'?'selected':''}>In Progress</option>
+        <option ${status==='Resolved'?'selected':''}>Resolved</option>
+      </select>
+      <a href="mailto:${encodeURIComponent(r.email || "")}?subject=${encodeURIComponent("Re: " + (r.subject || "Your request") + " (" + r.id + ")")}" class="attachment-btn" style="text-decoration:none;">✉️ Reply to resident</a>
+    </div>
+    <div class="comments-section">
+      <div class="attachments-title">Internal Board Notes</div>
+      <div id="reqnotes-${r.id}">${notesHtml || '<p style="font-size:13px;font-family:sans-serif;color:var(--text-m);font-style:italic;">No notes yet.</p>'}</div>
+      <div class="add-comment">
+        <input type="text" id="reqNoteInput-${r.id}" placeholder="Add an internal note..." onkeydown="if(event.key==='Enter')addRequestNote('${r.id}')"/>
+        <button class="btn-comment" onclick="addRequestNote('${r.id}')">Add</button>
+      </div>
+    </div>
+  </div>
+</div>`;
+  }
+
+  async function updateRequestStatus(id, status) {
+    const data = await api({ action: "updateRequestStatus", data: { itemId: id, status } });
+    if (!data) return;
+    const rq = (dashData.requests || []).find(r => r.id === id);
+    if (rq) rq.status = status;
+    updateStats();
+    showToast(`Status updated to ${status}`, "success");
+  }
+
+  async function addRequestNote(id) {
+    const input = document.getElementById("reqNoteInput-" + id);
+    const note = (input?.value || "").trim();
+    if (!note) return;
+    const data = await api({ action: "addRequestNote", data: { itemId: id, note } });
+    if (!data) return;
+    const rq = (dashData.requests || []).find(r => r.id === id);
+    if (rq) rq.board_notes = JSON.stringify(data.notes || []);
+    if (input) input.value = "";
+    const notesDiv = document.getElementById("reqnotes-" + id);
+    if (notesDiv) notesDiv.innerHTML = (data.notes || []).map(n => `
+      <div class="comment-item">
+        <span class="comment-author">${escapeHtml(n.author)}</span>
+        <span class="comment-time">${new Date(n.timestamp).toLocaleString()}</span>
+        <div class="comment-text">${escapeHtml(n.text)}</div>
+      </div>`).join("");
+    showToast("Note added", "success");
+  }
+
   // ── Activity Rendering ────────────────────────────────
   function renderActivity(rows) {
     document.getElementById("activityList").innerHTML = rows && rows.length
@@ -670,7 +833,7 @@
   }
 
   function formatAction(action) {
-    const map = { voted_Approve: "voted ✅ Approve", voted_Deny: "voted ❌ Deny", voted_Conditional: "voted 📋 Conditional", added_comment: "added a comment", viewed_dashboard: "viewed the dashboard", notified_mulloy: "sent Mulloy notification", status_changed_to_Open: "set status to Open", status_changed_to_Closed: "closed", status_changed_to_In_Progress: "set to In Progress" };
+    const map = { voted_Approve: "voted ✅ Approve", voted_Deny: "voted ❌ Deny", voted_Conditional: "voted 📋 Conditional", added_comment: "added a comment", added_note: "added a note", viewed_dashboard: "viewed the dashboard", notified_mulloy: "sent Mulloy notification", status_changed_to_Open: "set status to Open", status_changed_to_Closed: "closed", status_changed_to_In_Progress: "set to In Progress", status_changed_to_New: "set status to New", status_changed_to_Resolved: "marked Resolved" };
     return map[action] || action.replace(/_/g, " ");
   }
 

@@ -86,7 +86,7 @@ async function ensureSheetTabs(token) {
   const spreadsheet = JSON.parse(meta.body);
   const existing = (spreadsheet.sheets || []).map(s => s.properties.title);
 
-  const needed = ["ARC_Requests", "Violations", "Other_Items", "Activity_Log"];
+  const needed = ["ARC_Requests", "Violations", "Other_Items", "Activity_Log", "Resident_Requests"];
   const toAdd = needed.filter(n => !existing.includes(n));
 
   if (toAdd.length > 0) {
@@ -100,7 +100,8 @@ async function ensureSheetTabs(token) {
       ARC_Requests: [["id","date_received","homeowner_name","homeowner_email","address","request_type","description","email_subject","drive_folder_url","attachment_urls","ai_summary","ai_recommendation","ai_reasoning","ai_pros","ai_cons","tony_vote","tony_conditions","tony_note","tony_voted_at","yashu_vote","yashu_conditions","yashu_note","yashu_voted_at","ramana_vote","ramana_conditions","ramana_note","ramana_voted_at","raja_vote","raja_conditions","raja_note","raja_voted_at","aimee_vote","aimee_conditions","aimee_note","aimee_voted_at","mike_vote","mike_conditions","mike_note","mike_voted_at","vote_count","final_status","consolidated_conditions","notified_mulloy","notified_at","days_open","conflict_flag"]],
       Violations: [["id","date_received","homeowner_name","homeowner_email","address","violation_type","description","email_subject","drive_folder_url","ai_summary","ai_suggestion","status","comments_json","days_open"]],
       Other_Items: [["id","date_received","from","subject","category","ai_summary","status","drive_folder_url","needs_attention"]],
-      Activity_Log: [["timestamp","board_member","action","item_id","item_type","details"]]
+      Activity_Log: [["timestamp","board_member","action","item_id","item_type","details"]],
+      Resident_Requests: [["id","date_received","request_type","name","email","address","subject","description","sent_to","status","assigned_to","board_notes"]]
     };
     for (const tab of toAdd) {
       await sheetsUpdate(token, `${tab}!A1`, headers[tab]);
@@ -162,10 +163,11 @@ exports.handler = async (event) => {
 
   // ── GET DASHBOARD DATA ──
   if (action === "getDashboard") {
-    const [arcs, violations, others, activityRows] = await Promise.all([
+    const [arcs, violations, others, requests, activityRows] = await Promise.all([
       getSheetData(googleToken, "ARC_Requests"),
       getSheetData(googleToken, "Violations"),
       getSheetData(googleToken, "Other_Items"),
+      getSheetData(googleToken, "Resident_Requests"),
       sheetsGet(googleToken, "Activity_Log!A:F").then(r => (r.values || []).slice(1).slice(-50).reverse())
     ]);
 
@@ -178,13 +180,41 @@ exports.handler = async (event) => {
     violations.forEach(v => {
       v.days_open = v.date_received ? Math.floor((now - new Date(v.date_received).getTime()) / 86400000) : 0;
     });
+    requests.forEach(rq => {
+      rq.days_open = rq.date_received ? Math.floor((now - new Date(rq.date_received).getTime()) / 86400000) : 0;
+    });
 
     await logActivity(googleToken, session.username, "viewed_dashboard", "-", "dashboard", "");
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ arcs, violations, others, activity: activityRows })
+      body: JSON.stringify({ arcs, violations, others, requests, activity: activityRows })
     };
+  }
+
+  // ── UPDATE RESIDENT REQUEST STATUS ──
+  if (action === "updateRequestStatus") {
+    const { itemId, status } = data;
+    const items = await getSheetData(googleToken, "Resident_Requests");
+    const rowIndex = items.findIndex(i => i.id === itemId);
+    if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+    await sheetsUpdate(googleToken, `Resident_Requests!J${rowIndex + 2}`, [[status]]);
+    await logActivity(googleToken, session.username, `status_changed_to_${status.replace(/ /g, "_")}`, itemId, "request", "");
+    return { statusCode: 200, body: JSON.stringify({ success: true }) };
+  }
+
+  // ── ADD INTERNAL NOTE TO RESIDENT REQUEST ──
+  if (action === "addRequestNote") {
+    const { itemId, note } = data;
+    const items = await getSheetData(googleToken, "Resident_Requests");
+    const rowIndex = items.findIndex(i => i.id === itemId);
+    if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+    let notes = [];
+    try { notes = JSON.parse(items[rowIndex].board_notes || "[]"); } catch {}
+    notes.push({ author: session.name, username: session.username, text: note, timestamp: new Date().toISOString() });
+    await sheetsUpdate(googleToken, `Resident_Requests!L${rowIndex + 2}`, [[JSON.stringify(notes)]]);
+    await logActivity(googleToken, session.username, "added_note", itemId, "request", note.slice(0, 100));
+    return { statusCode: 200, body: JSON.stringify({ success: true, notes }) };
   }
 
   // ── CAST VOTE ──

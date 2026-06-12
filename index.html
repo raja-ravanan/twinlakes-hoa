@@ -1177,16 +1177,125 @@
             <div class="form-group"><label for="f-addr">Address</label><input type="text" id="f-addr" placeholder="Your street address" autocomplete="street-address" /></div>
             <div class="form-group"><label for="f-email">Email address</label><input type="email" id="f-email" placeholder="your@email.com" autocomplete="email" /></div>
             <div class="form-group">
+              <label for="f-type">Request type</label>
+              <select id="f-type" onchange="onTypeChange()">
+                <option value="">— Select request type —</option>
+                <option value="ARC">ARC / Architectural Request (fence, deck, paint, etc.)</option>
+                <option value="Landscaping">Landscaping / Lawn / Trees</option>
+                <option value="Irrigation">Irrigation Problem</option>
+                <option value="Common Area / Repair">Common Area / Repair (pothole, sidewalk, pond, lighting)</option>
+                <option value="Violation / Complaint">Violation / Complaint (pets, parking, noise)</option>
+                <option value="General">General Question / Other</option>
+              </select>
+            </div>
+            <div class="form-group">
               <label for="f-to">Send to</label>
               <select id="f-to">
                 <option value="">— Select recipient —</option>
                 <option value="mulloy">Mulloy Properties &mdash; Eddie Douglas</option>
                 <option value="board">HOA Board</option>
-                <option value="both">Both</option>
+                <option value="both" selected>Both (recommended)</option>
               </select>
             </div>
             <div class="form-group"><label for="f-subject">Subject</label><input type="text" id="f-subject" placeholder="Brief subject" /></div>
-            <div class="form-group"><label for="f-message">Message</label><textarea id="f-message" placeholder="Describe your question or concern..."></textarea></div>
+            <div class="form-group"><label for="f-message" id="f-message-label">Message</label><textarea id="f-message" placeholder="Describe your question or concern..."></textarea></div>
+
+            <!-- ══ ARC REQUEST SECTION (shown only when Request type = ARC) ══ -->
+            <style>
+              .arc-q { display:flex; justify-content:space-between; align-items:center; gap:12px; font-size:13px; color:#333; padding:9px 0; border-bottom:1px solid #efeae1; }
+              .arc-q span { flex:1; }
+              .arc-q select { width:90px; flex-shrink:0; }
+            </style>
+            <div id="arc-section" style="display:none;border-top:2px solid #C9A84C;margin-top:8px;padding-top:16px;">
+              <p style="font-size:13px;color:#1B4B7A;font-weight:700;margin:0 0 14px;">Architectural Request Details</p>
+              <p style="font-size:12px;color:#777;margin:-8px 0 16px;">This replaces the paper ARC form. Please complete all applicable fields so the board can review your request.</p>
+
+              <div class="form-group">
+                <label for="arc-subtype">What are you requesting?</label>
+                <select id="arc-subtype">
+                  <option value="">— Select —</option>
+                  <option>Fence</option>
+                  <option>Deck / Patio</option>
+                  <option>Landscaping</option>
+                  <option>Paint / Exterior Color</option>
+                  <option>Lighting</option>
+                  <option>Generator</option>
+                  <option>Shed / Structure</option>
+                  <option>Addition</option>
+                  <option>Other</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="arc-phone">Phone number</label>
+                <div style="display:flex;gap:8px;">
+                  <input type="tel" id="arc-phone" placeholder="(502) 555-1234" autocomplete="tel" style="flex:1;" />
+                  <select id="arc-phone-type" style="width:110px;">
+                    <option value="Cell">Cell</option>
+                    <option value="Home">Home</option>
+                    <option value="Work">Work</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="arc-materials">Construction materials &amp; how they match the original building</label>
+                <textarea id="arc-materials" placeholder="Describe materials, colors, and how they conform to the existing home/community standards..."></textarea>
+              </div>
+
+              <div class="form-group">
+                <label>Project will be completed by</label>
+                <div style="display:flex;gap:18px;font-size:14px;">
+                  <label style="font-weight:400;"><input type="radio" name="arc-by" value="Homeowner" /> Homeowner</label>
+                  <label style="font-weight:400;"><input type="radio" name="arc-by" value="Contractor" /> Contractor</label>
+                  <label style="font-weight:400;"><input type="radio" name="arc-by" value="Both" /> Both</label>
+                </div>
+              </div>
+
+              <div style="display:flex;gap:12px;">
+                <div class="form-group" style="flex:1;"><label for="arc-start">Anticipated start date</label><input type="date" id="arc-start" /></div>
+                <div class="form-group" style="flex:1;"><label for="arc-end">Anticipated end date</label><input type="date" id="arc-end" /></div>
+              </div>
+              <div class="form-group"><label for="arc-duration">Approx. time to complete after board approval</label><input type="text" id="arc-duration" placeholder="e.g. 1–2 days" /></div>
+
+              <!-- Yes / No / N-A questions -->
+              <div class="arc-q"><span>Will you obtain any building permits necessary before work begins?</span>
+                <select id="arc-permits"><option value="">—</option><option>Yes</option><option>No</option><option>N/A</option></select></div>
+              <div class="arc-q"><span>For landscape changes: are the required drawings attached below?</span>
+                <select id="arc-landscape"><option value="">—</option><option>Yes</option><option>No</option><option>N/A</option></select></div>
+              <div class="arc-q"><span>Do you understand irrigation marking &amp; repair is your responsibility?</span>
+                <select id="arc-irrigation"><option value="">—</option><option>Yes</option><option>No</option><option>N/A</option></select></div>
+              <div class="arc-q"><span>Have you read the Master Deed, Bylaws, Rules &amp; Restrictions for compliance?</span>
+                <select id="arc-rules"><option value="">—</option><option>Yes</option><option>No</option></select></div>
+              <div class="arc-q"><span>Do you understand applications are not processed if dues/fees are in arrears?</span>
+                <select id="arc-arrears"><option value="">—</option><option>Yes</option><option>No</option></select></div>
+
+              <!-- Attachments -->
+              <div class="form-group" style="margin-top:14px;">
+                <label for="arc-files">Attachments — plot plan <span style="color:#b00;">(required)</span>, plus any drawings/photos</label>
+                <input type="file" id="arc-files" multiple accept="image/*,.pdf" />
+                <p style="font-size:11px;color:#777;margin:6px 0 0;">Accepted: images &amp; PDF. Max ~4.5 MB total. Include a plot plan showing location &amp; dimensions.</p>
+                <div style="font-size:13px;margin-top:10px;display:flex;flex-direction:column;gap:6px;">
+                  <label style="font-weight:400;"><input type="checkbox" id="arc-att-plot" /> Plot plan (location &amp; dimensions)</label>
+                  <label style="font-weight:400;"><input type="checkbox" id="arc-att-plans" /> Blueprints / plans / working drawings</label>
+                  <label style="font-weight:400;"><input type="checkbox" id="arc-att-similar" /> Photo / brochure of a similar completed project</label>
+                </div>
+              </div>
+
+              <!-- Acknowledgment / e-signature -->
+              <div style="background:#FAF7F2;border:1px solid #e5e0d8;border-radius:8px;padding:14px;margin-top:8px;">
+                <label style="font-weight:400;font-size:13px;display:flex;gap:8px;align-items:flex-start;">
+                  <input type="checkbox" id="arc-ack" style="margin-top:3px;" />
+                  <span>I have read and agree to the Lot Owner responsibilities and community guidelines. I understand I am responsible for permits, compliance, contractor work, and any damage, and that no work may begin until the HOA Board approves this request in writing.</span>
+                </label>
+                <div class="form-group" style="margin-top:12px;margin-bottom:0;">
+                  <label for="arc-signature">Type your full name as your electronic signature</label>
+                  <input type="text" id="arc-signature" placeholder="Full legal name" />
+                </div>
+              </div>
+            </div>
+            <!-- ══ END ARC SECTION ══ -->
+
             <button class="form-submit" onclick="submitForm()">Send Message</button>
             <p class="form-note">Your message will be sent to the recipient selected above.</p>
             <div class="success-msg" id="success-msg"><strong>Message sent!</strong> Thank you. We&rsquo;ll be in touch within 2&ndash;3 business days.</div>
