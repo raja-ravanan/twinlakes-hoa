@@ -191,6 +191,50 @@ function showSuccess(refId) {
 }
 
 /* ═══════════════════════════════════════════════════════
+   COMMUNITY ANNOUNCEMENTS (posted from the Board Portal)
+   ═══════════════════════════════════════════════════════ */
+
+function escapeHtmlText(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+function formatAnnouncementDate(iso) {
+  var d = new Date(iso);
+  if (isNaN(d)) return '';
+  return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+}
+
+async function loadAnnouncements() {
+  var container = document.getElementById('dynamic-announcements');
+  if (!container) return;
+  try {
+    var res = await fetch('/.netlify/functions/board-api', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'getPublicAnnouncements' })
+    });
+    var data = await res.json();
+    var list = (data && data.announcements) || [];
+    if (!list.length) { container.innerHTML = ''; return; }
+    container.innerHTML = list.map(function(a) {
+      var bodyHtml = escapeHtmlText(a.body).replace(/\n/g, '<br>');
+      var dateStr = formatAnnouncementDate(a.date_posted);
+      return '<div class="notice-card notice-gold" style="grid-column:1/-1;">' +
+        '<div class="notice-badge">Announcement' + (dateStr ? ' &middot; ' + dateStr : '') + '</div>' +
+        '<h3>' + escapeHtmlText(a.title) + '</h3>' +
+        '<p>' + bodyHtml + '</p>' +
+      '</div>';
+    }).join('');
+  } catch (e) {
+    container.innerHTML = '';
+  }
+}
+
+document.addEventListener('DOMContentLoaded', loadAnnouncements);
+
+/* ═══════════════════════════════════════════════════════
    CHAT WIDGET
    ═══════════════════════════════════════════════════════ */
 

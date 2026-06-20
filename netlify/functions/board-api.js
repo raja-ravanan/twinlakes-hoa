@@ -86,7 +86,7 @@ async function ensureSheetTabs(token) {
   const spreadsheet = JSON.parse(meta.body);
   const existing = (spreadsheet.sheets || []).map(s => s.properties.title);
 
-  const needed = ["ARC_Requests", "Violations", "Other_Items", "Activity_Log", "Resident_Requests"];
+  const needed = ["ARC_Requests", "Violations", "Other_Items", "Activity_Log", "Resident_Requests", "Announcements"];
   const toAdd = needed.filter(n => !existing.includes(n));
 
   if (toAdd.length > 0) {
@@ -101,7 +101,8 @@ async function ensureSheetTabs(token) {
       Violations: [["id","date_received","homeowner_name","homeowner_email","address","violation_type","description","email_subject","drive_folder_url","ai_summary","ai_suggestion","status","comments_json","days_open"]],
       Other_Items: [["id","date_received","from","subject","category","ai_summary","status","drive_folder_url","needs_attention"]],
       Activity_Log: [["timestamp","board_member","action","item_id","item_type","details"]],
-      Resident_Requests: [["id","date_received","request_type","name","email","address","subject","description","sent_to","status","assigned_to","board_notes"]]
+      Resident_Requests: [["id","date_received","request_type","name","email","address","subject","description","sent_to","status","assigned_to","board_notes"]],
+      Announcements: [["id","date_posted","title","body","status","posted_by"]]
     };
     for (const tab of toAdd) {
       await sheetsUpdate(token, `${tab}!A1`, headers[tab]);
@@ -147,6 +148,22 @@ exports.handler = async (event) => {
     return { statusCode: 200, body: JSON.stringify({ token, name: member.name, role: member.role, isAdmin: member.isAdmin }) };
   }
 
+  // ── PUBLIC: GET PUBLISHED ANNOUNCEMENTS (no auth — read by the public website) ──
+  if (action === "getPublicAnnouncements") {
+    const publicToken = await getGoogleToken(SA_EMAIL, SA_KEY, SCOPES);
+    await ensureSheetTabs(publicToken);
+    const all = await getSheetData(publicToken, "Announcements");
+    const published = all
+      .filter(a => (a.status || "published") === "published")
+      .map(a => ({ id: a.id, date_posted: a.date_posted, title: a.title, body: a.body }))
+      .sort((x, y) => new Date(y.date_posted) - new Date(x.date_posted));
+    return {
+      statusCode: 200,
+      headers: { "Access-Control-Allow-Origin": "*" },
+      body: JSON.stringify({ announcements: published })
+    };
+  }
+
   // ── AUTH CHECK ──
   const authHeader = event.headers?.authorization || "";
   const sessionToken = authHeader.replace("Bearer ", "");
@@ -163,13 +180,15 @@ exports.handler = async (event) => {
 
   // ── GET DASHBOARD DATA ──
   if (action === "getDashboard") {
-    const [arcs, violations, others, requests, activityRows] = await Promise.all([
+    const [arcs, violations, others, requests, announcements, activityRows] = await Promise.all([
       getSheetData(googleToken, "ARC_Requests"),
       getSheetData(googleToken, "Violations"),
       getSheetData(googleToken, "Other_Items"),
       getSheetData(googleToken, "Resident_Requests"),
+      getSheetData(googleToken, "Announcements"),
       sheetsGet(googleToken, "Activity_Log!A:F").then(r => (r.values || []).slice(1).slice(-50).reverse())
     ]);
+    announcements.sort((x, y) => new Date(y.date_posted) - new Date(x.date_posted));
 
     // Calculate days open
     const now = Date.now();
@@ -188,8 +207,50 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ arcs, violations, others, requests, activity: activityRows })
+      body: JSON.stringify({ arcs, violations, others, requests, announcements, activity: activityRows })
     };
+  }
+
+  // ── ADD ANNOUNCEMENT ──
+  if (action === "addAnnouncement") {
+    const title = (data?.title || "").trim();
+    const text  = (data?.body || "").trim();
+    if (!title || !text) return { statusCode: 400, body: JSON.stringify({ error: "Title and body are required" }) };
+    const id = "ANN-" + Date.now().toString(36).toUpperCase();
+    await sheetsAppend(googleToken, "Announcements!A:F", [[
+      id, new Date().toISOString(), title, text, "published", session.name
+    ]]);
+    await logActivity(googleToken, session.username, "posted_announcement", id, "announcement", title.slice(0, 100));
+    return { statusCode: 200, body: JSON.stringify({ success: true, id }) };
+  }
+
+  // ── UPDATE ANNOUNCEMENT (edit text and/or change published status) ──
+  if (action === "updateAnnouncement") {
+    const { itemId, title, body: text, status } = data || {};
+    const items = await getSheetData(googleToken, "Announcements");
+    const rowIndex = items.findIndex(i => i.id === itemId);
+    if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+    const row = rowIndex + 2;
+    const updates = [];
+    if (typeof title === "string")  updates.push(sheetsUpdate(googleToken, `Announcements!C${row}`, [[title.trim()]]));
+    if (typeof text === "string")   updates.push(sheetsUpdate(googleToken, `Announcements!D${row}`, [[text.trim()]]));
+    if (typeof status === "string") updates.push(sheetsUpdate(googleToken, `Announcements!E${row}`, [[status]]));
+    await Promise.all(updates);
+    await logActivity(googleToken, session.username, status ? `announcement_${status}` : "edited_announcement", itemId, "announcement", "");
+    return { statusCode: 200, body: JSON.stringify({ success: true }) };
+  }
+
+  // ── DELETE ANNOUNCEMENT (mark deleted; row is blanked so it disappears everywhere) ──
+  if (action === "deleteAnnouncement") {
+    const { itemId } = data || {};
+    const items = await getSheetData(googleToken, "Announcements");
+    const rowIndex = items.findIndex(i => i.id === itemId);
+    if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+    const row = rowIndex + 2;
+    // Clear the row's content (A:F) so it no longer appears on the site or portal
+    await sheetsUpdate(googleToken, `Announcements!A${row}:F${row}`, [["", "", "", "", "deleted", ""]]);
+    await logActivity(googleToken, session.username, "deleted_announcement", itemId, "announcement", "");
+    return { statusCode: 200, body: JSON.stringify({ success: true }) };
   }
 
   // ── UPDATE RESIDENT REQUEST STATUS ──
