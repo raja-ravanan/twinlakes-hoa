@@ -79,6 +79,14 @@ async function refreshGmailToken() {
   return r.access_token;
 }
 
+// RFC 2047 encoded-word: keeps non-ASCII header values (e.g. em dashes in the
+// subject) from showing as mojibake in mail clients. ASCII passes through.
+function encodeHeader(value) {
+  const s = String(value == null ? "" : value);
+  if (/^[\x00-\x7F]*$/.test(s)) return s;
+  return `=?UTF-8?B?${Buffer.from(s, "utf8").toString("base64")}?=`;
+}
+
 function buildEmail(to, subject, text, replyTo) {
   const lines = [
     `From: Twin Lakes HOA <${BOARD_EMAIL}>`,
@@ -86,9 +94,10 @@ function buildEmail(to, subject, text, replyTo) {
   ];
   if (replyTo) lines.push(`Reply-To: ${replyTo}`);
   lines.push(
-    `Subject: ${subject}`,
+    `Subject: ${encodeHeader(subject)}`,
     `MIME-Version: 1.0`,
     `Content-Type: text/plain; charset=utf-8`,
+    `Content-Transfer-Encoding: 8bit`,
     ``,
     text
   );
@@ -112,13 +121,13 @@ function buildEmailWithAttachments(to, subject, text, replyTo, files) {
   ];
   if (replyTo) head.push(`Reply-To: ${replyTo}`);
   head.push(
-    `Subject: ${subject}`,
+    `Subject: ${encodeHeader(subject)}`,
     `MIME-Version: 1.0`,
     `Content-Type: multipart/mixed; boundary="${boundary}"`,
     ``,
     `--${boundary}`,
     `Content-Type: text/plain; charset=utf-8`,
-    `Content-Transfer-Encoding: 7bit`,
+    `Content-Transfer-Encoding: 8bit`,
     ``,
     text,
     ``

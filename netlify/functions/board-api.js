@@ -416,8 +416,15 @@ async function refreshGmailToken() {
   return r.access_token;
 }
 
+function encodeHeader(value) {
+  const s = String(value == null ? "" : value);
+  if (/^[\x00-\x7F]*$/.test(s)) return s;
+  return `=?UTF-8?B?${Buffer.from(s, "utf8").toString("base64")}?=`;
+}
+
 function buildEmail(to, subject, text) {
   const raw = [`From: Twin Lakes HOA <hoa.twinlakes.board@gmail.com>`, `To: ${to}`,
-    `Subject: ${subject}`, `MIME-Version: 1.0`, `Content-Type: text/plain; charset=utf-8`, ``, text].join("\r\n");
+    `Subject: ${encodeHeader(subject)}`, `MIME-Version: 1.0`,
+    `Content-Type: text/plain; charset=utf-8`, `Content-Transfer-Encoding: 8bit`, ``, text].join("\r\n");
   return Buffer.from(raw).toString("base64url");
 }
