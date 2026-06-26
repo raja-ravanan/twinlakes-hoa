@@ -86,7 +86,7 @@ async function ensureSheetTabs(token) {
   const spreadsheet = JSON.parse(meta.body);
   const existing = (spreadsheet.sheets || []).map(s => s.properties.title);
 
-  const needed = ["ARC_Requests", "Violations", "Other_Items", "Activity_Log", "Resident_Requests", "Announcements"];
+  const needed = ["ARC_Requests", "Violations", "Other_Items", "Activity_Log", "Resident_Requests", "Announcements", "Minutes"];
   const toAdd = needed.filter(n => !existing.includes(n));
 
   if (toAdd.length > 0) {
@@ -102,7 +102,8 @@ async function ensureSheetTabs(token) {
       Other_Items: [["id","date_received","from","subject","category","ai_summary","status","drive_folder_url","needs_attention"]],
       Activity_Log: [["timestamp","board_member","action","item_id","item_type","details"]],
       Resident_Requests: [["id","date_received","request_type","name","email","address","subject","description","sent_to","status","assigned_to","board_notes"]],
-      Announcements: [["id","date_posted","title","body","status","posted_by"]]
+      Announcements: [["id","date_posted","title","body","status","posted_by"]],
+      Minutes: [["id","meeting_date","title","summary","status","posted_by","attendees"]]
     };
     for (const tab of toAdd) {
       await sheetsUpdate(token, `${tab}!A1`, headers[tab]);
@@ -164,6 +165,22 @@ exports.handler = async (event) => {
     };
   }
 
+  // ── PUBLIC: GET PUBLISHED MEETING MINUTES (no auth — read by the public website) ──
+  if (action === "getPublicMinutes") {
+    const publicToken = await getGoogleToken(SA_EMAIL, SA_KEY, SCOPES);
+    await ensureSheetTabs(publicToken);
+    const all = await getSheetData(publicToken, "Minutes");
+    const published = all
+      .filter(m => (m.status || "published") === "published")
+      .map(m => ({ id: m.id, meeting_date: m.meeting_date, title: m.title, summary: m.summary, attendees: m.attendees || "" }))
+      .sort((x, y) => new Date(y.meeting_date) - new Date(x.meeting_date));
+    return {
+      statusCode: 200,
+      headers: { "Access-Control-Allow-Origin": "*" },
+      body: JSON.stringify({ minutes: published })
+    };
+  }
+
   // ── AUTH CHECK ──
   const authHeader = event.headers?.authorization || "";
   const sessionToken = authHeader.replace("Bearer ", "");
@@ -180,15 +197,17 @@ exports.handler = async (event) => {
 
   // ── GET DASHBOARD DATA ──
   if (action === "getDashboard") {
-    const [arcs, violations, others, requests, announcements, activityRows] = await Promise.all([
+    const [arcs, violations, others, requests, announcements, minutes, activityRows] = await Promise.all([
       getSheetData(googleToken, "ARC_Requests"),
       getSheetData(googleToken, "Violations"),
       getSheetData(googleToken, "Other_Items"),
       getSheetData(googleToken, "Resident_Requests"),
       getSheetData(googleToken, "Announcements"),
+      getSheetData(googleToken, "Minutes"),
       sheetsGet(googleToken, "Activity_Log!A:F").then(r => (r.values || []).slice(1).slice(-50).reverse())
     ]);
     announcements.sort((x, y) => new Date(y.date_posted) - new Date(x.date_posted));
+    minutes.sort((x, y) => new Date(y.meeting_date) - new Date(x.meeting_date));
 
     // Calculate days open
     const now = Date.now();
@@ -207,7 +226,7 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ arcs, violations, others, requests, announcements, activity: activityRows })
+      body: JSON.stringify({ arcs, violations, others, requests, announcements, minutes, activity: activityRows })
     };
   }
 
@@ -250,6 +269,52 @@ exports.handler = async (event) => {
     // Clear the row's content (A:F) so it no longer appears on the site or portal
     await sheetsUpdate(googleToken, `Announcements!A${row}:F${row}`, [["", "", "", "", "deleted", ""]]);
     await logActivity(googleToken, session.username, "deleted_announcement", itemId, "announcement", "");
+    return { statusCode: 200, body: JSON.stringify({ success: true }) };
+  }
+
+  // ── ADD MEETING MINUTES ──
+  if (action === "addMinutes") {
+    const meetingDate = (data?.meeting_date || "").trim();
+    const title = (data?.title || "").trim();
+    const summary  = (data?.summary || "").trim();
+    const attendees = (data?.attendees || "").trim();
+    if (!meetingDate || !title || !summary) return { statusCode: 400, body: JSON.stringify({ error: "Meeting date, title and summary are required" }) };
+    const id = "MIN-" + Date.now().toString(36).toUpperCase();
+    await sheetsAppend(googleToken, "Minutes!A:G", [[
+      id, meetingDate, title, summary, "published", session.name, attendees
+    ]]);
+    await logActivity(googleToken, session.username, "posted_minutes", id, "minutes", title.slice(0, 100));
+    return { statusCode: 200, body: JSON.stringify({ success: true, id }) };
+  }
+
+  // ── UPDATE MEETING MINUTES (edit text and/or change published status) ──
+  if (action === "updateMinutes") {
+    const { itemId, meeting_date: meetingDate, title, summary, status, attendees } = data || {};
+    const items = await getSheetData(googleToken, "Minutes");
+    const rowIndex = items.findIndex(i => i.id === itemId);
+    if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+    const row = rowIndex + 2;
+    const updates = [];
+    if (typeof meetingDate === "string") updates.push(sheetsUpdate(googleToken, `Minutes!B${row}`, [[meetingDate.trim()]]));
+    if (typeof title === "string")       updates.push(sheetsUpdate(googleToken, `Minutes!C${row}`, [[title.trim()]]));
+    if (typeof summary === "string")     updates.push(sheetsUpdate(googleToken, `Minutes!D${row}`, [[summary.trim()]]));
+    if (typeof status === "string")      updates.push(sheetsUpdate(googleToken, `Minutes!E${row}`, [[status]]));
+    if (typeof attendees === "string")   updates.push(sheetsUpdate(googleToken, `Minutes!G${row}`, [[attendees.trim()]]));
+    await Promise.all(updates);
+    await logActivity(googleToken, session.username, status ? `minutes_${status}` : "edited_minutes", itemId, "minutes", "");
+    return { statusCode: 200, body: JSON.stringify({ success: true }) };
+  }
+
+  // ── DELETE MEETING MINUTES (mark deleted; row is blanked so it disappears everywhere) ──
+  if (action === "deleteMinutes") {
+    const { itemId } = data || {};
+    const items = await getSheetData(googleToken, "Minutes");
+    const rowIndex = items.findIndex(i => i.id === itemId);
+    if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+    const row = rowIndex + 2;
+    // Clear the row's content (A:G) so it no longer appears on the site or portal
+    await sheetsUpdate(googleToken, `Minutes!A${row}:G${row}`, [["", "", "", "", "deleted", "", ""]]);
+    await logActivity(googleToken, session.username, "deleted_minutes", itemId, "minutes", "");
     return { statusCode: 200, body: JSON.stringify({ success: true }) };
   }
 

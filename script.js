@@ -201,7 +201,9 @@ function escapeHtmlText(s) {
 }
 
 function formatAnnouncementDate(iso) {
-  var d = new Date(iso);
+  // Parse plain YYYY-MM-DD as a LOCAL date to avoid UTC off-by-one.
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((iso || '').trim());
+  var d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(iso);
   if (isNaN(d)) return '';
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
@@ -232,7 +234,78 @@ async function loadAnnouncements() {
   }
 }
 
+function monthKeyFromDate(iso) {
+  var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((iso || '').trim());
+  var d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(iso);
+  if (isNaN(d)) return { key: 'unknown', label: 'Other' };
+  return {
+    key: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0'),
+    label: d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+  };
+}
+
+function toggleMinutesMonth(headerEl) {
+  var wrap = headerEl.parentElement;
+  if (wrap) wrap.classList.toggle('open');
+}
+
+async function loadMinutes() {
+  var container = document.getElementById('dynamic-minutes');
+  if (!container) return;
+  try {
+    var res = await fetch('/.netlify/functions/board-api', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'getPublicMinutes' })
+    });
+    var data = await res.json();
+    var list = (data && data.minutes) || [];
+    if (!list.length) {
+      container.innerHTML = '<p style="text-align:center;font-family:sans-serif;color:var(--text-m);">No meeting minutes have been posted yet. Please check back soon.</p>';
+      return;
+    }
+
+    // Group by month (list arrives newest-first from the API)
+    var groups = [];
+    var byKey = {};
+    list.forEach(function(m) {
+      var mk = monthKeyFromDate(m.meeting_date);
+      if (!byKey[mk.key]) { byKey[mk.key] = { key: mk.key, label: mk.label, items: [] }; groups.push(byKey[mk.key]); }
+      byKey[mk.key].items.push(m);
+    });
+
+    container.innerHTML = groups.map(function(g, gi) {
+      var openClass = gi === 0 ? ' open' : '';   // most recent month expanded by default
+      var entries = g.items.map(function(m) {
+        var summaryHtml = escapeHtmlText(m.summary).replace(/\n/g, '<br>');
+        var dateStr = formatAnnouncementDate(m.meeting_date);
+        var attendees = (m.attendees || '').trim();
+        var attendeesHtml = attendees
+          ? '<p class="mm-attendees"><strong>In attendance:</strong> ' + escapeHtmlText(attendees) + '</p>'
+          : '';
+        return '<div class="minutes-entry">' +
+          (dateStr ? '<div class="mm-date">' + dateStr + '</div>' : '') +
+          '<h3>' + escapeHtmlText(m.title) + '</h3>' +
+          attendeesHtml +
+          '<div class="mm-summary">' + summaryHtml + '</div>' +
+        '</div>';
+      }).join('');
+      var count = g.items.length + ' ' + (g.items.length === 1 ? 'meeting' : 'meetings');
+      return '<div class="minutes-month' + openClass + '">' +
+        '<button class="minutes-month-header" onclick="toggleMinutesMonth(this)">' +
+          '<span class="mm-label">' + escapeHtmlText(g.label) + '</span>' +
+          '<span class="mm-meta">' + count + ' <span class="mm-chev">&#9660;</span></span>' +
+        '</button>' +
+        '<div class="minutes-month-body">' + entries + '</div>' +
+      '</div>';
+    }).join('');
+  } catch (e) {
+    container.innerHTML = '<p style="text-align:center;font-family:sans-serif;color:var(--text-m);">Meeting minutes are temporarily unavailable. Please try again later.</p>';
+  }
+}
+
 document.addEventListener('DOMContentLoaded', loadAnnouncements);
+document.addEventListener('DOMContentLoaded', loadMinutes);
 
 /* ═══════════════════════════════════════════════════════
    CHAT WIDGET

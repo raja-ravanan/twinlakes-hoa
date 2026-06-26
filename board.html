@@ -304,6 +304,7 @@
     <button class="tab" onclick="switchTab('other')">📂 Other Items <span class="tab-badge" id="othBadge">0</span></button>
     <button class="tab" onclick="switchTab('requests')">📨 Resident Requests <span class="tab-badge" id="reqBadge">0</span></button>
     <button class="tab" onclick="switchTab('announcements')">📣 Announcements <span class="tab-badge" id="annBadge">0</span></button>
+    <button class="tab" onclick="switchTab('minutes')">📋 Meeting Minutes <span class="tab-badge" id="minBadge">0</span></button>
     <button class="tab" onclick="switchTab('activity')">📋 Activity Log</button>
   </div>
 
@@ -400,6 +401,25 @@
     <div id="annList"><div class="loading"><div class="spinner"></div>Loading announcements...</div></div>
   </div>
 
+  <div id="tab-minutes" style="display:none">
+    <div style="background:#fff;border:1px solid #e5e0d8;border-radius:10px;padding:22px;margin-bottom:24px;">
+      <div style="font-size:15px;font-weight:800;color:var(--navy);margin-bottom:6px;">Post Meeting Minutes</div>
+      <p style="font-size:13px;font-family:sans-serif;color:var(--text-m);margin:0 0 16px;">This appears immediately on the public website's <strong>Minutes</strong> page. No coding or deploys needed.</p>
+      <label style="display:block;font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;margin-bottom:4px;">Meeting Date</label>
+      <input type="date" id="minDate" class="search-input" style="width:100%;margin-bottom:14px;"/>
+      <label style="display:block;font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;margin-bottom:4px;">Title</label>
+      <input type="text" id="minTitle" class="search-input" style="width:100%;margin-bottom:14px;" placeholder="e.g. Board Meeting — Summary"/>
+      <label style="display:block;font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;margin-bottom:4px;">Attendees <span style="font-weight:400;text-transform:none;">(optional)</span></label>
+      <input type="text" id="minAttendees" class="search-input" style="width:100%;margin-bottom:14px;" placeholder="e.g. Tony, Mike, Yashu, Aimee, Raja"/>
+      <label style="display:block;font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;margin-bottom:4px;">Summary</label>
+      <textarea id="minSummary" rows="8" style="width:100%;font-family:sans-serif;font-size:14px;padding:10px 12px;border:1px solid #ddd;border-radius:8px;resize:vertical;margin-bottom:14px;" placeholder="Write the resident-friendly meeting summary here. Line breaks are preserved."></textarea>
+      <button class="btn-scan" id="minPostBtn" onclick="postMinutes()">Publish Meeting Minutes</button>
+      <span id="minPostMsg" style="font-size:13px;font-family:sans-serif;margin-left:12px;"></span>
+    </div>
+    <div style="font-size:13px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Posted Meeting Minutes</div>
+    <div id="minList"><div class="loading"><div class="spinner"></div>Loading meeting minutes...</div></div>
+  </div>
+
   <div id="tab-activity" style="display:none">
     <div class="activity-panel">
       <div class="activity-title">Recent Activity</div>
@@ -433,7 +453,7 @@
 
 <script>
   // ── State ─────────────────────────────────────────────
-  let dashData = { arcs: [], violations: [], others: [], requests: [], announcements: [], activity: [] };
+  let dashData = { arcs: [], violations: [], others: [], requests: [], announcements: [], minutes: [], activity: [] };
   let currentUser = null;
   let currentEmailItemId = null;
   let selectedVotes = {};
@@ -510,11 +530,16 @@
     const annPublished = anns.filter(a => (a.status || "published") === "published").length;
     const annBadge = document.getElementById("annBadge");
     if (annBadge) annBadge.textContent = annPublished;
+
+    const mins = (dashData.minutes || []).filter(m => m.id);
+    const minPublished = mins.filter(m => (m.status || "published") === "published").length;
+    const minBadge = document.getElementById("minBadge");
+    if (minBadge) minBadge.textContent = minPublished;
   }
 
   // ── Tabs ──────────────────────────────────────────────
   function switchTab(tab) {
-    const tabs = ["arc","violations","other","requests","announcements","activity"];
+    const tabs = ["arc","violations","other","requests","announcements","minutes","activity"];
     tabs.forEach(t => {
       const el = document.getElementById("tab-" + t);
       if (el) el.style.display = t === tab ? "block" : "none";
@@ -530,6 +555,7 @@
     renderOthers(dashData.others);
     renderRequests();
     renderAnnouncements();
+    renderMinutes();
     renderActivity(dashData.activity);
   }
 
@@ -922,6 +948,98 @@
     });
   }
 
+  // ── Meeting Minutes ───────────────────────────────────
+  function renderMinutes() {
+    const list = (dashData.minutes || []).filter(m => m.id);
+    const el = document.getElementById("minList");
+    if (!el) return;
+    if (!list.length) {
+      el.innerHTML = '<p style="font-size:13px;font-family:sans-serif;color:var(--text-m);">No meeting minutes yet. Post some above and they appear on the website Updates page.</p>';
+      return;
+    }
+    el.innerHTML = list.map(m => {
+      const published = (m.status || "published") === "published";
+      const dateStr = m.meeting_date ? new Date(m.meeting_date).toLocaleDateString() : "";
+      const summaryHtml = escapeHtml(m.summary || "").replace(/\n/g, "<br>");
+      const attendeesHtml = (m.attendees || "").trim()
+        ? `<div style="font-size:12px;font-family:sans-serif;color:var(--text-m);margin:0 0 10px;"><strong style="color:var(--navy);">In attendance:</strong> ${escapeHtml(m.attendees)}</div>`
+        : '';
+      return `
+<div style="background:#fff;border:1px solid #e5e0d8;border-left:4px solid ${published ? 'var(--gold)' : '#bbb'};border-radius:10px;padding:18px;margin-bottom:14px;">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+    <div style="font-size:16px;font-weight:800;color:var(--navy);">${escapeHtml(m.title || "(untitled)")}</div>
+    <span style="font-size:11px;font-family:sans-serif;font-weight:700;text-transform:uppercase;padding:3px 10px;border-radius:20px;${published ? 'background:#fff7e6;color:#9a7d24;' : 'background:#f0f0f0;color:#888;'}">${published ? 'Live on website' : 'Hidden'}</span>
+  </div>
+  <div style="font-size:12px;font-family:sans-serif;color:var(--text-m);margin:4px 0 10px;">Meeting: ${dateStr}${m.posted_by ? ' · by ' + escapeHtml(m.posted_by) : ''}</div>
+  ${attendeesHtml}
+  <div style="font-size:14px;font-family:sans-serif;color:var(--text);line-height:1.6;">${summaryHtml}</div>
+  <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+    <button class="btn-vote" style="background:#eef2f7;color:var(--navy);border-color:#cdd8e6;" onclick="editMinutes('${m.id}')">Edit</button>
+    <button class="btn-vote" style="background:#f7f4ea;color:#9a7d24;border-color:#e6dcc0;" onclick="toggleMinutes('${m.id}', ${published ? 'false' : 'true'})">${published ? 'Hide from website' : 'Publish'}</button>
+    <button class="btn-vote" style="background:#fdf0f0;color:var(--red);border-color:#f5b7b1;" onclick="deleteMinutes('${m.id}')">Delete</button>
+  </div>
+</div>`;
+    }).join("");
+  }
+
+  async function postMinutes() {
+    const dateEl = document.getElementById("minDate");
+    const titleEl = document.getElementById("minTitle");
+    const attendeesEl = document.getElementById("minAttendees");
+    const summaryEl = document.getElementById("minSummary");
+    const btn = document.getElementById("minPostBtn");
+    const msg = document.getElementById("minPostMsg");
+    const meeting_date = (dateEl.value || "").trim();
+    const title = (titleEl.value || "").trim();
+    const attendees = (attendeesEl.value || "").trim();
+    const summary = (summaryEl.value || "").trim();
+    if (!meeting_date || !title || !summary) { msg.textContent = "Please enter a meeting date, title and summary."; msg.style.color = "#c0392b"; return; }
+    btn.disabled = true; const label = btn.textContent; btn.textContent = "Publishing…"; msg.textContent = "";
+    const data = await api({ action: "addMinutes", data: { meeting_date, title, summary, attendees } });
+    btn.disabled = false; btn.textContent = label;
+    if (data && data.success) {
+      dateEl.value = ""; titleEl.value = ""; attendeesEl.value = ""; summaryEl.value = "";
+      msg.textContent = "Published! It is now live on the website."; msg.style.color = "#3a7d44";
+      await loadDashboard();
+    } else {
+      msg.textContent = (data && data.error) || "Could not publish. Please try again."; msg.style.color = "#c0392b";
+    }
+  }
+
+  function editMinutes(id) {
+    const m = (dashData.minutes || []).find(x => x.id === id);
+    if (!m) return;
+    const newDate = prompt("Edit meeting date (YYYY-MM-DD):", m.meeting_date || "");
+    if (newDate === null) return;
+    const newTitle = prompt("Edit title:", m.title || "");
+    if (newTitle === null) return;
+    const newAttendees = prompt("Edit attendees (comma-separated, optional):", m.attendees || "");
+    if (newAttendees === null) return;
+    const newSummary = prompt("Edit summary:", m.summary || "");
+    if (newSummary === null) return;
+    api({ action: "updateMinutes", data: { itemId: id, meeting_date: newDate, title: newTitle, attendees: newAttendees, summary: newSummary } }).then(d => {
+      if (d && d.success) { showToast("Meeting minutes updated", "success"); loadDashboard(); }
+      else showToast("Update failed", "error");
+    });
+  }
+
+  function toggleMinutes(id, publish) {
+    api({ action: "updateMinutes", data: { itemId: id, status: publish ? "published" : "unpublished" } }).then(d => {
+      if (d && d.success) { showToast(publish ? "Published to website" : "Hidden from website", "success"); loadDashboard(); }
+      else showToast("Update failed", "error");
+    });
+  }
+
+  function deleteMinutes(id) {
+    const m = (dashData.minutes || []).find(x => x.id === id);
+    const title = m ? m.title : "these meeting minutes";
+    if (!confirm(`Delete "${title}"? This removes it from the website permanently and cannot be undone.`)) return;
+    api({ action: "deleteMinutes", data: { itemId: id } }).then(d => {
+      if (d && d.success) { showToast("Meeting minutes deleted", "success"); loadDashboard(); }
+      else showToast("Delete failed", "error");
+    });
+  }
+
   // ── Activity Rendering ────────────────────────────────
   function renderActivity(rows) {
     document.getElementById("activityList").innerHTML = rows && rows.length
@@ -935,7 +1053,7 @@
   }
 
   function formatAction(action) {
-    const map = { voted_Approve: "voted ✅ Approve", voted_Deny: "voted ❌ Deny", voted_Conditional: "voted 📋 Conditional", added_comment: "added a comment", added_note: "added a note", viewed_dashboard: "viewed the dashboard", notified_mulloy: "sent Mulloy notification", status_changed_to_Open: "set status to Open", status_changed_to_Closed: "closed", status_changed_to_In_Progress: "set to In Progress", status_changed_to_New: "set status to New", status_changed_to_Resolved: "marked Resolved", posted_announcement: "posted an announcement", edited_announcement: "edited an announcement", deleted_announcement: "deleted an announcement", announcement_published: "published an announcement", announcement_unpublished: "hid an announcement" };
+    const map = { voted_Approve: "voted ✅ Approve", voted_Deny: "voted ❌ Deny", voted_Conditional: "voted 📋 Conditional", added_comment: "added a comment", added_note: "added a note", viewed_dashboard: "viewed the dashboard", notified_mulloy: "sent Mulloy notification", status_changed_to_Open: "set status to Open", status_changed_to_Closed: "closed", status_changed_to_In_Progress: "set to In Progress", status_changed_to_New: "set status to New", status_changed_to_Resolved: "marked Resolved", posted_announcement: "posted an announcement", edited_announcement: "edited an announcement", deleted_announcement: "deleted an announcement", announcement_published: "published an announcement", announcement_unpublished: "hid an announcement", posted_minutes: "posted meeting minutes", edited_minutes: "edited meeting minutes", deleted_minutes: "deleted meeting minutes", minutes_published: "published meeting minutes", minutes_unpublished: "hid meeting minutes" };
     return map[action] || action.replace(/_/g, " ");
   }
 

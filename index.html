@@ -343,6 +343,24 @@
       .qa-item { flex: 0 0 50%; }
       .stat-item { flex: 0 0 100%; }
     }
+    /* ── Meeting Minutes accordion ── */
+    .minutes-accordion { max-width: 860px; margin: 0 auto; }
+    .minutes-month { border: 1px solid #e5e0d8; border-radius: 12px; margin-bottom: 14px; overflow: hidden; background: #fff; box-shadow: 0 1px 3px rgba(20,40,80,0.04); }
+    .minutes-month-header { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 18px 22px; background: #fff; border: none; cursor: pointer; text-align: left; font-family: inherit; transition: background 0.15s; }
+    .minutes-month-header:hover { background: #faf8f2; }
+    .minutes-month-header .mm-label { font-size: 17px; font-weight: 700; color: var(--navy); }
+    .minutes-month-header .mm-meta { display: flex; align-items: center; gap: 10px; font-family: sans-serif; font-size: 13px; color: var(--text-m); white-space: nowrap; }
+    .minutes-month-header .mm-chev { display: inline-block; transition: transform 0.2s; font-size: 12px; color: var(--gold); }
+    .minutes-month.open .mm-chev { transform: rotate(180deg); }
+    .minutes-month-body { display: none; padding: 0 22px 8px; border-top: 1px solid #f0ece2; }
+    .minutes-month.open .minutes-month-body { display: block; }
+    .minutes-entry { padding: 18px 0; border-bottom: 1px solid #f0ece2; }
+    .minutes-entry:last-child { border-bottom: none; }
+    .minutes-entry h3 { font-size: 18px; color: var(--navy); margin: 0 0 6px; }
+    .minutes-entry .mm-date { font-family: sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gold); margin-bottom: 10px; }
+    .minutes-entry .mm-attendees { font-family: sans-serif; font-size: 13px; color: var(--text-m); margin: 0 0 12px; }
+    .minutes-entry .mm-attendees strong { color: var(--navy); }
+    .minutes-entry .mm-summary { font-family: sans-serif; font-size: 15px; color: var(--text-s); line-height: 1.7; }
   </style>
 </head>
 <body>
@@ -358,6 +376,7 @@
       <a href="#" onclick="go('home')"      id="nav-home"      class="active">Home</a>
       <a href="#" onclick="go('board')"     id="nav-board">Board</a>
       <a href="#" onclick="go('updates')"   id="nav-updates">Updates</a>
+      <a href="#" onclick="go('minutes')"   id="nav-minutes">Minutes</a>
       <a href="#" onclick="go('documents')" id="nav-documents">Documents</a>
       <a href="#" onclick="go('contact')"   id="nav-contact">Contact</a>
     </div>
@@ -1045,6 +1064,26 @@
     </footer>
   </div>
  
+  <!-- ═══════════════════════════════════════════ MINUTES -->
+  <div id="page-minutes" class="page">
+    <section class="page-header">
+      <div class="sec-label" style="font-size:14px;">Board Meeting Records</div>
+      <h1 class="sec-title">Meeting Minutes</h1>
+      <p class="sec-sub">Summaries of Twin Lakes at Floyds Fork board meetings. Select a month to view the minutes.</p>
+    </section>
+    <section>
+      <div id="dynamic-minutes" class="minutes-accordion">
+        <p style="text-align:center;font-family:sans-serif;color:var(--text-m);">Loading meeting minutes…</p>
+      </div>
+    </section>
+    <footer>
+      <img src="logo.png" alt="Twin Lakes at Floyds Fork" class="footer-logo" />
+      <div class="footer-divider"></div>
+      <p>Louisville, Kentucky &nbsp;&middot;&nbsp; Managed by Mulloy Properties</p>
+      <p class="footer-copy">&copy; 2026 Twin Lakes at Floyds Fork HOA. All rights reserved.</p>
+    </footer>
+  </div>
+
   <!-- ═══════════════════════════════════════════ DOCUMENTS -->
   <div id="page-documents" class="page">
     <section class="page-header">
