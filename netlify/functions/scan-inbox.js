@@ -617,7 +617,8 @@ exports.handler = async (event) => {
                 emailData.subject, folderUrl, attachmentUrls.join(", "),
                 analysis.ai_summary || "", analysis.ai_recommendation || "", analysis.ai_reasoning || "",
                 analysis.ai_pros || "", analysis.ai_cons || "",
-                "","","","","","","","","","","","","","","","","","","","","","",
+                // 24 empty board-vote cells: 6 members x (vote, conditions, note, voted_at)
+                "","","","", "","","","", "","","","", "","","","", "","","","", "","","","",
                 "0","Open","","No","","0", analysis.conflict_flag || "no"
               ]);
               existingArcIds.add(itemId);
