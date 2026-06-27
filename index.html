@@ -373,125 +373,46 @@
       <span></span><span></span><span></span>
     </button>
     <div class="nav-links" id="nav-links">
-      <a href="#" onclick="go('home')"      id="nav-home"      class="active">Home</a>
-      <a href="#" onclick="go('board')"     id="nav-board">Board</a>
-      <a href="#" onclick="go('updates')"   id="nav-updates">Updates</a>
-      <a href="#" onclick="go('minutes')"   id="nav-minutes">Minutes</a>
-      <a href="#" onclick="go('documents')" id="nav-documents">Documents</a>
-      <a href="#" onclick="go('contact')"   id="nav-contact">Contact</a>
+      <a href="#" onclick="go('home')" id="nav-home" class="active">Home</a>
+
+      <div class="nav-group">
+        <button class="nav-group-label" onclick="toggleNavGroup(this)">About <span class="nav-caret">&#9662;</span></button>
+        <div class="nav-dropdown">
+          <a href="#" onclick="go('board')"   id="nav-board">The Board</a>
+          <a href="#" onclick="go('vendors')" id="nav-vendors">Vendors</a>
+          <a href="#" onclick="go('faq')"     id="nav-faq">FAQ</a>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <button class="nav-group-label" onclick="toggleNavGroup(this)">Community <span class="nav-caret">&#9662;</span></button>
+        <div class="nav-dropdown">
+          <a href="#" onclick="go('updates')"     id="nav-updates">Announcements</a>
+          <a href="#" onclick="go('minutes')"     id="nav-minutes">Meeting Minutes</a>
+          <a href="#" onclick="go('newsletters')" id="nav-newsletters">Newsletters</a>
+        </div>
+      </div>
+
+      <div class="nav-group">
+        <button class="nav-group-label" onclick="toggleNavGroup(this)">Documents <span class="nav-caret">&#9662;</span></button>
+        <div class="nav-dropdown">
+          <a href="https://drive.google.com/file/d/1dQdZQ3sKi4SkXM-z5OnTncUEEqTTnuoX/view?usp=drive_link" target="_blank" rel="noopener noreferrer">CC&amp;Rs</a>
+          <a href="https://drive.google.com/file/d/1Jm47Xn1lJoBqkqN7tN5z4sl639Maj4f6/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Bylaws</a>
+          <a href="https://drive.google.com/file/d/1FyrtPbrsm-HvCuZqVTuSm-hSNgrFZU2J/view?usp=drive_link" target="_blank" rel="noopener noreferrer">ARC Request Form</a>
+          <a href="#" onclick="go('financials')" id="nav-financials">Financials</a>
+        </div>
+      </div>
+
+      <a href="#" onclick="go('contact')" id="nav-contact">Contact</a>
     </div>
   </nav>
  
   <!-- ═══════════════════════════════════════════ HOME -->
   <div id="page-home" class="page active">
  
-    <!-- ANNOUNCEMENT BANNER -->
-    <div class="announcement-bar">
-      <div class="announcement-bar-inner">
- 
-        <div class="announcement-item">
-          <div class="ann-dot urgent"></div>
-          <span class="ann-text"><strong>Pond Maintenance:</strong> Blue dye treatment this week (June 24)</span>
-          <span class="ann-chevron">▼</span>
-          <div class="ann-dropdown">
-            <div class="ann-dropdown-title">🌊 Pond Update</div>
-            <div class="ann-dropdown-body">
-              <strong>Pond Maintenance Underway</strong><br/>
-              The Board is actively working to keep our ponds healthy and find the right long-term care.
-              <ul>
-                <li>Blue dye will be added to the small ponds this week (June 24)</li>
-                <li>The Board is actively working to find the right vendor for ongoing pond maintenance</li>
-                <li>We are awaiting estimates from multiple vendors</li>
-                <li>Once estimates are finalized, the Board will make a decision and share an update</li>
-                <li>The Board has asked our landscaping vendor to direct mower and trimmer discharge away from the ponds and clear clippings from the shoreline — this helps both appearance and water quality (reducing nutrients that feed algae)</li>
-              </ul>
-            </div>
-            <div class="ann-dropdown-footer">HOA Board — June 2026</div>
-          </div>
-        </div>
-
-        <div class="announcement-item">
-          <div class="ann-dot info"></div>
-          <span class="ann-text"><strong>Special Meeting:</strong> Resident request acknowledged — date being finalized</span>
-          <span class="ann-chevron">▼</span>
-          <div class="ann-dropdown">
-            <div class="ann-dropdown-title">📅 Special Meeting</div>
-            <div class="ann-dropdown-body">
-              <strong>Resident-Requested Special Meeting</strong><br/>
-              The Board has acknowledged the special meeting requested by residents.
-              <ul>
-                <li>Internal review is in progress to finalize a date</li>
-                <li>Tentatively planning to combine it with the mid-year annual review</li>
-                <li>The date will be shared once confirmed</li>
-              </ul>
-            </div>
-            <div class="ann-dropdown-footer">HOA Board — June 2026</div>
-          </div>
-        </div>
-
-        <div class="announcement-item">
-          <div class="ann-dot good"></div>
-          <span class="ann-text"><strong>Volunteers Wanted:</strong> Help the Board form community committees</span>
-          <span class="ann-chevron">▼</span>
-          <div class="ann-dropdown">
-            <div class="ann-dropdown-title">🤝 Volunteers Wanted</div>
-            <div class="ann-dropdown-body">
-              <strong>Get Involved in Twin Lakes</strong><br/>
-              The Board is looking for resident volunteers to help form community committees, such as:
-              <ul>
-                <li>Social / events committee</li>
-                <li>Irrigation committee</li>
-                <li>Landscaping &amp; pond / common-area committee</li>
-              </ul>
-              Interested in helping shape our community? Email the Board at hoa.twinlakes.board@gmail.com.
-            </div>
-            <div class="ann-dropdown-footer">HOA Board — June 2026</div>
-          </div>
-        </div>
-
-        <div class="announcement-item">
-          <div class="ann-dot urgent"></div>
-          <span class="ann-text"><strong>Reminder:</strong> No overnight parking on subdivision roads — CC&Rs violation</span>
-          <span class="ann-chevron">▼</span>
-          <div class="ann-dropdown">
-            <div class="ann-dropdown-title">🚗 Parking Reminder</div>
-            <div class="ann-dropdown-body">
-              <strong>No Overnight Street Parking</strong><br/>
-              This is a frequent violation in the community. All vehicles must be parked in garages or driveways overnight.
-              <ul>
-                <li>No vehicles on subdivision roads between 10 PM – 6 AM</li>
-                <li>Especially critical during snow events for plowing access</li>
-                <li>Violations reported to Mulloy for enforcement</li>
-                <li>Repeat violations may result in fines per CC&Rs</li>
-              </ul>
-              Questions? Contact Eddie Douglas at Mulloy Properties.
-            </div>
-            <div class="ann-dropdown-footer">Per CC&Rs — enforced year-round</div>
-          </div>
-        </div>
- 
-        <div class="announcement-item">
-          <div class="ann-dot info"></div>
-          <span class="ann-text"><strong>ARC:</strong> Submit requests before starting any exterior work</span>
-          <span class="ann-chevron">▼</span>
-          <div class="ann-dropdown">
-            <div class="ann-dropdown-title">🏗️ ARC Reminder</div>
-            <div class="ann-dropdown-body">
-              <strong>Board Approval Required First</strong><br/>
-              All exterior modifications require ARC approval before work begins. Recent approvals include fences, garden beds, deck staining, and handrails.
-              <ul>
-                <li>Download ARC form from the Documents tab</li>
-                <li>Email to edouglas@mulloyproperties.com</li>
-                <li>Copy hoa.twinlakes.board@gmail.com</li>
-                <li>Board typically responds within 7–10 days</li>
-              </ul>
-              <strong>Starting work without approval may require removal at your expense.</strong>
-            </div>
-            <div class="ann-dropdown-footer">Per Architectural Guidelines</div>
-          </div>
-        </div>
-
-      </div>
+    <!-- ANNOUNCEMENTS BANNER (top 3 most recent board posts; loaded dynamically) -->
+    <div class="announcement-bar" id="announcement-bar" style="display:none;">
+      <div class="announcement-bar-inner" id="dynamic-banner"></div>
     </div>
  
     <!-- HERO -->
@@ -651,171 +572,6 @@
       </div>
     </div>
  
-    <!-- FAQ -->
-    <div class="faq-section">
-      <div class="faq-inner">
-        <div class="sec-label">Common Questions</div>
-        <h2 class="sec-title">Frequently Asked Questions</h2>
-        <p class="sec-sub">Quick answers to the most common questions from Twin Lakes residents.</p>
-        <div class="faq-grid">
- 
-          <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">
-              What are the HOA dues and what do they cover?
-              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div class="faq-answer">
-              All 149 homes pay an <strong>annual HOA due of $895</strong>. This covers community maintenance, common area upkeep, pond care, snow removal on subdivision roads, and board operations.<br/><br/>
-              <strong>Garden Home series owners pay an additional $185/month</strong> which covers: front &amp; back lawn mowing, irrigation (front &amp; back), mulching, weed spraying, fertilizer, bush trimming, street tree maintenance, and trash &amp; recycling pickup.<br/><br/>
-              Patriot series homeowners are responsible for their own lawn care, irrigation, and trash services.
-            </div>
-          </div>
- 
-          <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">
-              What is the difference between Patriot and Garden Home series?
-              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div class="faq-answer">
-              Twin Lakes has <strong>149 homes</strong> across two series:<br/><br/>
-              <strong>Patriot Series (79 homes)</strong><br/>
-              Annual HOA dues: $895/year only. Lawn mowing, irrigation, and trash are the owner's responsibility.<br/><br/>
-              <strong>Garden Home Series (70 homes)</strong><br/>
-              Annual HOA dues: $895/year plus $185/month which includes front &amp; back lawn mowing, irrigation managed by Evergreen, mulching, weed spraying, fertilizer, bush trimming, street tree maintenance, and trash &amp; recycling pickup.<br/><br/>
-              Not sure which series your home is? Contact Eddie Douglas at Mulloy Properties.
-            </div>
-          </div>
- 
-          <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">
-              Do I need approval before making changes to my home?
-              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div class="faq-answer">
-              <strong>Yes — always get ARC approval before starting any exterior work.</strong> This includes fences, sheds, decks, landscaping changes, paint colors, additions, and enclosures. Download the ARC Request Form from the <a href="#" onclick="go('documents')">Documents page</a>, complete it, and email to <a href="mailto:edouglas@mulloyproperties.com">edouglas@mulloyproperties.com</a> copying the board. Starting work without approval may require removal at your expense.
-            </div>
-          </div>
- 
-          <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">
-              Can I park on the street overnight?
-              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div class="faq-answer">
-              <strong>No.</strong> Overnight parking on subdivision roads is not permitted at any time per our CC&Rs. All vehicles must be in garages or driveways overnight. This is especially important during potential snow events so plowing crews can clear roads efficiently. Violations are reported to Mulloy Properties for enforcement.
-            </div>
-          </div>
- 
-          <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">
-              Who handles snow removal and when does it start?
-              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div class="faq-answer">
-              The HOA contractor begins snow removal after <strong>3 inches of accumulation</strong>. De-icing is applied for icy conditions regardless of snow depth. The HOA clears all community and subdivision roads — contractors begin within 24 hours of snowfall. <strong>Your responsibility:</strong> driveways, aprons, walkways, patios, decks, and personal steps. Report missed spots within 12 hours to Eddie Douglas.
-            </div>
-          </div>
- 
-          <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">
-              Who mows my lawn and when does it start?
-              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div class="faq-answer">
-              <strong>TruGreen</strong> handles lawn treatments and mowing for Garden Homes — 30 scheduled mowings April through November, weather dependent. This includes trimming and edging up to the sidewalk. <strong>Aphix</strong> handles common areas and entrances. If you have a lawn concern or missed mowing, contact Eddie Douglas at <a href="mailto:edouglas@mulloyproperties.com">edouglas@mulloyproperties.com</a>.
-            </div>
-          </div>
- 
-          <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">
-              How do I build a garbage can enclosure?
-              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div class="faq-answer">
-              You must first <strong>obtain ARC approval</strong>. Enclosures must be placed in side or rear yards, use approved materials (brick, stone, stucco, or painted wood), have a functioning closable door, and match or harmonize with your home's colors. Unfinished plywood, corrugated metal, and plastic panels are not permitted. See the Updates page for full dos and don'ts.
-            </div>
-          </div>
- 
-          <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">
-              How do I contact the HOA board or property manager?
-              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div class="faq-answer">
-              For all requests — ARC, maintenance, billing, violations — contact <strong>Eddie Douglas at Mulloy Properties:</strong> <a href="mailto:edouglas@mulloyproperties.com">edouglas@mulloyproperties.com</a> or (502) 498-2411, and copy <a href="mailto:hoa.twinlakes.board@gmail.com">hoa.twinlakes.board@gmail.com</a> so the board stays informed. You can also use our <a href="#" onclick="go('contact')">contact form</a>. Response time is typically 2–3 business days.
-            </div>
-          </div>
- 
-          <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">
-              Can I paint the exterior of my home?
-              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div class="faq-answer">
-              <strong>Yes, but ARC approval is required first.</strong> Submit an ARC request with your proposed color swatches or samples. The board reviews for compatibility with the neighborhood aesthetic. Recent paint and staining requests have generally been approved when colors harmonize with the home's existing materials. Allow 7–10 days for board review.
-            </div>
-          </div>
- 
-          <div class="faq-item">
-            <button class="faq-question" onclick="toggleFaq(this)">
-              How do I join the residents Facebook group?
-              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-            </button>
-            <div class="faq-answer">
-              Visit our <a href="https://www.facebook.com/share/g/1bh4nL3BUi/" target="_blank">private Facebook group</a> and click "Request to Join." Joining requests are reviewed against the resident directory by the HOA board before approval — this keeps the group residents-only. If your request isn't approved within a few days, reach out to the board via the contact form.
-            </div>
-          </div>
- 
-        </div>
-      </div>
-    </div>
- 
-    <!-- VENDOR DIRECTORY -->
-    <div class="vendor-section">
-      <div class="sec-label">Service Providers</div>
-      <h2 class="sec-title">Community Vendors</h2>
-      <p class="sec-sub">The contractors and service providers maintaining Twin Lakes at Floyds Fork.</p>
-      <div class="vendor-grid">
-        <div class="vendor-card">
-          <div class="vendor-category">Lawn Treatments</div>
-          <div class="vendor-name">TruGreen</div>
-          <div class="vendor-scope">Fertilizer, weed control, and crabgrass pre-emergent — Garden Homes only</div>
-          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> 6 treatment visits, April – December</div>
-        </div>
-        <div class="vendor-card">
-          <div class="vendor-category">Mowing &amp; Common Areas</div>
-          <div class="vendor-name">Aphix</div>
-          <div class="vendor-scope">Turf applications for common areas and entrances; mowing for Garden Homes</div>
-          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> 30 mowings, April – November</div>
-        </div>
-        <div class="vendor-card">
-          <div class="vendor-category">Property Management</div>
-          <div class="vendor-name">Mulloy Properties</div>
-          <div class="vendor-scope">Day-to-day management, resident communications, vendor coordination, billing</div>
-          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg> Eddie Douglas — (502) 498-2411</div>
-          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg> edouglas@mulloyproperties.com</div>
-        </div>
-        <div class="vendor-card">
-          <div class="vendor-category">Snow Removal</div>
-          <div class="vendor-name">Snow Contractor</div>
-          <div class="vendor-scope">Plowing and de-icing of all subdivision roads and common areas</div>
-          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Begins after 3&rdquo; accumulation, within 24 hrs</div>
-        </div>
-        <div class="vendor-card">
-          <div class="vendor-category">Pond &amp; Irrigation</div>
-          <div class="vendor-name">Pond &amp; Irrigation Contractor</div>
-          <div class="vendor-scope">Fountain maintenance, filter cleaning, irrigation startup/shutdown, pipe repairs</div>
-          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> Spring startup &amp; fall shutdown annually</div>
-        </div>
-        <div class="vendor-card">
-          <div class="vendor-category">Tree &amp; Sidewalk</div>
-          <div class="vendor-name">General Maintenance</div>
-          <div class="vendor-scope">Tree trimming (storm damage), sidewalk crack repair and sealing</div>
-          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg> Oak Lane corridor &amp; Lakeside Drive</div>
-        </div>
-      </div>
-    </div>
- 
     <!-- CTA BAND -->
     <div class="cta-band">
       <div class="cta-logo-mark">TL</div>
@@ -877,8 +633,8 @@
     <div class="updates-bg">
       <section class="page-header">
         <div class="sec-label" style="font-size:14px;">Scheduled Work &amp; Notices</div>
-        <h1 class="sec-title">Community Updates</h1>
-        <p class="sec-sub">Upcoming maintenance schedules, community notices, and important announcements for Twin Lakes at Floyds Fork.</p>
+        <h1 class="sec-title">Announcements</h1>
+        <p class="sec-sub">The latest community notices and important announcements from your Twin Lakes at Floyds Fork board.</p>
       </section>
       <section>
         <!-- Board-posted announcements (managed from the Board Portal) load here -->
@@ -1161,6 +917,234 @@
     </footer>
   </div>
  
+  <!-- ═══════════════════════════════════════════ VENDORS -->
+  <div id="page-vendors" class="page">
+    <section class="page-header">
+      <div class="sec-label">Service Providers</div>
+      <h1 class="sec-title">Community Vendors</h1>
+      <p class="sec-sub">The contractors and service providers maintaining Twin Lakes at Floyds Fork.</p>
+    </section>
+    <section style="padding-top:8px;">
+      <div class="vendor-grid">
+        <div class="vendor-card">
+          <div class="vendor-category">Lawn Treatments</div>
+          <div class="vendor-name">TruGreen</div>
+          <div class="vendor-scope">Fertilizer, weed control, and crabgrass pre-emergent — Garden Homes only</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> 6 treatment visits, April – December</div>
+        </div>
+        <div class="vendor-card">
+          <div class="vendor-category">Mowing &amp; Common Areas</div>
+          <div class="vendor-name">Aphix</div>
+          <div class="vendor-scope">Turf applications for common areas and entrances; mowing for Garden Homes</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> 30 mowings, April – November</div>
+        </div>
+        <div class="vendor-card">
+          <div class="vendor-category">Property Management</div>
+          <div class="vendor-name">Mulloy Properties</div>
+          <div class="vendor-scope">Day-to-day management, resident communications, vendor coordination, billing</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg> Eddie Douglas — (502) 498-2411</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg> edouglas@mulloyproperties.com</div>
+        </div>
+        <div class="vendor-card">
+          <div class="vendor-category">Snow Removal</div>
+          <div class="vendor-name">Snow Contractor</div>
+          <div class="vendor-scope">Plowing and de-icing of all subdivision roads and common areas</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Begins after 3&rdquo; accumulation, within 24 hrs</div>
+        </div>
+        <div class="vendor-card">
+          <div class="vendor-category">Pond &amp; Irrigation</div>
+          <div class="vendor-name">Pond &amp; Irrigation Contractor</div>
+          <div class="vendor-scope">Fountain maintenance, filter cleaning, irrigation startup/shutdown, pipe repairs</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> Spring startup &amp; fall shutdown annually</div>
+        </div>
+        <div class="vendor-card">
+          <div class="vendor-category">Tree &amp; Sidewalk</div>
+          <div class="vendor-name">General Maintenance</div>
+          <div class="vendor-scope">Tree trimming (storm damage), sidewalk crack repair and sealing</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg> Oak Lane corridor &amp; Lakeside Drive</div>
+        </div>
+      </div>
+    </section>
+    <footer>
+      <img src="logo.png" alt="Twin Lakes at Floyds Fork" class="footer-logo" />
+      <div class="footer-divider"></div>
+      <p>Louisville, Kentucky &nbsp;&middot;&nbsp; Managed by Mulloy Properties</p>
+      <p class="footer-copy">&copy; 2026 Twin Lakes at Floyds Fork HOA. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ FAQ -->
+  <div id="page-faq" class="page">
+    <div class="faq-section">
+      <div class="faq-inner">
+        <div class="sec-label">Common Questions</div>
+        <h1 class="sec-title">Frequently Asked Questions</h1>
+        <p class="sec-sub">Quick answers to the most common questions from Twin Lakes residents.</p>
+        <div class="faq-grid">
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              What are the HOA dues and what do they cover?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              All 149 homes pay an <strong>annual HOA due of $895</strong>. This covers community maintenance, common area upkeep, pond care, snow removal on subdivision roads, and board operations.<br/><br/>
+              <strong>Garden Home series owners pay an additional $185/month</strong> which covers: front &amp; back lawn mowing, irrigation (front &amp; back), mulching, weed spraying, fertilizer, bush trimming, street tree maintenance, and trash &amp; recycling pickup.<br/><br/>
+              Patriot series homeowners are responsible for their own lawn care, irrigation, and trash services.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              What is the difference between Patriot and Garden Home series?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              Twin Lakes has <strong>149 homes</strong> across two series:<br/><br/>
+              <strong>Patriot Series (79 homes)</strong><br/>
+              Annual HOA dues: $895/year only. Lawn mowing, irrigation, and trash are the owner's responsibility.<br/><br/>
+              <strong>Garden Home Series (70 homes)</strong><br/>
+              Annual HOA dues: $895/year plus $185/month which includes front &amp; back lawn mowing, irrigation managed by Evergreen, mulching, weed spraying, fertilizer, bush trimming, street tree maintenance, and trash &amp; recycling pickup.<br/><br/>
+              Not sure which series your home is? Contact Eddie Douglas at Mulloy Properties.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              Do I need approval before making changes to my home?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              <strong>Yes — always get ARC approval before starting any exterior work.</strong> This includes fences, sheds, decks, landscaping changes, paint colors, additions, and enclosures. Download the ARC Request Form from the <a href="#" onclick="go('documents')">Documents page</a>, complete it, and email to <a href="mailto:edouglas@mulloyproperties.com">edouglas@mulloyproperties.com</a> copying the board. Starting work without approval may require removal at your expense.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              Can I park on the street overnight?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              <strong>No.</strong> Overnight parking on subdivision roads is not permitted at any time per our CC&Rs. All vehicles must be in garages or driveways overnight. This is especially important during potential snow events so plowing crews can clear roads efficiently. Violations are reported to Mulloy Properties for enforcement.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              Who handles snow removal and when does it start?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              The HOA contractor begins snow removal after <strong>3 inches of accumulation</strong>. De-icing is applied for icy conditions regardless of snow depth. The HOA clears all community and subdivision roads — contractors begin within 24 hours of snowfall. <strong>Your responsibility:</strong> driveways, aprons, walkways, patios, decks, and personal steps. Report missed spots within 12 hours to Eddie Douglas.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              Who mows my lawn and when does it start?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              <strong>TruGreen</strong> handles lawn treatments and mowing for Garden Homes — 30 scheduled mowings April through November, weather dependent. This includes trimming and edging up to the sidewalk. <strong>Aphix</strong> handles common areas and entrances. If you have a lawn concern or missed mowing, contact Eddie Douglas at <a href="mailto:edouglas@mulloyproperties.com">edouglas@mulloyproperties.com</a>.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              How do I build a garbage can enclosure?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              You must first <strong>obtain ARC approval</strong>. Enclosures must be placed in side or rear yards, use approved materials (brick, stone, stucco, or painted wood), have a functioning closable door, and match or harmonize with your home's colors. Unfinished plywood, corrugated metal, and plastic panels are not permitted. See the Announcements page for full dos and don'ts.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              How do I contact the HOA board or property manager?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              For all requests — ARC, maintenance, billing, violations — contact <strong>Eddie Douglas at Mulloy Properties:</strong> <a href="mailto:edouglas@mulloyproperties.com">edouglas@mulloyproperties.com</a> or (502) 498-2411, and copy <a href="mailto:hoa.twinlakes.board@gmail.com">hoa.twinlakes.board@gmail.com</a> so the board stays informed. You can also use our <a href="#" onclick="go('contact')">contact form</a>. Response time is typically 2–3 business days.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              Can I paint the exterior of my home?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              <strong>Yes, but ARC approval is required first.</strong> Submit an ARC request with your proposed color swatches or samples. The board reviews for compatibility with the neighborhood aesthetic. Recent paint and staining requests have generally been approved when colors harmonize with the home's existing materials. Allow 7–10 days for board review.
+            </div>
+          </div>
+
+          <div class="faq-item">
+            <button class="faq-question" onclick="toggleFaq(this)">
+              How do I join the residents Facebook group?
+              <svg class="faq-chevron" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div class="faq-answer">
+              Visit our <a href="https://www.facebook.com/share/g/1bh4nL3BUi/" target="_blank">private Facebook group</a> and click "Request to Join." Joining requests are reviewed against the resident directory by the HOA board before approval — this keeps the group residents-only. If your request isn't approved within a few days, reach out to the board via the contact form.
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+    <footer>
+      <img src="logo.png" alt="Twin Lakes at Floyds Fork" class="footer-logo" />
+      <div class="footer-divider"></div>
+      <p>Louisville, Kentucky &nbsp;&middot;&nbsp; Managed by Mulloy Properties</p>
+      <p class="footer-copy">&copy; 2026 Twin Lakes at Floyds Fork HOA. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ NEWSLETTERS -->
+  <div id="page-newsletters" class="page">
+    <section class="page-header">
+      <div class="sec-label">Community News</div>
+      <h1 class="sec-title">Newsletters</h1>
+      <p class="sec-sub">Periodic newsletters from your Twin Lakes at Floyds Fork board. Each opens as a PDF in a new tab.</p>
+    </section>
+    <section style="padding-top:8px;">
+      <div id="newsletter-grid" class="doc-grid">
+        <!-- Newsletter PDFs will be added here once issues are posted. -->
+        <div class="doc-missing" style="grid-column:1/-1;">
+          <div class="doc-missing-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#8B6914" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div><h3>Newsletters coming soon</h3><p>The board's newsletters will be posted here. Check back shortly — or <a href="#" onclick="go('contact')">contact the board</a> if you'd like a past issue.</p></div>
+        </div>
+      </div>
+    </section>
+    <footer>
+      <img src="logo.png" alt="Twin Lakes at Floyds Fork" class="footer-logo" />
+      <div class="footer-divider"></div>
+      <p>Louisville, Kentucky &nbsp;&middot;&nbsp; Managed by Mulloy Properties</p>
+      <p class="footer-copy">&copy; 2026 Twin Lakes at Floyds Fork HOA. All rights reserved.</p>
+    </footer>
+  </div>
+
+  <!-- ═══════════════════════════════════════════ FINANCIALS -->
+  <div id="page-financials" class="page">
+    <section class="page-header">
+      <div class="sec-label">Transparency</div>
+      <h1 class="sec-title">Financials</h1>
+      <p class="sec-sub">Monthly financial snapshots for Twin Lakes at Floyds Fork.</p>
+    </section>
+    <section style="padding-top:8px;">
+      <div class="doc-missing" style="grid-column:1/-1;">
+        <div class="doc-missing-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#8B6914" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
+        <div><h3>Coming soon</h3><p>The board is preparing monthly financial snapshots — drawn from the community's bank statements — so residents can see income, expenses, and reserves at a glance. This section will be published once the first statements are ready.</p></div>
+      </div>
+    </section>
+    <footer>
+      <img src="logo.png" alt="Twin Lakes at Floyds Fork" class="footer-logo" />
+      <div class="footer-divider"></div>
+      <p>Louisville, Kentucky &nbsp;&middot;&nbsp; Managed by Mulloy Properties</p>
+      <p class="footer-copy">&copy; 2026 Twin Lakes at Floyds Fork HOA. All rights reserved.</p>
+    </footer>
+  </div>
+
   <!-- ═══════════════════════════════════════════ CONTACT -->
   <div id="page-contact" class="page">
     <section class="page-header">

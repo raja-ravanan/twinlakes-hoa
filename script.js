@@ -5,10 +5,20 @@
 function go(pageName) {
   document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
   document.querySelectorAll('.nav-links a').forEach(function(a) { a.classList.remove('active'); });
+  document.querySelectorAll('.nav-group-label').forEach(function(l) { l.classList.remove('active'); });
+  document.querySelectorAll('.nav-group').forEach(function(g) { g.classList.remove('open'); });
   var page = document.getElementById('page-' + pageName);
   var link = document.getElementById('nav-' + pageName);
   if (page) page.classList.add('active');
-  if (link) link.classList.add('active');
+  if (link) {
+    link.classList.add('active');
+    // If this link lives inside a dropdown, highlight its group label too.
+    var group = link.closest ? link.closest('.nav-group') : null;
+    if (group) {
+      var label = group.querySelector('.nav-group-label');
+      if (label) label.classList.add('active');
+    }
+  }
   var navLinks = document.getElementById('nav-links');
   if (navLinks) navLinks.classList.remove('open');
   window.scrollTo(0, 0);
@@ -17,6 +27,12 @@ function go(pageName) {
 function toggleMenu() {
   var navLinks = document.getElementById('nav-links');
   if (navLinks) navLinks.classList.toggle('open');
+}
+
+// Mobile: expand/collapse a nav dropdown group (desktop uses hover via CSS).
+function toggleNavGroup(labelEl) {
+  var group = labelEl.closest ? labelEl.closest('.nav-group') : labelEl.parentElement;
+  if (group) group.classList.toggle('open');
 }
 
 // Show/hide the ARC details section based on the selected request type
@@ -234,6 +250,42 @@ async function loadAnnouncements() {
   }
 }
 
+// Top announcements banner — shows the 3 most recent board posts.
+// Same data source as the Announcements page, so one portal post updates both.
+async function loadBanner() {
+  var bar = document.getElementById('announcement-bar');
+  var inner = document.getElementById('dynamic-banner');
+  if (!bar || !inner) return;
+  try {
+    var res = await fetch('/.netlify/functions/board-api', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'getPublicAnnouncements' })
+    });
+    var data = await res.json();
+    var list = (data && data.announcements) || [];
+    if (!list.length) { bar.style.display = 'none'; return; }
+    var top = list.slice(0, 3);
+    inner.innerHTML = top.map(function(a) {
+      var bodyHtml = escapeHtmlText(a.body).replace(/\n/g, '<br>');
+      var dateStr = formatAnnouncementDate(a.date_posted);
+      return '<div class="announcement-item">' +
+        '<div class="ann-dot info"></div>' +
+        '<span class="ann-text"><strong>' + escapeHtmlText(a.title) + '</strong></span>' +
+        '<span class="ann-chevron">&#9660;</span>' +
+        '<div class="ann-dropdown">' +
+          '<div class="ann-dropdown-title">' + escapeHtmlText(a.title) + '</div>' +
+          '<div class="ann-dropdown-body">' + bodyHtml + '</div>' +
+          '<div class="ann-dropdown-footer">HOA Board' + (dateStr ? ' &middot; ' + dateStr : '') + '</div>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    bar.style.display = '';
+  } catch (e) {
+    bar.style.display = 'none';
+  }
+}
+
 function monthKeyFromDate(iso) {
   var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((iso || '').trim());
   var d = m ? new Date(+m[1], +m[2] - 1, +m[3]) : new Date(iso);
@@ -304,6 +356,7 @@ async function loadMinutes() {
   }
 }
 
+document.addEventListener('DOMContentLoaded', loadBanner);
 document.addEventListener('DOMContentLoaded', loadAnnouncements);
 document.addEventListener('DOMContentLoaded', loadMinutes);
 
