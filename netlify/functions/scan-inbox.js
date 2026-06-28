@@ -64,6 +64,26 @@ async function getMessage(gmailToken, id) {
   return JSON.parse(r.body);
 }
 
+// The original request date = the EARLIEST message in the thread. The message we
+// fetch from the list query is often a later forward/reply (from Eddie or the
+// board), so its Date header is not when the resident actually submitted.
+async function getThreadStartDate(gmailToken, threadId, fallback) {
+  try {
+    const r = await httpsReq("GET", "gmail.googleapis.com",
+      `/gmail/v1/users/me/threads/${threadId}?format=metadata&metadataHeaders=Date`,
+      { Authorization: `Bearer ${gmailToken}` });
+    const msgs = (JSON.parse(r.body).messages) || [];
+    if (!msgs.length) return fallback;
+    let earliest = msgs[0];
+    for (const m of msgs) {
+      if (Number(m.internalDate || 0) < Number(earliest.internalDate || 0)) earliest = m;
+    }
+    const dateHdr = (earliest.payload?.headers || []).find(h => h.name.toLowerCase() === "date");
+    return (dateHdr && dateHdr.value) ||
+           (earliest.internalDate ? new Date(Number(earliest.internalDate)).toUTCString() : fallback);
+  } catch (e) { return fallback; }
+}
+
 function getHeader(headers, name) {
   return (headers.find(h => h.name.toLowerCase() === name.toLowerCase()) || {}).value || "";
 }
@@ -562,13 +582,17 @@ exports.handler = async (event) => {
           // Extract original sender from forwarded chains
           const senderInfo = extractOriginalSender({ from: rawFrom, body, subject });
 
+          // Use the original request date (earliest message in the thread), not the
+          // date of the later forward/reply that the list query happened to return.
+          const requestDate = await getThreadStartDate(gmailToken, threadId, getHeader(headers, "Date"));
+
           const emailData = {
             id: msgRef.id,
             threadId,
             from: senderInfo.from,
             originalFrom: rawFrom,
             subject,
-            date: getHeader(headers, "Date"),
+            date: requestDate,
             body,
             isForwarded: senderInfo.isForwarded
           };
