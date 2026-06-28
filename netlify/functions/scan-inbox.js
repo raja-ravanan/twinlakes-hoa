@@ -183,15 +183,32 @@ function getHeader(headers, name) {
   return (headers.find(h => h.name.toLowerCase() === name.toLowerCase()) || {}).value || "";
 }
 
+// Walk the (often deeply nested) MIME tree and pull out the body text. Gmail nests
+// text/plain inside multipart/alternative > multipart/mixed, so a flat scan of the
+// top-level parts misses it and returns "" — which silently dropped every board vote.
 function decodeBody(msg) {
   try {
-    const parts = msg.payload.parts || [msg.payload];
-    for (const part of parts) {
-      if (part.mimeType === "text/plain" && part.body?.data)
-        return Buffer.from(part.body.data, "base64url").toString("utf8").slice(0, 2000);
-    }
-    if (msg.payload.body?.data)
-      return Buffer.from(msg.payload.body.data, "base64url").toString("utf8").slice(0, 2000);
+    const decode = (p) => Buffer.from(p.body.data, "base64url").toString("utf8");
+    const htmlToText = (h) => h
+      .replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<script[\s\S]*?<\/script>/gi, " ")
+      .replace(/<\/(p|div|br|tr|li|h[1-6])>/gi, "\n").replace(/<[^>]+>/g, " ")
+      .replace(/&nbsp;/gi, " ").replace(/&amp;/gi, "&").replace(/&lt;/gi, "<").replace(/&gt;/gi, ">")
+      .replace(/[ \t]+/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+    // Depth-first search; prefer text/plain, fall back to text/html (converted).
+    const findText = (node, mime) => {
+      if (!node) return "";
+      if (node.mimeType === mime && node.body?.data) return decode(node);
+      for (const c of (node.parts || [])) {
+        const r = findText(c, mime);
+        if (r) return r;
+      }
+      return "";
+    };
+    const plain = findText(msg.payload, "text/plain");
+    if (plain) return plain.slice(0, 2000);
+    const html = findText(msg.payload, "text/html");
+    if (html) return htmlToText(html).slice(0, 2000);
+    if (msg.payload.body?.data) return decode(msg.payload).slice(0, 2000);
   } catch {}
   return "";
 }
