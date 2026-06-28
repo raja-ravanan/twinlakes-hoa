@@ -412,6 +412,7 @@ function extractOriginalSender(emailData) {
   const boardEmails = [
     "tonybackert@gmail.com", "12.yashumb@gmail.com", "mschnell194@gmail.com",
     "ramana.nar@yahoo.com", "ratgreen13@gmail.com", "rraja14@gmail.com",
+    "aimee.green@pnc.com", "aimeegreen", "aimee.green",
     "hoa.twinlakes.board@gmail.com", "edouglas@mulloyproperties.com",
     "peterfotos@yahoo.com"
   ];
@@ -491,12 +492,19 @@ exports.handler = async (event) => {
 
     // Get existing Gmail message IDs to avoid duplicates (column H = email_subject, use message IDs stored separately)
     // We store Gmail message ID in a hidden way - check the drive_folder_url column for existing items
-    const [existingArcIds, existingVioIds, existingOthIds] = await Promise.all([
+    const [existingArcIds, existingVioIds, existingOthIds,
+           threadArc, threadVio, threadOth] = await Promise.all([
       getExistingIds(googleToken, "ARC_Requests", "A"),
       getExistingIds(googleToken, "Violations", "A"),
-      getExistingIds(googleToken, "Other_Items", "A")
+      getExistingIds(googleToken, "Other_Items", "A"),
+      // Persisted Gmail thread IDs (trailing dedup column on each tab)
+      getExistingIds(googleToken, "ARC_Requests", "AU"),
+      getExistingIds(googleToken, "Violations", "O"),
+      getExistingIds(googleToken, "Other_Items", "J")
     ]);
-    // Also track processed Gmail IDs to prevent duplicates in this run
+    // Stable cross-run dedup: one Gmail thread = one request
+    const existingThreadIds = new Set([...threadArc, ...threadVio, ...threadOth]);
+    // Also track processed Gmail thread IDs to prevent duplicates in this run
     const processedGmailIds = new Set();
 
     // Fetch emails within a date window. daysBack = how far back to start (older bound);
@@ -530,24 +538,29 @@ exports.handler = async (event) => {
       for (const msgRef of batch) {
         try {
           const msg = await getMessage(gmailToken, msgRef.id);
+          const threadId = msg.threadId || msgRef.id;
           const headers = msg.payload?.headers || [];
           const rawFrom = getHeader(headers, "From");
           const subject = getHeader(headers, "Subject");
           const body = decodeBody(msg);
-          
-          // Extract original sender from forwarded chains
-          const senderInfo = extractOriginalSender({ from: rawFrom, body, subject });
-          
-          // Dedup by ARC number in subject to prevent counting same request multiple times
-          const arcNum = extractArcNumber(subject);
-          if (arcNum && allIds.has("ARC-" + arcNum)) {
-            console.log(`Skipping duplicate ARC-${arcNum} from forwarded email`);
+
+          // Dedup by Gmail thread ID — one thread = one request, stable across runs.
+          // Skip if this thread was already saved on a previous run...
+          if (existingThreadIds.has(threadId)) {
+            console.log(`Skipping already-saved thread ${threadId} (${subject})`);
             results.skipped++;
             continue;
           }
-          
+          // ...or already handled earlier in this same run.
+          if (processedGmailIds.has(threadId)) { results.skipped++; continue; }
+          processedGmailIds.add(threadId);
+
+          // Extract original sender from forwarded chains
+          const senderInfo = extractOriginalSender({ from: rawFrom, body, subject });
+
           const emailData = {
             id: msgRef.id,
+            threadId,
             from: senderInfo.from,
             originalFrom: rawFrom,
             subject,
@@ -557,10 +570,6 @@ exports.handler = async (event) => {
           };
 
           if (!emailData.subject && !emailData.body) { results.skipped++; continue; }
-          
-          // Skip if already processed in this run
-          if (processedGmailIds.has(msgRef.id)) { results.skipped++; continue; }
-          processedGmailIds.add(msgRef.id);
 
           // Categorize and analyze in parallel
           const category = await categorizeEmail(emailData);
@@ -577,13 +586,21 @@ exports.handler = async (event) => {
           // Enhance with resident directory if available
           if (process.env.RESIDENT_SHEET_ID) {
             const fromEmail = emailData.from.match(/[\w.-]+@[\w.-]+/)?.[0] || "";
-            const resident = await getResidentByEmail(googleToken, fromEmail) || 
+            // When a board member relayed the request, the From email/name is NOT the
+            // homeowner — match by ADDRESS and OVERWRITE the (board) attribution.
+            const relayedByBoard = senderInfo.isForwarded;
+            const resident = (!relayedByBoard && await getResidentByEmail(googleToken, fromEmail)) ||
                             await getResidentByAddress(googleToken, address);
             if (resident) {
-              if (!analysis.homeowner_name || analysis.homeowner_name === "Unknown") analysis.homeowner_name = resident.name;
-              if (!analysis.homeowner_email) analysis.homeowner_email = resident.email;
+              if (relayedByBoard || !analysis.homeowner_name || analysis.homeowner_name === "Unknown") analysis.homeowner_name = resident.name;
+              if (relayedByBoard || !analysis.homeowner_email) analysis.homeowner_email = resident.email;
               if (!analysis.address || analysis.address === "Unknown") analysis.address = resident.address;
-              console.log(`Matched resident: ${resident.name} at ${resident.address}`);
+              console.log(`Matched resident: ${resident.name} at ${resident.address}${relayedByBoard ? " (overrode board relay)" : ""}`);
+            } else if (relayedByBoard) {
+              // Board relayed but no directory match — blank the board attribution so a
+              // board member is never recorded as the requesting homeowner.
+              console.log(`Board relay with no directory match; clearing board sender as homeowner`);
+              analysis.homeowner_name = analysis.homeowner_name && !/aimee|green|tony|yashu|ramana|raja|mike/i.test(analysis.homeowner_name) ? analysis.homeowner_name : "";
             }
           }
 
@@ -626,7 +643,8 @@ exports.handler = async (event) => {
                 analysis.ai_pros || "", analysis.ai_cons || "",
                 // 24 empty board-vote cells: 6 members x (vote, conditions, note, voted_at)
                 "","","","", "","","","", "","","","", "","","","", "","","","", "","","","",
-                "0","Open","","No","","0", analysis.conflict_flag || "no"
+                "0","Open","","No","","0", analysis.conflict_flag || "no",
+                emailData.threadId  // col AU (47): Gmail thread ID for cross-run dedup
               ]);
               existingArcIds.add(itemId);
               results.arc++;
@@ -635,7 +653,8 @@ exports.handler = async (event) => {
                 itemId, emailData.date, analysis.homeowner_name || "", analysis.homeowner_email || "",
                 analysis.address || "", analysis.violation_type || "", analysis.description || "",
                 emailData.subject, folderUrl, analysis.ai_summary || "", analysis.ai_suggestion || "",
-                "Open", "[]", "0"
+                "Open", "[]", "0",
+                emailData.threadId  // col O (15): Gmail thread ID for cross-run dedup
               ]);
               existingVioIds.add(itemId);
               results.violation++;
@@ -646,7 +665,8 @@ exports.handler = async (event) => {
             await sheetsAppend(googleToken, "Other_Items", [
               itemId, emailData.date, analysis.from || emailData.from, emailData.subject,
               analysis.category || "Other", otherSummary,
-              "Open", "", analysis.needs_attention || "yes"
+              "Open", "", analysis.needs_attention || "yes",
+              emailData.threadId  // col J (10): Gmail thread ID for cross-run dedup
             ]);
             existingOthIds.add(itemId);
             results.other++;
