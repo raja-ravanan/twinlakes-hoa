@@ -64,24 +64,97 @@ async function getMessage(gmailToken, id) {
   return JSON.parse(r.body);
 }
 
-// The original request date = the EARLIEST message in the thread. The message we
-// fetch from the list query is often a later forward/reply (from Eddie or the
-// board), so its Date header is not when the resident actually submitted.
-async function getThreadStartDate(gmailToken, threadId, fallback) {
+// Map each board member's email(s) to their column key.
+const BOARD_VOTE_EMAILS = {
+  "tonybackert@gmail.com": "tony",
+  "12.yashumb@gmail.com":  "yashu",
+  "ramana.nar@yahoo.com":  "ramana",
+  "ramana_nar@yahoo.com":  "ramana",
+  "rraja14@gmail.com":     "raja",
+  "aimee.green@pnc.com":   "aimee",
+  "mschnell194@gmail.com": "mike"
+};
+function boardKeyForEmail(email) {
+  const e = (email || "").toLowerCase();
+  for (const [addr, key] of Object.entries(BOARD_VOTE_EMAILS)) {
+    if (e === addr || e.includes(addr.split("@")[0])) return key;
+  }
+  return null;
+}
+
+// Fetch the thread once: returns the original request date (earliest message) and,
+// per board member, their latest reply text — so votes can be extracted for ARC items.
+// The list query often returns a later forward/reply, so its own Date header is wrong.
+async function getThreadData(gmailToken, threadId, fallbackDate) {
+  const out = { startDate: fallbackDate, boardMessages: {} };
   try {
     const r = await httpsReq("GET", "gmail.googleapis.com",
-      `/gmail/v1/users/me/threads/${threadId}?format=metadata&metadataHeaders=Date`,
+      `/gmail/v1/users/me/threads/${threadId}?format=full`,
       { Authorization: `Bearer ${gmailToken}` });
     const msgs = (JSON.parse(r.body).messages) || [];
-    if (!msgs.length) return fallback;
+    if (!msgs.length) return out;
     let earliest = msgs[0];
     for (const m of msgs) {
       if (Number(m.internalDate || 0) < Number(earliest.internalDate || 0)) earliest = m;
+      const h = m.payload?.headers || [];
+      const from = (h.find(x => x.name.toLowerCase() === "from") || {}).value || "";
+      const fromEmail = (from.match(/[\w.-]+@[\w.-]+/) || [""])[0];
+      const key = boardKeyForEmail(fromEmail);
+      if (!key) continue;
+      const dt = Number(m.internalDate || 0);
+      if (!out.boardMessages[key] || dt > out.boardMessages[key].dt) {
+        const dh = (h.find(x => x.name.toLowerCase() === "date") || {}).value || "";
+        out.boardMessages[key] = { dt, date: dh, body: decodeBody(m) };
+      }
     }
     const dateHdr = (earliest.payload?.headers || []).find(h => h.name.toLowerCase() === "date");
-    return (dateHdr && dateHdr.value) ||
-           (earliest.internalDate ? new Date(Number(earliest.internalDate)).toUTCString() : fallback);
-  } catch (e) { return fallback; }
+    out.startDate = (dateHdr && dateHdr.value) ||
+                    (earliest.internalDate ? new Date(Number(earliest.internalDate)).toUTCString() : fallbackDate);
+  } catch (e) { console.log("getThreadData error:", e.message); }
+  return out;
+}
+
+// Generic Claude JSON call.
+async function callClaudeJSON(system, user, maxTokens) {
+  try {
+    const r = await httpsReq("POST", "api.anthropic.com", "/v1/messages",
+      { "Content-Type": "application/json", "x-api-key": process.env.ANTHROPIC_API_KEY, "anthropic-version": "2023-06-01" },
+      { model: "claude-haiku-4-5-20251001", max_tokens: maxTokens || 600, system, messages: [{ role: "user", content: user }] });
+    const resp = JSON.parse(r.body);
+    if (resp.error) { console.log("Claude vote error:", JSON.stringify(resp.error)); return {}; }
+    const text = resp.content?.[0]?.text || "{}";
+    const clean = text.replace(/^```json\s*/i, "").replace(/```\s*$/i, "").trim();
+    return JSON.parse(clean);
+  } catch (e) { console.log("callClaudeJSON error:", e.message); return {}; }
+}
+
+// Extract each board member's vote from their reply text. Board members approve in
+// writing ("I approve", "approved", "fine with me"); they rarely decline by email —
+// discussion or questions without a clear approval stay "Pending" (never a denial).
+async function extractBoardVotes(boardMessages) {
+  const members = Object.keys(boardMessages || {});
+  const votes = {};
+  if (!members.length) return votes;
+  const blocks = members.map(k => `### ${k}\n${(boardMessages[k].body || "").slice(0, 900)}`).join("\n\n");
+  const system = `You analyze HOA board members' email replies on an ARC (architectural) request and determine each member's VOTE.
+- Board members APPROVE by writing things like "I approve", "approved", "yes from me", "I'm good with it", "no objection", "fine with me", "ok to proceed".
+- If they approve but attach a requirement/stipulation, the vote is "Conditional" and put the requirement text in "conditions".
+- They almost NEVER decline in writing. If a reply is only discussion, a question, or raises a concern WITHOUT clearly approving, the vote is "Pending" — do NOT treat that as a denial.
+- Only use "Denied" if the member EXPLICITLY rejects/denies the request.
+Return ONLY a JSON object keyed by the exact member keys provided, e.g. {"tony":{"vote":"Approved|Conditional|Denied|Pending","conditions":"","note":""}}. Include every member key given.`;
+  const user = `Member keys: ${members.join(", ")}\n\nReplies:\n\n${blocks}`;
+  const resp = await callClaudeJSON(system, user, 700);
+  for (const k of members) {
+    const v = resp[k] || {};
+    const vote = ["Approved", "Conditional", "Denied", "Pending"].includes(v.vote) ? v.vote : "Pending";
+    votes[k] = {
+      vote,
+      conditions: v.conditions || "",
+      note: v.note || "",
+      voted_at: vote === "Pending" ? "" : (boardMessages[k].date || "")
+    };
+  }
+  return votes;
 }
 
 function getHeader(headers, name) {
@@ -582,9 +655,9 @@ exports.handler = async (event) => {
           // Extract original sender from forwarded chains
           const senderInfo = extractOriginalSender({ from: rawFrom, body, subject });
 
-          // Use the original request date (earliest message in the thread), not the
-          // date of the later forward/reply that the list query happened to return.
-          const requestDate = await getThreadStartDate(gmailToken, threadId, getHeader(headers, "Date"));
+          // Fetch the thread once: original request date (earliest message) plus each
+          // board member's latest reply (for vote extraction on ARC items below).
+          const threadData = await getThreadData(gmailToken, threadId, getHeader(headers, "Date"));
 
           const emailData = {
             id: msgRef.id,
@@ -592,7 +665,7 @@ exports.handler = async (event) => {
             from: senderInfo.from,
             originalFrom: rawFrom,
             subject,
-            date: requestDate,
+            date: threadData.startDate,
             body,
             isForwarded: senderInfo.isForwarded
           };
@@ -674,16 +747,39 @@ exports.handler = async (event) => {
               const displayTitle = analysis.title || analysis.description || emailData.subject;
               const displayAddress = analysis.address && analysis.address !== "Unknown" ? analysis.address : "";
               const displayName = analysis.homeowner_name && analysis.homeowner_name !== "Unknown" ? analysis.homeowner_name : "";
-              
+
+              // Extract board votes from the thread replies (only for ARC items).
+              const votes = await extractBoardVotes(threadData.boardMessages);
+              // Build the 24 vote cells in column order: tony, yashu, ramana, raja, aimee, mike.
+              const VOTE_ORDER = ["tony", "yashu", "ramana", "raja", "aimee", "mike"];
+              const voteCells = [];
+              let approveCount = 0;
+              const condParts = [];
+              for (const k of VOTE_ORDER) {
+                const v = votes[k] || {};
+                const vote = v.vote && v.vote !== "Pending" ? v.vote : "";
+                // Both unconditional and conditional approvals count toward the majority.
+                if (vote === "Approved" || vote === "Conditional") approveCount++;
+                if (vote === "Conditional" && v.conditions) condParts.push(`${k}: ${v.conditions}`);
+                voteCells.push(vote, v.conditions || "", v.note || "", v.voted_at || "");
+              }
+              // Per the board: Approved only when a full-board majority (>=4 of 6) approves;
+              // otherwise it stays Open (they rarely deny in writing).
+              const finalStatus = approveCount >= 4 ? "Approved" : "Open";
+              const consolidatedConditions = condParts.join(" | ");
+              if (Object.keys(votes).length) {
+                console.log(`Votes for ${itemId}: ${approveCount} approvals -> ${finalStatus}`);
+              }
+
               await sheetsAppend(googleToken, "ARC_Requests", [
                 itemId, emailData.date, displayName, analysis.homeowner_email || "",
                 displayAddress, analysis.request_type || "Other", displayTitle,
                 emailData.subject, folderUrl, attachmentUrls.join(", "),
                 analysis.ai_summary || "", analysis.ai_recommendation || "", analysis.ai_reasoning || "",
                 analysis.ai_pros || "", analysis.ai_cons || "",
-                // 24 empty board-vote cells: 6 members x (vote, conditions, note, voted_at)
-                "","","","", "","","","", "","","","", "","","","", "","","","", "","","","",
-                "0","Open","","No","","0", analysis.conflict_flag || "no",
+                // 24 board-vote cells: 6 members x (vote, conditions, note, voted_at)
+                ...voteCells,
+                String(approveCount), finalStatus, consolidatedConditions, "No", "", "0", analysis.conflict_flag || "no",
                 emailData.threadId  // col AU (47): Gmail thread ID for cross-run dedup
               ]);
               existingArcIds.add(itemId);
