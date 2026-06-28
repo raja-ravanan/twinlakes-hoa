@@ -390,13 +390,17 @@ async function getResidentByAddress(token, address) {
   if (!process.env.RESIDENT_SHEET_ID || !address) return null;
   try {
     if (!residentCache) await getResidentByEmail(token, ""); // Initialize cache
-    const addrLower = address.toLowerCase();
-    const houseNum = addrLower.match(/\b(1[0-9]{4})\b/)?.[0];
-    if (!houseNum) return null;
-    const match = residentCache.find(row => (row[1] || "").toString().trim() === houseNum);
-    if (match) {
-      const fullAddress = `${(match[1] || "").trim()} ${(match[2] || "").trim()}`.trim();
-      return { name: match[0] || "", address: fullAddress, email: (match[3] || "").split(";")[0].trim() };
+    // Twin Lakes uses BOTH 4-digit (e.g. 1940) and 5-digit (e.g. 15820, 16006)
+    // house numbers, so collect every 3–5 digit run and try each against the
+    // directory's "Street No" column. First exact match wins (the AI-extracted
+    // address number is fed first, before any subject text).
+    const candidates = address.match(/\b\d{3,5}\b/g) || [];
+    for (const houseNum of candidates) {
+      const match = residentCache.find(row => (row[1] || "").toString().trim() === houseNum);
+      if (match) {
+        const fullAddress = `${(match[1] || "").trim()} ${(match[2] || "").trim()}`.trim();
+        return { name: match[0] || "", address: fullAddress, email: (match[3] || "").split(";")[0].trim() };
+      }
     }
   } catch(e) {}
   return null;
@@ -577,32 +581,44 @@ exports.handler = async (event) => {
 
           if (category === "Other" && analysis.needs_attention === "no") { results.skipped++; continue; }
 
-          // Extract address from analysis - prefer numeric address for ID generation
+          // ── Resolve the homeowner from the DIRECTORY, keyed by the request ADDRESS ──
+          // Workflow: residents email Eddie (Mulloy property mgr), who forwards to the
+          // board; or a board member forwards it. So the email SENDER is almost never
+          // the actual homeowner. The resident's ADDRESS (in the request) is the reliable
+          // key — look it up in the directory and let that be authoritative for identity.
+          if (process.env.RESIDENT_SHEET_ID) {
+            // The house number sometimes appears only in the subject (e.g. "ARC-15820 …"),
+            // so feed both the AI-extracted address and the subject to the lookup.
+            const lookupAddr = `${analysis.address || ""} ${emailData.subject || ""}`;
+            let resident = await getResidentByAddress(googleToken, lookupAddr);
+            // Fall back to sender-email match ONLY when the sender is a real resident
+            // (not a board member and not Mulloy).
+            const senderEmail = (emailData.from.match(/[\w.-]+@[\w.-]+/)?.[0] || "").toLowerCase();
+            const internalSender = senderInfo.isForwarded || /mulloyproperties\.com/.test(senderEmail);
+            if (!resident && !internalSender) {
+              resident = await getResidentByEmail(googleToken, senderEmail);
+            }
+            if (resident) {
+              // Directory is the source of truth for who the homeowner is.
+              analysis.homeowner_name = resident.name;
+              analysis.homeowner_email = resident.email;
+              if (resident.address) analysis.address = resident.address;
+              console.log(`Resident (by directory address): ${resident.name} at ${resident.address}`);
+            } else if (internalSender) {
+              // No directory match AND an internal sender — never record the forwarder
+              // (Eddie or a board member) as the requesting homeowner.
+              console.log(`No directory match for internal sender; clearing homeowner name/email`);
+              analysis.homeowner_name = "";
+              analysis.homeowner_email = "";
+            }
+          }
+
+          // Generate the item ID AFTER directory resolution so it reflects the real
+          // house number (e.g. ARC-15820) rather than a random fallback.
           const address = analysis.address || "";
           const itemId = generateId(category, address, allIds);
           allIds.add(itemId); // Add immediately to prevent parallel duplicates
           console.log(`Categorized email as ${category}, ID: ${itemId}, address: "${address}", name: "${analysis.homeowner_name || ""}"`);
-          
-          // Enhance with resident directory if available
-          if (process.env.RESIDENT_SHEET_ID) {
-            const fromEmail = emailData.from.match(/[\w.-]+@[\w.-]+/)?.[0] || "";
-            // When a board member relayed the request, the From email/name is NOT the
-            // homeowner — match by ADDRESS and OVERWRITE the (board) attribution.
-            const relayedByBoard = senderInfo.isForwarded;
-            const resident = (!relayedByBoard && await getResidentByEmail(googleToken, fromEmail)) ||
-                            await getResidentByAddress(googleToken, address);
-            if (resident) {
-              if (relayedByBoard || !analysis.homeowner_name || analysis.homeowner_name === "Unknown") analysis.homeowner_name = resident.name;
-              if (relayedByBoard || !analysis.homeowner_email) analysis.homeowner_email = resident.email;
-              if (!analysis.address || analysis.address === "Unknown") analysis.address = resident.address;
-              console.log(`Matched resident: ${resident.name} at ${resident.address}${relayedByBoard ? " (overrode board relay)" : ""}`);
-            } else if (relayedByBoard) {
-              // Board relayed but no directory match — blank the board attribution so a
-              // board member is never recorded as the requesting homeowner.
-              console.log(`Board relay with no directory match; clearing board sender as homeowner`);
-              analysis.homeowner_name = analysis.homeowner_name && !/aimee|green|tony|yashu|ramana|raja|mike/i.test(analysis.homeowner_name) ? analysis.homeowner_name : "";
-            }
-          }
 
           const attachments = getAttachments(msg);
           const attachmentUrls = [];
