@@ -83,6 +83,23 @@ function boardKeyForEmail(email) {
   return null;
 }
 
+// Keep only the NEW text a person wrote, dropping the quoted/forwarded chain below it
+// (so one member's "I approve" isn't lost in, or confused with, quoted prior messages).
+function topReply(text) {
+  if (!text) return "";
+  const out = [];
+  for (const line of text.replace(/\r/g, "").split("\n")) {
+    const t = line.trim();
+    if (/^>/.test(t)) break;
+    if (/^On .*wrote:$/i.test(t)) break;
+    if (/^From:\s/i.test(t)) break;
+    if (/^-+\s*Forwarded message/i.test(t)) break;
+    if (/^_{5,}$/.test(t)) break;
+    out.push(line);
+  }
+  return out.join("\n").trim();
+}
+
 // Fetch the thread once: returns the original request date (earliest message) and,
 // per board member, their latest reply text — so votes can be extracted for ARC items.
 // The list query often returns a later forward/reply, so its own Date header is wrong.
@@ -103,10 +120,14 @@ async function getThreadData(gmailToken, threadId, fallbackDate) {
       const key = boardKeyForEmail(fromEmail);
       if (!key) continue;
       const dt = Number(m.internalDate || 0);
-      if (!out.boardMessages[key] || dt > out.boardMessages[key].dt) {
-        const dh = (h.find(x => x.name.toLowerCase() === "date") || {}).value || "";
-        out.boardMessages[key] = { dt, date: dh, body: decodeBody(m) };
-      }
+      const dh = (h.find(x => x.name.toLowerCase() === "date") || {}).value || "";
+      // Accumulate EVERY reply this member wrote in the thread (their vote may be in
+      // any one of them), keeping only their own new text, and track the latest date.
+      const reply = topReply(decodeBody(m));
+      if (!out.boardMessages[key]) out.boardMessages[key] = { dt: 0, date: dh, body: "" };
+      const slot = out.boardMessages[key];
+      if (reply) slot.body += (slot.body ? "\n---\n" : "") + reply;
+      if (dt >= slot.dt) { slot.dt = dt; slot.date = dh; }
     }
     const dateHdr = (earliest.payload?.headers || []).find(h => h.name.toLowerCase() === "date");
     out.startDate = (dateHdr && dateHdr.value) ||
