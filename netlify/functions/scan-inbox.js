@@ -72,6 +72,7 @@ const BOARD_VOTE_EMAILS = {
   "ramana_nar@yahoo.com":  "ramana",
   "rraja14@gmail.com":     "raja",
   "aimee.green@pnc.com":   "aimee",
+  "ratgreen13@gmail.com":  "aimee",
   "mschnell194@gmail.com": "mike"
 };
 function boardKeyForEmail(email) {
@@ -708,6 +709,19 @@ exports.handler = async (event) => {
               analysis.homeowner_name = "";
               analysis.homeowner_email = "";
             }
+          }
+
+          // The initial AI summary/reasoning were generated from the forwarded email,
+          // so they may name the board member or Eddie as the requester. Now that the
+          // real homeowner is known, regenerate them attributed to the actual resident.
+          if ((category === "ARC" || category === "Violation") && analysis.homeowner_name) {
+            const fixed = await callClaudeJSON(
+              `You write a concise, factual summary of an HOA ${category === "ARC" ? "architectural (ARC)" : "violation"} request. The request is FROM and ABOUT the homeowner "${analysis.homeowner_name}" at "${analysis.address || ""}". The email is often a forward from a board member or property manager (Eddie Douglas / Mulloy) — IGNORE the forwarder entirely; never describe a board member or Eddie as the requester. Refer only to the named homeowner. Return ONLY JSON: {"ai_summary":"2-3 sentences","ai_reasoning":"1-2 sentences on how it fits HOA guidelines"}.`,
+              `Homeowner: ${analysis.homeowner_name}\nAddress: ${analysis.address || ""}\nType: ${analysis.request_type || analysis.violation_type || ""}\nTitle: ${analysis.title || analysis.description || ""}\n\nEmail content:\n${(emailData.body || "").slice(0, 2500)}`,
+              500
+            );
+            if (fixed.ai_summary) analysis.ai_summary = fixed.ai_summary;
+            if (fixed.ai_reasoning) analysis.ai_reasoning = fixed.ai_reasoning;
           }
 
           // Generate the item ID AFTER directory resolution so it reflects the real
