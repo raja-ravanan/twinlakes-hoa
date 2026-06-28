@@ -273,6 +273,9 @@
         <button onclick="runScan(7,20);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Last 7 days (20 emails)</button>
         <button onclick="runScan(30,20);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Last 30 days (20 emails)</button>
         <button onclick="runScan(90,30);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Last 90 days (30 emails)</button>
+        <div style="font-size:11px;font-family:sans-serif;font-weight:700;color:#999;padding:8px 8px 4px;text-transform:uppercase;letter-spacing:1px;border-top:1px solid #eee;margin-top:4px;">3-Month Backfill</div>
+        <button onclick="runScan(45,60,0);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Step 1 · Last 45 days (60 emails)</button>
+        <button onclick="runScan(90,60,45);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Step 2 · 45–90 days ago (60 emails)</button>
       </div>
     </div>
     <button class="btn-logout" onclick="logout()">Sign Out</button>
@@ -292,7 +295,7 @@
   <!-- Stats Row -->
   <div class="stats-row" id="statsRow">
     <div class="stat-card urgent"><div class="stat-num" id="statOpenARC">—</div><div class="stat-label">Open ARC Requests</div></div>
-    <div class="stat-card warning"><div class="stat-num" id="statOpenVio">—</div><div class="stat-label">Open Violations</div></div>
+    <div class="stat-card warning" data-admin="true"><div class="stat-num" id="statOpenVio">—</div><div class="stat-label">Open Violations</div></div>
     <div class="stat-card"><div class="stat-num" id="statPendingVotes">—</div><div class="stat-label">Awaiting My Vote</div></div>
     <div class="stat-card good"><div class="stat-num" id="statResolved">—</div><div class="stat-label">Resolved This Month</div></div>
   </div>
@@ -300,12 +303,12 @@
   <!-- Tabs -->
   <div class="tabs">
     <button class="tab active" onclick="switchTab('arc')">🏗️ ARC Requests <span class="tab-badge" id="arcBadge">0</span></button>
-    <button class="tab" onclick="switchTab('violations')">⚠️ Violations <span class="tab-badge" id="vioBadge">0</span></button>
-    <button class="tab" onclick="switchTab('other')">📂 Other Items <span class="tab-badge" id="othBadge">0</span></button>
-    <button class="tab" onclick="switchTab('requests')">📨 Resident Requests <span class="tab-badge" id="reqBadge">0</span></button>
+    <button class="tab" data-admin="true" onclick="switchTab('violations')">⚠️ Violations <span class="tab-badge" id="vioBadge">0</span></button>
+    <button class="tab" data-admin="true" onclick="switchTab('other')">📂 Other Items <span class="tab-badge" id="othBadge">0</span></button>
+    <button class="tab" data-admin="true" onclick="switchTab('requests')">📨 Resident Requests <span class="tab-badge" id="reqBadge">0</span></button>
     <button class="tab" onclick="switchTab('announcements')">📣 Announcements <span class="tab-badge" id="annBadge">0</span></button>
     <button class="tab" onclick="switchTab('minutes')">📋 Meeting Minutes <span class="tab-badge" id="minBadge">0</span></button>
-    <button class="tab" onclick="switchTab('activity')">📋 Activity Log</button>
+    <button class="tab" data-admin="true" onclick="switchTab('activity')">📋 Activity Log</button>
   </div>
 
   <!-- Filter Bar -->
@@ -467,6 +470,11 @@
     document.getElementById("userName").textContent = currentUser.name;
     document.getElementById("userRole").textContent = currentUser.role;
     if (currentUser.isAdmin) document.getElementById("scanBtnWrap").style.display = "flex";
+    // Board members see only ARC Requests, Announcements, Meeting Minutes.
+    // Admin-only tabs/cards (Violations, Other Items, Resident Requests, Activity Log) are hidden for non-admins.
+    if (!currentUser.isAdmin) {
+      document.querySelectorAll('[data-admin="true"]').forEach(el => { el.style.display = "none"; });
+    }
     loadDashboard();
     const ls = localStorage.getItem("lastScan");
     if (ls) document.getElementById("lastScan").textContent = "Last scan: " + new Date(ls).toLocaleString();
@@ -1146,7 +1154,7 @@
   }
 
   // ── Scan Inbox ────────────────────────────────────────
-  async function runScan(daysBack = 30, maxEmails = 20) {
+  async function runScan(daysBack = 30, maxEmails = 20, beforeDays = 0) {
     const secret = prompt("Enter admin secret:");
     if (!secret) return;
     document.getElementById("scanOverlay").classList.add("show");
@@ -1154,7 +1162,7 @@
     try {
       const res = await fetch("/.netlify/functions/scan-inbox", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ secret, daysBack, maxEmails })
+        body: JSON.stringify({ secret, daysBack, maxEmails, beforeDays })
       });
       const data = await res.json();
       if (data.success) {

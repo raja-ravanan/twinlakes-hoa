@@ -499,11 +499,18 @@ exports.handler = async (event) => {
     // Also track processed Gmail IDs to prevent duplicates in this run
     const processedGmailIds = new Set();
 
-    // Fetch emails — last 90 days, max 30 at a time
-    const { daysBack = 90, maxEmails = 30 } = reqBody;
-    console.log(`Fetching last ${maxEmails} emails from past ${daysBack} days...`);
+    // Fetch emails within a date window. daysBack = how far back to start (older bound);
+    // beforeDays = newer bound (0 = up to now). This lets us sweep older mail in chunks
+    // without re-processing the same newest N every time (e.g. 45–90 days ago).
+    const { daysBack = 90, maxEmails = 30, beforeDays = 0 } = reqBody;
     const after = Math.floor((Date.now() - daysBack * 24 * 60 * 60 * 1000) / 1000);
-    const q = encodeURIComponent(`in:inbox after:${after}`);
+    let queryStr = `in:inbox after:${after}`;
+    if (beforeDays > 0) {
+      const before = Math.floor((Date.now() - beforeDays * 24 * 60 * 60 * 1000) / 1000);
+      queryStr += ` before:${before}`;
+    }
+    console.log(`Fetching up to ${maxEmails} emails in window: daysBack=${daysBack}, beforeDays=${beforeDays} → q="${queryStr}"`);
+    const q = encodeURIComponent(queryStr);
     const listRes = await httpsReq("GET", "gmail.googleapis.com",
       `/gmail/v1/users/me/messages?maxResults=${maxEmails}&q=${q}`,
       { Authorization: `Bearer ${gmailToken}` });
