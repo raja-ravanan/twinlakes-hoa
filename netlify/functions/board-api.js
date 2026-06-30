@@ -230,6 +230,34 @@ exports.handler = async (event) => {
     };
   }
 
+  // ── GET RESIDENT DIRECTORY (master inventory) ──
+  if (action === "getResidents") {
+    const RID = process.env.RESIDENT_SHEET_ID;
+    if (!RID) return { statusCode: 200, body: JSON.stringify({ residents: [] }) };
+    const r = await httpsReq("GET", "sheets.googleapis.com",
+      `/v4/spreadsheets/${RID}/values/${encodeURIComponent("A1:Z500")}`,
+      { Authorization: `Bearer ${googleToken}` });
+    const rows = (JSON.parse(r.body).values) || [];
+    // Columns: A Name, B Street No, C Street Name, D Email, E Phone1, F Ph1Type, G Phone2, H Ph2Type, I Series
+    const residents = rows.slice(1)
+      .filter(row => (row[0] || "").trim())
+      .map(row => {
+        const streetNo = (row[1] || "").trim();
+        const streetName = (row[2] || "").trim();
+        return {
+          name: (row[0] || "").trim(),
+          streetNo, streetName,
+          address: `${streetNo} ${streetName}`.trim(),
+          email: (row[3] || "").trim(),
+          phone1: (row[4] || "").trim(),
+          phone2: (row[6] || "").trim(),
+          series: (row[8] || "").trim()
+        };
+      })
+      .sort((a, b) => a.streetName.localeCompare(b.streetName) || (parseInt(a.streetNo) || 0) - (parseInt(b.streetNo) || 0));
+    return { statusCode: 200, body: JSON.stringify({ residents, count: residents.length }) };
+  }
+
   // ── ADD ANNOUNCEMENT ──
   if (action === "addAnnouncement") {
     const title = (data?.title || "").trim();

@@ -43,7 +43,7 @@
     .stat-label { font-size:12px; font-family:sans-serif; color:var(--text-m); margin-top:4px; text-transform:uppercase; letter-spacing:0.5px; }
 
     /* ── TABS ── */
-    .tabs { display:flex; gap:4px; margin-bottom:20px; background:var(--white); border-radius:8px; padding:6px; border:1px solid #ddd; width:fit-content; }
+    .tabs { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:20px; background:var(--white); border-radius:8px; padding:6px; border:1px solid #ddd; max-width:100%; }
     .tab { padding:10px 24px; border-radius:6px; font-family:sans-serif; font-size:14px; font-weight:600; cursor:pointer; border:none; background:none; color:var(--text-m); transition:all 0.2s; position:relative; }
     .tab.active { background:var(--navy); color:var(--white); }
     .tab-badge { background:var(--red); color:#fff; border-radius:10px; padding:2px 7px; font-size:10px; font-weight:700; margin-left:6px; }
@@ -54,6 +54,33 @@
     .filter-select { padding:8px 12px; border:1px solid #ddd; border-radius:6px; font-size:13px; font-family:sans-serif; background:var(--white); color:var(--text); outline:none; cursor:pointer; }
     .search-input { padding:8px 14px; border:1px solid #ddd; border-radius:6px; font-size:13px; font-family:sans-serif; outline:none; flex:1; min-width:200px; }
     .search-input:focus, .filter-select:focus { border-color:var(--gold); }
+
+    /* ── RESIDENT INVENTORY ── */
+    .res-table-wrap { background:var(--white); border:1px solid #e5e0d8; border-radius:10px; overflow:hidden; }
+    .res-table { width:100%; border-collapse:collapse; font-family:sans-serif; font-size:13px; }
+    .res-table th { background:var(--navy-dark); color:#fff; text-align:left; padding:11px 14px; font-size:11px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; position:sticky; top:0; }
+    .res-table td { padding:11px 14px; border-top:1px solid #eee; color:var(--text-d); vertical-align:top; }
+    .res-table tr:hover td { background:#FAFAF7; }
+    .res-table a { color:var(--navy); text-decoration:none; }
+    .res-table a:hover { text-decoration:underline; }
+    .res-name { font-weight:700; color:var(--navy); }
+    .series-pill { display:inline-block; font-size:11px; font-weight:700; padding:2px 9px; border-radius:20px; }
+    .series-garden { background:#e6f4ea; color:#2e7d4f; }
+    .series-patriotic { background:#e7eef7; color:#1B4B7A; }
+    .series-none { background:#f0eee9; color:#999; }
+    .res-count { font-size:13px; font-family:sans-serif; color:var(--text-m); margin-bottom:12px; }
+
+    /* ── RESOURCE CARDS ── */
+    .resource-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:16px; }
+    .resource-card { display:block; background:var(--white); border:1px solid #e5e0d8; border-left:4px solid var(--gold); border-radius:10px; padding:22px; text-decoration:none; transition:box-shadow 0.2s, transform 0.1s; }
+    .resource-card:hover { box-shadow:0 6px 22px rgba(0,0,0,0.10); transform:translateY(-2px); }
+    .rc-icon { font-size:28px; margin-bottom:10px; }
+    .rc-title { font-size:16px; font-weight:800; color:var(--navy); margin-bottom:6px; }
+    .rc-desc { font-size:13px; font-family:sans-serif; color:var(--text-m); line-height:1.5; margin-bottom:14px; }
+    .rc-link { font-size:12px; font-family:sans-serif; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:0.5px; }
+    .resource-card.placeholder { border-left-color:#ccc; opacity:0.75; cursor:default; }
+    .resource-card.placeholder:hover { box-shadow:none; transform:none; }
+    .rc-badge { display:inline-block; font-size:11px; font-family:sans-serif; font-weight:700; color:#999; background:#f0eee9; padding:3px 10px; border-radius:20px; }
 
     /* ── ARC CARD ── */
     .arc-card { background:var(--white); border-radius:10px; border:1px solid #ddd; margin-bottom:16px; overflow:hidden; transition:box-shadow 0.2s; }
@@ -309,6 +336,8 @@
     <button class="tab" data-admin="true" onclick="switchTab('requests')">📨 Resident Requests <span class="tab-badge" id="reqBadge">0</span></button>
     <button class="tab" onclick="switchTab('announcements')">📣 Announcements <span class="tab-badge" id="annBadge">0</span></button>
     <button class="tab" onclick="switchTab('minutes')">📋 Meeting Minutes <span class="tab-badge" id="minBadge">0</span></button>
+    <button class="tab" onclick="switchTab('residents')">📇 Residents <span class="tab-badge" id="resBadge">0</span></button>
+    <button class="tab" onclick="switchTab('resources')">📁 Resources</button>
     <button class="tab" data-admin="true" onclick="switchTab('activity')">📋 Activity Log</button>
   </div>
 
@@ -424,6 +453,54 @@
     <div id="minList"><div class="loading"><div class="spinner"></div>Loading meeting minutes...</div></div>
   </div>
 
+  <div id="tab-residents" style="display:none">
+    <div class="filter-bar" style="display:flex;">
+      <input type="text" class="search-input" id="resSearch" placeholder="Search by name or address..." oninput="renderResidents()"/>
+      <select class="filter-select" id="resSeriesFilter" onchange="renderResidents()">
+        <option value="all">All Series</option>
+        <option value="Garden">Garden Series</option>
+        <option value="Patriotic">Patriotic Series</option>
+        <option value="none">Unassigned</option>
+      </select>
+      <select class="filter-select" id="resStreetFilter" onchange="renderResidents()">
+        <option value="all">All Streets</option>
+      </select>
+    </div>
+    <div class="res-count" id="resCount"></div>
+    <div id="resList"><div class="loading"><div class="spinner"></div>Loading residents...</div></div>
+  </div>
+
+  <div id="tab-resources" style="display:none">
+    <div style="font-size:13px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Board Documents &amp; Resources</div>
+    <p style="font-size:13px;font-family:sans-serif;color:var(--text-m);margin:0 0 18px;">Quick access to shared board files in Google Drive. These open in a new tab.</p>
+    <div class="resource-grid">
+      <a class="resource-card" href="https://drive.google.com/drive/folders/1ZH7dlxOYW-vAVlB7-hONumj_Fghez8rJ" target="_blank" rel="noopener noreferrer">
+        <div class="rc-icon">📋</div>
+        <div class="rc-title">Meeting Minutes</div>
+        <div class="rc-desc">Archive of board meeting minutes and notes.</div>
+        <div class="rc-link">Open in Drive →</div>
+      </a>
+      <a class="resource-card" href="https://drive.google.com/drive/folders/1SUhLzTTiwLJy5ufeBja7X9bRGqiQlvDG" target="_blank" rel="noopener noreferrer">
+        <div class="rc-icon">📑</div>
+        <div class="rc-title">Vendor Contracts</div>
+        <div class="rc-desc">Signed vendor agreements and service contracts.</div>
+        <div class="rc-link">Open in Drive →</div>
+      </a>
+      <a class="resource-card" href="https://drive.google.com/drive/folders/1SUhLzTTiwLJy5ufeBja7X9bRGqiQlvDG" target="_blank" rel="noopener noreferrer">
+        <div class="rc-icon">🛠️</div>
+        <div class="rc-title">Vendor Information</div>
+        <div class="rc-desc">Vendor contacts, quotes, and reference documents.</div>
+        <div class="rc-link">Open in Drive →</div>
+      </a>
+      <div class="resource-card placeholder">
+        <div class="rc-icon">📇</div>
+        <div class="rc-title">Resident Records</div>
+        <div class="rc-desc">Master inventory of all homes &mdash; see the <strong>Residents</strong> tab for the searchable directory.</div>
+        <div class="rc-badge">In the Residents tab</div>
+      </div>
+    </div>
+  </div>
+
   <div id="tab-activity" style="display:none">
     <div class="activity-panel">
       <div class="activity-title">Recent Activity</div>
@@ -459,6 +536,8 @@
   // ── State ─────────────────────────────────────────────
   let dashData = { arcs: [], violations: [], others: [], requests: [], announcements: [], minutes: [], activity: [] };
   let currentUser = null;
+  let residentsData = [];
+  let residentsLoaded = false;
   let currentEmailItemId = null;
   let selectedVotes = {};
 
@@ -505,6 +584,70 @@
     updateStats();
   }
 
+  // ── Resident Inventory ────────────────────────────────
+  async function loadResidents() {
+    residentsLoaded = true;
+    const data = await api({ action: "getResidents" });
+    if (!data) { residentsLoaded = false; return; }
+    residentsData = data.residents || [];
+    document.getElementById("resBadge").textContent = residentsData.length;
+    // Populate street filter
+    const streets = [...new Set(residentsData.map(r => r.streetName).filter(Boolean))].sort();
+    const sel = document.getElementById("resStreetFilter");
+    sel.innerHTML = '<option value="all">All Streets</option>' +
+      streets.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join("");
+    renderResidents();
+  }
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  }
+
+  function seriesPill(series) {
+    const v = (series || "").toLowerCase();
+    if (v.startsWith("garden"))    return '<span class="series-pill series-garden">Garden</span>';
+    if (v.startsWith("patriotic")) return '<span class="series-pill series-patriotic">Patriotic</span>';
+    return '<span class="series-pill series-none">—</span>';
+  }
+
+  function renderResidents() {
+    const q = (document.getElementById("resSearch").value || "").toLowerCase().trim();
+    const series = document.getElementById("resSeriesFilter").value;
+    const street = document.getElementById("resStreetFilter").value;
+    const filtered = residentsData.filter(r => {
+      if (street !== "all" && r.streetName !== street) return false;
+      if (series === "Garden" && !(r.series || "").toLowerCase().startsWith("garden")) return false;
+      if (series === "Patriotic" && !(r.series || "").toLowerCase().startsWith("patriotic")) return false;
+      if (series === "none" && (r.series || "").trim()) return false;
+      if (q) {
+        const hay = `${r.name} ${r.address} ${r.email}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+    document.getElementById("resCount").textContent =
+      `Showing ${filtered.length} of ${residentsData.length} homes`;
+    if (!filtered.length) {
+      document.getElementById("resList").innerHTML = '<div class="loading">No residents match your filters.</div>';
+      return;
+    }
+    const rows = filtered.map(r => {
+      const emails = (r.email || "").split(";").map(e => e.trim()).filter(Boolean)
+        .map(e => `<a href="mailto:${esc(e)}">${esc(e)}</a>`).join("<br>") || '<span style="color:#bbb">—</span>';
+      const phones = [r.phone1, r.phone2].filter(Boolean).map(esc).join("<br>") || '<span style="color:#bbb">—</span>';
+      return `<tr>
+        <td class="res-name">${esc(r.name)}</td>
+        <td>${esc(r.address)}</td>
+        <td>${seriesPill(r.series)}</td>
+        <td>${emails}</td>
+        <td>${phones}</td>
+      </tr>`;
+    }).join("");
+    document.getElementById("resList").innerHTML = `<div class="res-table-wrap"><table class="res-table">
+      <thead><tr><th>Name</th><th>Address</th><th>Series</th><th>Email</th><th>Phone</th></tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+  }
+
   function updateStats() {
     const openARCs = dashData.arcs.filter(a => a.final_status === "Open" || !a.final_status).length;
     const openVios = dashData.violations.filter(v => v.status === "Open").length;
@@ -548,7 +691,8 @@
 
   // ── Tabs ──────────────────────────────────────────────
   function switchTab(tab) {
-    const tabs = ["arc","violations","other","requests","announcements","minutes","activity"];
+    const tabs = ["arc","violations","other","requests","announcements","minutes","residents","resources","activity"];
+    if (tab === "residents" && !residentsLoaded) loadResidents();
     tabs.forEach(t => {
       const el = document.getElementById("tab-" + t);
       if (el) el.style.display = t === tab ? "block" : "none";
