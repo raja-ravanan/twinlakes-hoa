@@ -56,6 +56,8 @@ nav { background: var(--navy-dark); padding: 0 2.5rem; display: flex; align-item
 .nav-dropdown a { padding: 14px 22px; border-bottom: 1px solid rgba(201,168,76,0.08); white-space: nowrap; letter-spacing: 1px; }
 .nav-dropdown a:last-child { border-bottom: none; }
 .nav-dropdown a.active { border-bottom: 1px solid rgba(201,168,76,0.08); }
+.nav-links a.nav-portal { color: var(--navy-dark); background: var(--gold); border-radius: 3px; padding: 9px 18px; margin-left: 14px; align-self: center; font-weight: bold; }
+.nav-links a.nav-portal:hover { background: var(--gold-border); color: var(--navy-dark); }
 
 .page { display: none; } .page.active { display: block; }
 
@@ -330,6 +332,25 @@ footer { background: var(--navy-dark); color: rgba(250,247,242,0.6); text-align:
 .footer-copy    { margin-top: 12px; font-size: 12px; opacity: 0.35; }
 
 /* ── RESPONSIVE ── */
+/* Switch nav to the hamburger menu earlier than the rest of the layout,
+   since the full horizontal nav (incl. the Board Portal button) needs ~950px. */
+@media (max-width: 960px) {
+  nav               { position: relative; }
+  .nav-links        { display: none; flex-direction: column; position: absolute; top: 74px; left: 0; right: 0; background: var(--navy-dark); border-top: 1px solid rgba(201,168,76,0.2); z-index: 99; }
+  .nav-links.open   { display: flex; }
+  .nav-links a      { padding: 18px 24px; border-bottom: 1px solid rgba(201,168,76,0.1); }
+  .nav-links a.active { border-bottom: 1px solid rgba(201,168,76,0.1); }
+  .nav-links a.nav-portal { margin: 0; border-radius: 0; text-align: center; padding: 18px 24px; display: block; align-self: stretch; }
+  .nav-toggle       { display: flex; }
+  .nav-group        { width: 100%; }
+  .nav-group-label  { width: 100%; padding: 18px 24px; justify-content: space-between; border-bottom: 1px solid rgba(201,168,76,0.1); }
+  .nav-group:hover .nav-dropdown { display: none; }
+  .nav-group.open .nav-dropdown  { display: block; }
+  .nav-group:hover .nav-caret    { transform: none; }
+  .nav-group.open .nav-caret     { transform: rotate(180deg); }
+  .nav-dropdown     { position: static; min-width: 0; box-shadow: none; border: none; border-top: none; background: rgba(0,0,0,0.22); }
+  .nav-dropdown a   { padding-left: 40px; }
+}
 @media (max-width: 768px) {
   .hero-wrap        { grid-template-columns: 1fr; }
   .hero-right       { min-height: 280px; }
