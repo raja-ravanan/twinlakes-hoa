@@ -86,7 +86,7 @@ async function ensureSheetTabs(token) {
   const spreadsheet = JSON.parse(meta.body);
   const existing = (spreadsheet.sheets || []).map(s => s.properties.title);
 
-  const needed = ["ARC_Requests", "Violations", "Other_Items", "Activity_Log", "Resident_Requests", "Announcements", "Minutes"];
+  const needed = ["ARC_Requests", "Violations", "Other_Items", "Activity_Log", "Resident_Requests", "Announcements", "Minutes", "Settings"];
   const toAdd = needed.filter(n => !existing.includes(n));
 
   if (toAdd.length > 0) {
@@ -103,7 +103,8 @@ async function ensureSheetTabs(token) {
       Activity_Log: [["timestamp","board_member","action","item_id","item_type","details"]],
       Resident_Requests: [["id","date_received","request_type","name","email","address","subject","description","sent_to","status","assigned_to","board_notes"]],
       Announcements: [["id","date_posted","title","body","status","posted_by"]],
-      Minutes: [["id","meeting_date","title","summary","status","posted_by","attendees"]]
+      Minutes: [["id","meeting_date","title","summary","status","posted_by","attendees"]],
+      Settings: [["key","value"],["financials_published","false"]]
     };
     for (const tab of toAdd) {
       await sheetsUpdate(token, `${tab}!A1`, headers[tab]);
@@ -178,6 +179,20 @@ exports.handler = async (event) => {
       statusCode: 200,
       headers: { "Access-Control-Allow-Origin": "*" },
       body: JSON.stringify({ minutes: published })
+    };
+  }
+
+  // ── PUBLIC: GET SITE SETTINGS (no auth — read by the public website) ──
+  if (action === "getPublicSettings") {
+    const publicToken = await getGoogleToken(SA_EMAIL, SA_KEY, SCOPES);
+    await ensureSheetTabs(publicToken);
+    const rows = (await sheetsGet(publicToken, "Settings!A:B")).values || [];
+    const map = {};
+    rows.slice(1).forEach(r => { if (r[0]) map[r[0]] = r[1]; });
+    return {
+      statusCode: 200,
+      headers: { "Access-Control-Allow-Origin": "*" },
+      body: JSON.stringify({ financials_published: (map.financials_published === "true") })
     };
   }
 
@@ -256,6 +271,24 @@ exports.handler = async (event) => {
       })
       .sort((a, b) => a.streetName.localeCompare(b.streetName) || (parseInt(a.streetNo) || 0) - (parseInt(b.streetNo) || 0));
     return { statusCode: 200, body: JSON.stringify({ residents, count: residents.length }) };
+  }
+
+  // ── SET A SITE SETTING (admin only) ──
+  if (action === "setSetting") {
+    if (!session.isAdmin) return { statusCode: 403, body: JSON.stringify({ error: "Admin only" }) };
+    const key = (data?.key || "").trim();
+    const value = String(data?.value);
+    if (!key) return { statusCode: 400, body: JSON.stringify({ error: "key required" }) };
+    const rows = (await sheetsGet(googleToken, "Settings!A:B")).values || [];
+    let rowIdx = -1; // 1-based sheet row
+    for (let i = 1; i < rows.length; i++) { if ((rows[i][0] || "") === key) { rowIdx = i + 1; break; } }
+    if (rowIdx > 0) {
+      await sheetsUpdate(googleToken, `Settings!A${rowIdx}:B${rowIdx}`, [[key, value]]);
+    } else {
+      await sheetsAppend(googleToken, "Settings!A:B", [[key, value]]);
+    }
+    await logActivity(googleToken, session.username, "set_setting", key, "settings", value);
+    return { statusCode: 200, body: JSON.stringify({ success: true, key, value }) };
   }
 
   // ── ADD ANNOUNCEMENT ──

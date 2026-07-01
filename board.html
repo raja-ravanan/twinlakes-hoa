@@ -293,16 +293,17 @@
       <div class="last-scan" id="lastScan">Last scan: never</div>
     </div>
     <div style="position:relative;display:none" id="scanBtnWrap">
-      <button class="btn-scan" id="scanBtn" onclick="runScan(30,20)">🔄 Scan Inbox</button>
+      <button class="btn-scan" id="scanBtn" onclick="runScan(30,10)">🔄 Scan Inbox</button>
       <button class="btn-scan" style="padding:8px 10px;margin-left:2px;border-radius:0 6px 6px 0;border-left:1px solid rgba(255,255,255,0.3)" onclick="document.getElementById('scanMenu').classList.toggle('show')">▾</button>
       <div id="scanMenu" style="display:none;position:absolute;right:0;top:100%;background:#fff;border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,0.2);padding:8px;min-width:200px;z-index:200;margin-top:4px;">
         <div style="font-size:11px;font-family:sans-serif;font-weight:700;color:#999;padding:4px 8px;text-transform:uppercase;letter-spacing:1px;">Scan Options</div>
-        <button onclick="runScan(7,20);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Last 7 days (20 emails)</button>
-        <button onclick="runScan(30,20);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Last 30 days (20 emails)</button>
-        <button onclick="runScan(90,30);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Last 90 days (30 emails)</button>
-        <div style="font-size:11px;font-family:sans-serif;font-weight:700;color:#999;padding:8px 8px 4px;text-transform:uppercase;letter-spacing:1px;border-top:1px solid #eee;margin-top:4px;">3-Month Backfill</div>
-        <button onclick="runScan(45,60,0);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Step 1 · Last 45 days (60 emails)</button>
-        <button onclick="runScan(90,60,45);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Step 2 · 45–90 days ago (60 emails)</button>
+        <button onclick="runScan(7,10);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Last 7 days (10 emails)</button>
+        <button onclick="runScan(30,10);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Last 30 days (10 emails)</button>
+        <button onclick="runScan(90,10);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Last 90 days (10 emails)</button>
+        <div style="font-size:11px;font-family:sans-serif;font-weight:700;color:#999;padding:8px 8px 4px;text-transform:uppercase;letter-spacing:1px;border-top:1px solid #eee;margin-top:4px;">Deep Backfill (run each once)</div>
+        <button onclick="runScan(30,12,0);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Step 1 · 0–30 days (12 emails)</button>
+        <button onclick="runScan(60,12,30);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Step 2 · 30–60 days (12 emails)</button>
+        <button onclick="runScan(90,12,60);document.getElementById('scanMenu').classList.remove('show')" style="display:block;width:100%;text-align:left;padding:8px 12px;background:none;border:none;font-size:13px;font-family:sans-serif;cursor:pointer;border-radius:4px;color:#1B4B7A;">Step 3 · 60–90 days (12 emails)</button>
       </div>
     </div>
     <a href="/" class="btn-logout" style="text-decoration:none;">← Resident Site</a>
@@ -338,6 +339,7 @@
     <button class="tab" onclick="switchTab('minutes')">📋 Meeting Minutes <span class="tab-badge" id="minBadge">0</span></button>
     <button class="tab" onclick="switchTab('residents')">📇 Residents <span class="tab-badge" id="resBadge">0</span></button>
     <button class="tab" onclick="switchTab('resources')">📁 Resources</button>
+    <button class="tab" onclick="switchTab('financials')">📊 Financials</button>
     <button class="tab" data-admin="true" onclick="switchTab('activity')">📋 Activity Log</button>
   </div>
 
@@ -501,6 +503,123 @@
     </div>
   </div>
 
+  <div id="tab-financials" style="display:none">
+    <style>
+      .finb-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:24px;}
+      .finb-kpi{background:#fff;border:1px solid #e5e0d8;border-radius:10px;padding:16px 18px;border-top:3px solid var(--navy);}
+      .finb-kpi.good{border-top-color:#2e7d4f;} .finb-kpi.gold{border-top-color:var(--gold);}
+      .finb-kpi .n{font-size:22px;font-weight:800;color:var(--navy);font-family:Georgia,serif;}
+      .finb-kpi .n.good{color:#2e7d4f;}
+      .finb-kpi .l{font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-m);margin-top:4px;font-family:sans-serif;}
+      .finb-kpi .s{font-size:11px;color:#999;margin-top:5px;font-family:sans-serif;}
+      .finb-tbl{width:100%;border-collapse:collapse;font-size:13px;background:#fff;border-radius:10px;overflow:hidden;border:1px solid #e5e0d8;margin-bottom:10px;font-family:sans-serif;}
+      .finb-tbl th{background:var(--navy-dark);color:#fff;text-align:left;padding:9px 12px;font-size:10px;text-transform:uppercase;letter-spacing:0.5px;}
+      .finb-tbl td{padding:9px 12px;border-top:1px solid #eee;}
+      .finb-tbl td.n,.finb-tbl th.n{text-align:right;font-variant-numeric:tabular-nums;}
+      .finb-tbl tfoot td{font-weight:800;background:#f4f2ed;border-top:2px solid var(--navy);}
+      .finb-lbl{font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.5px;margin:22px 0 12px;}
+      .finb-tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
+      .finb-tag.m{background:#e7eef7;color:#1B4B7A;} .finb-tag.g{background:#e6f4ea;color:#2e7d4f;}
+      .finb-grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+      @media(max-width:760px){.finb-grid2{grid-template-columns:1fr;}}
+      .finb-callout{background:#eef4fb;border:1px solid #bcd4ee;border-left:4px solid var(--navy);border-radius:10px;padding:13px 16px;font-size:13px;font-family:sans-serif;margin-top:14px;line-height:1.5;}
+      .finb-callout.warn{background:#fdf3ef;border-color:#f0c9bc;border-left-color:#c0492e;}
+      .finb-note{font-size:12px;color:#999;font-style:italic;font-family:sans-serif;margin-top:16px;line-height:1.5;}
+      .finb-publish{display:flex;align-items:center;gap:14px;background:#fff;border:1px solid #e5e0d8;border-radius:10px;padding:14px 18px;margin-bottom:22px;font-family:sans-serif;flex-wrap:wrap;}
+      .finb-publish .ptitle{font-size:14px;font-weight:800;color:var(--navy);}
+      .finb-publish .pdesc{font-size:12px;color:var(--text-m);margin-top:2px;}
+      .finb-state{font-size:12px;font-weight:700;padding:3px 10px;border-radius:20px;}
+      .finb-state.on{background:#e6f4ea;color:#2e7d4f;} .finb-state.off{background:#f0eee9;color:#999;}
+      .switch{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0;}
+      .switch input{opacity:0;width:0;height:0;}
+      .switch .sl{position:absolute;cursor:pointer;inset:0;background:#ccc;border-radius:26px;transition:.2s;}
+      .switch .sl:before{content:"";position:absolute;height:20px;width:20px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.2s;}
+      .switch input:checked + .sl{background:#2e7d4f;}
+      .switch input:checked + .sl:before{transform:translateX(20px);}
+      .switch input:disabled + .sl{opacity:0.5;cursor:default;}
+    </style>
+    <div style="font-size:15px;font-weight:800;color:var(--navy);margin-bottom:4px;">Financial Summary</div>
+    <p style="font-size:13px;font-family:sans-serif;color:var(--text-m);margin:0 0 16px;">Twin Lakes Master HOA + Garden Homes &middot; January&ndash;May 2026 &middot; Managed by Mulloy Properties</p>
+
+    <a href="https://drive.google.com/drive/folders/1gEes3d27w6QFEpd7-P2Iha6bxYuNxCcz" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;gap:8px;background:var(--gold);color:var(--navy-dark);text-decoration:none;font-family:sans-serif;font-weight:700;font-size:13px;padding:10px 18px;border-radius:8px;margin-bottom:20px;">📁 View all statements &amp; budgets in Drive →</a>
+
+    <div class="finb-publish" id="finPublishBox" style="display:none;">
+      <label class="switch"><input type="checkbox" id="finPublishToggle" onchange="toggleFinancialsPublish()"><span class="sl"></span></label>
+      <div style="flex:1;min-width:180px;">
+        <div class="ptitle">Publish to resident website</div>
+        <div class="pdesc">When ON, residents see this summary on the public Financials page. When OFF, they see &ldquo;Coming soon.&rdquo;</div>
+      </div>
+      <span class="finb-state off" id="finPublishState">Loading…</span>
+    </div>
+
+    <div class="finb-kpis">
+      <div class="finb-kpi good"><div class="n good">$120,693</div><div class="l">Total Cash</div><div class="s">operating + reserves, May 31</div></div>
+      <div class="finb-kpi"><div class="n">$116,215</div><div class="l">Operating Balance</div><div class="s">both checking accounts</div></div>
+      <div class="finb-kpi gold"><div class="n">$4,478</div><div class="l">Reserves</div><div class="s">building ~$895/mo</div></div>
+      <div class="finb-kpi"><div class="n">$4,522</div><div class="l">Dues Receivable</div><div class="s">Mar (mostly new closings)</div></div>
+    </div>
+
+    <div class="finb-lbl">Balances by Account (May 31, 2026)</div>
+    <table class="finb-tbl">
+      <thead><tr><th>Association / Account</th><th class="n">Operating</th><th class="n">Reserve</th><th class="n">Total</th></tr></thead>
+      <tbody>
+        <tr><td><span class="finb-tag m">Master HOA</span> &nbsp;&bull;&bull;4747 / &bull;&bull;4771</td><td class="n">$88,594</td><td class="n">$2,534</td><td class="n">$91,128</td></tr>
+        <tr><td><span class="finb-tag g">Garden Homes</span> &nbsp;&bull;&bull;2457 / &bull;&bull;1934</td><td class="n">$27,621</td><td class="n">$1,944</td><td class="n">$29,565</td></tr>
+      </tbody>
+      <tfoot><tr><td>Combined</td><td class="n">$116,215</td><td class="n">$4,478</td><td class="n">$120,693</td></tr></tfoot>
+    </table>
+
+    <div class="finb-lbl">Operating Balance Trend</div>
+    <table class="finb-tbl">
+      <thead><tr><th>Month</th><th class="n">Master HOA</th><th class="n">Garden Homes</th><th class="n">Combined</th></tr></thead>
+      <tbody>
+        <tr><td>January</td><td class="n">$105,635</td><td class="n">$19,237</td><td class="n">$124,872</td></tr>
+        <tr><td>February</td><td class="n">$99,186</td><td class="n">$22,520</td><td class="n">$121,705</td></tr>
+        <tr><td>March</td><td class="n">$104,867</td><td class="n">$24,769</td><td class="n">$129,636</td></tr>
+        <tr><td>April</td><td class="n">$98,375</td><td class="n">$33,678</td><td class="n">$132,053</td></tr>
+        <tr><td>May</td><td class="n">$88,594</td><td class="n">$27,621</td><td class="n">$116,215</td></tr>
+      </tbody>
+    </table>
+    <p class="finb-note">Master-HOA balance declines through spring because its dues are billed annually in January &mdash; cash arrives early, then draws down against monthly costs. Expect further drawdown over the summer landscaping/water peak.</p>
+
+    <div class="finb-grid2">
+      <div>
+        <div class="finb-lbl">Master HOA &mdash; 2026 Budget ($127,383)</div>
+        <table class="finb-tbl">
+          <tbody>
+            <tr><td>Lawn cutting (common areas)</td><td class="n">$45,938</td></tr>
+            <tr><td>Trash removal</td><td class="n">$26,730</td></tr>
+            <tr><td>Water</td><td class="n">$15,145</td></tr>
+            <tr><td>Lake maintenance (3 lakes)</td><td class="n">$10,123</td></tr>
+            <tr><td>Street lights + electric</td><td class="n">$7,187</td></tr>
+            <tr><td>Management (Mulloy)</td><td class="n">$5,346</td></tr>
+            <tr><td>Snow, mosquito, insurance, other</td><td class="n">$10,833</td></tr>
+            <tr><td>Reserve funding</td><td class="n">$6,081</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div>
+        <div class="finb-lbl">Garden Homes &mdash; 2026 Budget ($158,283)</div>
+        <table class="finb-tbl">
+          <tbody>
+            <tr><td>Lawn cutting (homes)</td><td class="n">$66,780</td></tr>
+            <tr><td>Water / irrigation</td><td class="n">$29,285</td></tr>
+            <tr><td>Mulch (homes + trees)</td><td class="n">$12,254</td></tr>
+            <tr><td>Lawn chemical (TruGreen)</td><td class="n">$10,042</td></tr>
+            <tr><td>Management (Mulloy)</td><td class="n">$8,350</td></tr>
+            <tr><td>Trimming, weeding, tree/shrub</td><td class="n">$10,529</td></tr>
+            <tr><td>Recycling</td><td class="n">$5,428</td></tr>
+            <tr><td>Reserve funding</td><td class="n">$8,830</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="finb-callout"><strong>Receivables:</strong> January dues receivable spiked to ~$24,074 (annual billing); most was collected by March (~$4,522). The remainder is largely recently-closed Garden Homes whose dues haven&rsquo;t posted yet but are expected &mdash; not true delinquency.</div>
+    <div class="finb-callout warn"><strong>Discussion points:</strong> (1) Reserves are lean (~$4,478 today; ~$10,746/yr funding target) for a community this size &mdash; worth a funding-adequacy review. (2) Lawn/landscaping is by far the largest cost across both budgets (~$113K combined) &mdash; the main lever for savings or re-bid.</div>
+    <p class="finb-note">Figures from Jan&ndash;May 2026 bank statements (reconciled) and the 2026 approved budgets. This is a static snapshot; to refresh, provide updated statements. Confidential &mdash; board only.</p>
+  </div>
+
   <div id="tab-activity" style="display:none">
     <div class="activity-panel">
       <div class="activity-title">Recent Activity</div>
@@ -648,6 +767,41 @@
       <tbody>${rows}</tbody></table></div>`;
   }
 
+  // ── Financials publish toggle (admin only) ───────────
+  function setFinState(on) {
+    const st = document.getElementById("finPublishState");
+    st.textContent = on ? "Published" : "Hidden";
+    st.className = "finb-state " + (on ? "on" : "off");
+    document.getElementById("finPublishToggle").checked = on;
+  }
+  async function loadFinancialsToggle() {
+    const box = document.getElementById("finPublishBox");
+    if (!currentUser || !currentUser.isAdmin) { box.style.display = "none"; return; }
+    box.style.display = "flex";
+    try {
+      const res = await fetch("/.netlify/functions/board-api", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "getPublicSettings" })
+      });
+      const data = await res.json();
+      setFinState(!!(data && data.financials_published));
+    } catch (e) { setFinState(false); }
+  }
+  async function toggleFinancialsPublish() {
+    const toggle = document.getElementById("finPublishToggle");
+    const want = toggle.checked;
+    toggle.disabled = true;
+    const data = await api({ action: "setSetting", data: { key: "financials_published", value: want ? "true" : "false" } });
+    toggle.disabled = false;
+    if (data && data.success) {
+      setFinState(want);
+      showToast(want ? "✅ Financials published to website" : "Financials hidden from website", "success");
+    } else {
+      setFinState(!want); // revert
+      showToast("Could not update setting", "error");
+    }
+  }
+
   function updateStats() {
     const openARCs = dashData.arcs.filter(a => a.final_status === "Open" || !a.final_status).length;
     const openVios = dashData.violations.filter(v => v.status === "Open").length;
@@ -691,8 +845,9 @@
 
   // ── Tabs ──────────────────────────────────────────────
   function switchTab(tab) {
-    const tabs = ["arc","violations","other","requests","announcements","minutes","residents","resources","activity"];
+    const tabs = ["arc","violations","other","requests","announcements","minutes","residents","resources","financials","activity"];
     if (tab === "residents" && !residentsLoaded) loadResidents();
+    if (tab === "financials") loadFinancialsToggle();
     tabs.forEach(t => {
       const el = document.getElementById("tab-" + t);
       if (el) el.style.display = t === tab ? "block" : "none";
@@ -1316,7 +1471,13 @@
         showToast(`✅ ${data.message}`, "success");
         await loadDashboard();
       } else { showToast("Scan error: " + (data.error || "Unknown error"), "error"); }
-    } catch (e) { showToast("Scan failed: " + e.message, "error"); }
+    } catch (e) {
+      // The scan keeps running on the server even if the connection drops (e.g. a
+      // larger batch takes longer than the browser will wait). Let the user know
+      // and refresh the dashboard shortly so newly-added items appear.
+      showToast("⏳ Scan is still running in the background. Refreshing in a moment…", "success");
+      setTimeout(() => { loadDashboard(); }, 20000);
+    }
     document.getElementById("scanOverlay").classList.remove("show");
     document.getElementById("scanBtn").disabled = false;
   }

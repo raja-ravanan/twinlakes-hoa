@@ -356,9 +356,30 @@ async function loadMinutes() {
   }
 }
 
+// Financials page is gated by a board-controlled publish flag. Default = hidden
+// (Coming Soon) until the board turns it on from the portal.
+async function loadFinancialsFlag() {
+  var comingSoon = document.getElementById('fin-comingsoon');
+  var content = document.getElementById('fin-content');
+  if (!comingSoon || !content) return;
+  try {
+    var res = await fetch('/.netlify/functions/board-api', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'getPublicSettings' })
+    });
+    var data = await res.json();
+    if (data && data.financials_published) {
+      comingSoon.style.display = 'none';
+      content.style.display = 'block';
+    }
+  } catch (e) { /* keep Coming Soon on error */ }
+}
+
 document.addEventListener('DOMContentLoaded', loadBanner);
 document.addEventListener('DOMContentLoaded', loadAnnouncements);
 document.addEventListener('DOMContentLoaded', loadMinutes);
+document.addEventListener('DOMContentLoaded', loadFinancialsFlag);
 
 /* ═══════════════════════════════════════════════════════
    CHAT WIDGET

@@ -497,7 +497,7 @@
         <h2>A gracious place to call home</h2>
         <p>Twin Lakes at Floyds Fork is a distinguished community in Louisville, Kentucky &mdash; where tranquil lakeside living meets the warmth of a close-knit neighborhood.</p>
         <ul class="feature-list">
-          <li><div class="feat-diamond"></div>Two scenic ponds with maintained fountains and landscaping</li>
+          <li><div class="feat-diamond"></div>Three scenic ponds with maintained landscaping</li>
           <li><div class="feat-diamond"></div>Responsive board and professional property management by Mulloy</li>
           <li><div class="feat-diamond"></div>Community guidelines that protect your investment and property values</li>
           <li><div class="feat-diamond"></div>A welcoming neighborhood for all stages of life</li>
@@ -538,7 +538,7 @@
       <h2 class="sec-title">Here to serve our community</h2>
       <p class="sec-sub">The Twin Lakes HOA board works year-round to keep the neighborhood safe, beautiful, and well-maintained.</p>
       <div class="card-grid">
-        <div class="card"><div class="card-num">01</div><h3>Neighborhood upkeep</h3><p>Regular landscaping via TruGreen and Aphix, irrigation maintenance, and pond fountain care keep Twin Lakes looking its best year-round.</p></div>
+        <div class="card"><div class="card-num">01</div><h3>Neighborhood upkeep</h3><p>Regular landscaping via TruGreen and Aphix, irrigation maintenance, and pond care keep Twin Lakes looking its best year-round.</p></div>
         <div class="card"><div class="card-num">02</div><h3>Community standards</h3><p>Our CC&amp;Rs and Architectural Guidelines ensure the beauty and property values of Twin Lakes are preserved for everyone.</p></div>
         <div class="card"><div class="card-num">03</div><h3>Stay informed</h3><p>Check our Updates page for maintenance schedules, community notices, and board announcements — or ask our AI assistant below.</p></div>
       </div>
@@ -1159,14 +1159,72 @@
   <div id="page-financials" class="page">
     <section class="page-header">
       <div class="sec-label">Transparency</div>
-      <h1 class="sec-title">Financials</h1>
-      <p class="sec-sub">Monthly financial snapshots for Twin Lakes at Floyds Fork.</p>
+      <h1 class="sec-title">Community Financials</h1>
+      <p class="sec-sub">A transparent, high-level look at how your HOA dues are managed &middot; as of May 2026.</p>
     </section>
-    <section style="padding-top:8px;">
+    <style>
+      .fin-health{background:linear-gradient(135deg,#eef6f0,#faf7f2);border:1px solid #cfe6d6;border-left:4px solid #2e7d4f;border-radius:12px;padding:24px 28px;margin-bottom:26px;}
+      .fin-health .fh-title{font-size:19px;color:#2e7d4f;font-weight:800;margin-bottom:8px;font-family:sans-serif;}
+      .fin-health p{font-size:15px;color:var(--text-s);line-height:1.6;margin:0;font-family:sans-serif;}
+      .fin-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:16px;margin-bottom:30px;}
+      .fin-card{background:var(--white);border:1px solid var(--cream-border);border-top:3px solid var(--navy);border-radius:10px;padding:24px;text-align:center;}
+      .fin-card .big{font-size:30px;font-weight:800;color:var(--navy);font-family:Georgia,serif;}
+      .fin-card .lbl{font-size:13px;color:var(--text-m);margin-top:8px;font-family:sans-serif;line-height:1.4;}
+      .fin-block-label{font-size:13px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.5px;margin:0 0 16px;}
+      .fin-donut-wrap{display:flex;align-items:center;gap:32px;flex-wrap:wrap;margin-bottom:30px;}
+      .fin-donut{width:190px;height:190px;border-radius:50%;flex-shrink:0;background:conic-gradient(
+        #1B4B7A 0turn 0.52turn,#4f7cad 0.52turn 0.70turn,#C9A84C 0.70turn 0.81turn,
+        #6fae86 0.81turn 0.85turn,#9db9d4 0.85turn 0.90turn,#e0cd92 0.90turn 0.94turn,#c4beb2 0.94turn 1turn);}
+      .fin-legend{font-size:15px;line-height:2;font-family:sans-serif;color:var(--text-s);}
+      .fin-legend .dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:9px;vertical-align:middle;}
+      .fin-dues{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:8px;}
+      .fin-due{background:var(--white);border:1px solid var(--cream-border);border-left:3px solid var(--gold);border-radius:10px;padding:20px 22px;}
+      .fin-due .amt{font-size:22px;font-weight:800;color:var(--navy);font-family:Georgia,serif;}
+      .fin-due .dd{font-size:14px;color:var(--text-m);margin-top:6px;font-family:sans-serif;line-height:1.5;}
+      .fin-note{font-size:13px;color:#9a948b;margin-top:22px;font-style:italic;font-family:sans-serif;line-height:1.5;}
+      @media(max-width:600px){.fin-dues{grid-template-columns:1fr;}}
+    </style>
+    <section style="padding-top:8px;" id="fin-comingsoon">
       <div class="doc-missing" style="grid-column:1/-1;">
         <div class="doc-missing-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#8B6914" stroke-width="2"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div>
-        <div><h3>Coming soon</h3><p>The board is preparing monthly financial snapshots — drawn from the community's bank statements — so residents can see income, expenses, and reserves at a glance. This section will be published once the first statements are ready.</p></div>
+        <div><h3>Coming soon</h3><p>The board is preparing a clear, high-level financial summary — income, expenses, and reserves at a glance. This section will be published shortly.</p></div>
       </div>
+    </section>
+    <section style="padding-top:8px;display:none;" id="fin-content">
+      <div class="fin-health">
+        <div class="fh-title">&#10003; Your HOA is financially healthy</div>
+        <p>Twin Lakes maintains a strong cash position across its operating and reserve accounts, carries no debt, and has paid $0 in bank or late fees this year. Every dollar of dues goes back into maintaining and improving the community.</p>
+      </div>
+
+      <div class="fin-cards">
+        <div class="fin-card"><div class="big">$120K+</div><div class="lbl">Total funds on hand<br>(operating + reserves)</div></div>
+        <div class="fin-card"><div class="big">Growing</div><div class="lbl">Reserve fund, built<br>every month</div></div>
+        <div class="fin-card"><div class="big">$0</div><div class="lbl">Debt &amp; bank /<br>late fees</div></div>
+      </div>
+
+      <p class="fin-block-label">How Your Dues Are Spent</p>
+      <div class="fin-donut-wrap">
+        <div class="fin-donut"></div>
+        <div class="fin-legend">
+          <div><span class="dot" style="background:#1B4B7A;"></span>Landscaping &amp; grounds &mdash; <strong>52%</strong></div>
+          <div><span class="dot" style="background:#4f7cad;"></span>Water &amp; irrigation &mdash; <strong>18%</strong></div>
+          <div><span class="dot" style="background:#C9A84C;"></span>Trash &amp; recycling &mdash; <strong>11%</strong></div>
+          <div><span class="dot" style="background:#6fae86;"></span>Lakes &amp; ponds &mdash; <strong>4%</strong></div>
+          <div><span class="dot" style="background:#9db9d4;"></span>Management &mdash; <strong>5%</strong></div>
+          <div><span class="dot" style="background:#e0cd92;"></span>Reserves (savings) &mdash; <strong>4%</strong></div>
+          <div><span class="dot" style="background:#c4beb2;"></span>Utilities, insurance &amp; other &mdash; <strong>6%</strong></div>
+        </div>
+      </div>
+
+      <p class="fin-block-label">Your Annual Dues</p>
+      <div class="fin-dues">
+        <div class="fin-due"><div class="amt">$895 / year</div><div class="dd">All homes &mdash; covers common areas, lakes, trash, street lights, insurance &amp; reserves.</div></div>
+        <div class="fin-due"><div class="amt">+ $185 / month</div><div class="dd">Garden Homes only &mdash; full lawn cutting, chemical treatment, mulch &amp; irrigation.</div></div>
+      </div>
+
+      <p style="font-family:sans-serif;font-size:15px;color:var(--text-s);line-height:1.6;margin-top:22px;">The large majority of dues goes directly into keeping Twin Lakes beautiful &mdash; lawn care, landscaping, irrigation, and our three lakes. The board also sets money aside each month into a reserve fund for long-term community needs.</p>
+
+      <p class="fin-note">This summary reflects the community's operating and reserve accounts as of May 2026. Percentages are based on the approved 2026 budget. Individual homeowner and account details are kept private. Questions? <a href="#" onclick="go('contact')" style="color:var(--navy);">Contact the board.</a></p>
     </section>
     <footer>
       <img src="logo.png" alt="Twin Lakes at Floyds Fork" class="footer-logo" />
