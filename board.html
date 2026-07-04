@@ -49,6 +49,22 @@
     .tab-badge { background:var(--red); color:#fff; border-radius:10px; padding:2px 7px; font-size:10px; font-weight:700; margin-left:6px; }
     .tab.active .tab-badge { background:var(--gold); color:var(--navy-dark); }
 
+    /* ── SIDEBAR LAYOUT ── */
+    .portal-layout { display:flex; gap:20px; align-items:flex-start; }
+    .sidebar { width:230px; flex-shrink:0; background:var(--white); border:1px solid #ddd; border-radius:10px; padding:10px; position:sticky; top:16px; }
+    .content-area { flex:1; min-width:0; }
+    .nav-sec { font-size:10px; font-family:sans-serif; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:1px; padding:12px 12px 5px; }
+    .nav-sec:first-child { padding-top:4px; }
+    .sidebar-menu .tab { display:flex; align-items:center; width:100%; text-align:left; padding:9px 12px; margin-bottom:2px; gap:7px; font-size:13.5px; }
+    .sidebar-menu .tab .tab-badge { margin-left:auto; }
+    @media (max-width:860px) {
+      .portal-layout { flex-direction:column; }
+      .sidebar { width:100%; position:static; }
+      .sidebar-menu { display:flex; flex-wrap:wrap; gap:4px; }
+      .sidebar-menu .tab { width:auto; }
+      .nav-sec { width:100%; }
+    }
+
     /* ── FILTER BAR ── */
     .filter-bar { display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap; align-items:center; }
     .filter-select { padding:8px 12px; border:1px solid #ddd; border-radius:6px; font-size:13px; font-family:sans-serif; background:var(--white); color:var(--text); outline:none; cursor:pointer; }
@@ -329,19 +345,29 @@
     <div class="stat-card good"><div class="stat-num" id="statResolved">—</div><div class="stat-label">Resolved This Month</div></div>
   </div>
 
-  <!-- Tabs -->
-  <div class="tabs">
-    <button class="tab active" onclick="switchTab('arc')">🏗️ ARC Requests <span class="tab-badge" id="arcBadge">0</span></button>
-    <button class="tab" data-admin="true" onclick="switchTab('violations')">⚠️ Violations <span class="tab-badge" id="vioBadge">0</span></button>
-    <button class="tab" data-admin="true" onclick="switchTab('other')">📂 Other Items <span class="tab-badge" id="othBadge">0</span></button>
-    <button class="tab" data-admin="true" onclick="switchTab('requests')">📨 Resident Requests <span class="tab-badge" id="reqBadge">0</span></button>
-    <button class="tab" onclick="switchTab('announcements')">📣 Announcements <span class="tab-badge" id="annBadge">0</span></button>
-    <button class="tab" onclick="switchTab('minutes')">📋 Meeting Minutes <span class="tab-badge" id="minBadge">0</span></button>
-    <button class="tab" onclick="switchTab('residents')">📇 Residents <span class="tab-badge" id="resBadge">0</span></button>
-    <button class="tab" onclick="switchTab('resources')">📁 Resources</button>
-    <button class="tab" onclick="switchTab('financials')">📊 Financials</button>
-    <button class="tab" data-admin="true" onclick="switchTab('activity')">📋 Activity Log</button>
-  </div>
+  <!-- Sidebar + content layout -->
+  <div class="portal-layout">
+  <aside class="sidebar">
+    <div class="sidebar-menu">
+      <div class="nav-sec">Workflow</div>
+      <button class="tab active" onclick="switchTab('arc')">🏗️ ARC Requests <span class="tab-badge" id="arcBadge">0</span></button>
+      <button class="tab" data-admin="true" onclick="switchTab('violations')">⚠️ Violations <span class="tab-badge" id="vioBadge">0</span></button>
+      <button class="tab" data-admin="true" onclick="switchTab('other')">📂 Other Items <span class="tab-badge" id="othBadge">0</span></button>
+      <button class="tab" data-admin="true" onclick="switchTab('requests')">📨 Resident Requests <span class="tab-badge" id="reqBadge">0</span></button>
+      <div class="nav-sec">Community</div>
+      <button class="tab" onclick="switchTab('announcements')">📣 Announcements <span class="tab-badge" id="annBadge">0</span></button>
+      <button class="tab" onclick="switchTab('minutes')">📝 Post Public Minutes <span class="tab-badge" id="minBadge">0</span></button>
+      <button class="tab" onclick="switchTab('residents')">📇 Residents <span class="tab-badge" id="resBadge">0</span></button>
+      <div class="nav-sec">Documents</div>
+      <button class="tab" onclick="switchTab('resources')">📁 Documents</button>
+      <button class="tab" onclick="switchTab('meetingrecords')">🗂️ Meeting Records</button>
+      <div class="nav-sec">Finance</div>
+      <button class="tab" onclick="switchTab('financials')">📊 Financials</button>
+      <div class="nav-sec">Admin</div>
+      <button class="tab" data-admin="true" onclick="switchTab('activity')">📋 Activity Log</button>
+    </div>
+  </aside>
+  <div class="content-area">
 
   <!-- Filter Bar -->
   <div class="filter-bar" id="filter-bar">
@@ -473,33 +499,67 @@
   </div>
 
   <div id="tab-resources" style="display:none">
-    <div style="font-size:13px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">Board Documents &amp; Resources</div>
-    <p style="font-size:13px;font-family:sans-serif;color:var(--text-m);margin:0 0 18px;">Quick access to shared board files in Google Drive. These open in a new tab.</p>
+    <div style="font-size:15px;font-weight:800;color:var(--navy);margin-bottom:4px;">Documents</div>
+    <p style="font-size:13px;font-family:sans-serif;color:var(--text-m);margin:0 0 18px;">Governing documents, contracts, and financials &mdash; all stored in the shared board Drive. Links open in a new tab.</p>
+
+    <div style="font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.5px;margin:0 0 12px;">Governing Documents</div>
     <div class="resource-grid">
-      <a class="resource-card" href="https://drive.google.com/drive/folders/1ZH7dlxOYW-vAVlB7-hONumj_Fghez8rJ" target="_blank" rel="noopener noreferrer">
-        <div class="rc-icon">📋</div>
-        <div class="rc-title">Meeting Minutes</div>
-        <div class="rc-desc">Archive of board meeting minutes and notes.</div>
-        <div class="rc-link">Open in Drive →</div>
+      <a class="resource-card" href="https://drive.google.com/drive/folders/1_k-V46neifR_ZNko_uxX9iWeXKVuleUC" target="_blank" rel="noopener noreferrer">
+        <div class="rc-icon">📐</div><div class="rc-title">Architectural Guidelines</div>
+        <div class="rc-desc">ARC standards for exterior changes and improvements.</div><div class="rc-link">Open in Drive →</div>
       </a>
-      <a class="resource-card" href="https://drive.google.com/drive/folders/1SUhLzTTiwLJy5ufeBja7X9bRGqiQlvDG" target="_blank" rel="noopener noreferrer">
-        <div class="rc-icon">📑</div>
-        <div class="rc-title">Vendor Contracts</div>
-        <div class="rc-desc">Signed vendor agreements and service contracts.</div>
-        <div class="rc-link">Open in Drive →</div>
+      <a class="resource-card" href="https://drive.google.com/drive/folders/1YLbfiwYNfOZj8dEBHeDH1hZ4lBhC5EmP" target="_blank" rel="noopener noreferrer">
+        <div class="rc-icon">📜</div><div class="rc-title">Bylaws</div>
+        <div class="rc-desc">Association bylaws governing operations and the board.</div><div class="rc-link">Open in Drive →</div>
       </a>
-      <a class="resource-card" href="https://drive.google.com/drive/folders/1SUhLzTTiwLJy5ufeBja7X9bRGqiQlvDG" target="_blank" rel="noopener noreferrer">
-        <div class="rc-icon">🛠️</div>
-        <div class="rc-title">Vendor Information</div>
-        <div class="rc-desc">Vendor contacts, quotes, and reference documents.</div>
-        <div class="rc-link">Open in Drive →</div>
+      <a class="resource-card" href="https://drive.google.com/drive/folders/16MMRSvQ7B4wZ9-ZQMkM8sQXMhrMOOvkN" target="_blank" rel="noopener noreferrer">
+        <div class="rc-icon">📕</div><div class="rc-title">CC&amp;Rs</div>
+        <div class="rc-desc">Covenants, Conditions &amp; Restrictions for the community.</div><div class="rc-link">Open in Drive →</div>
+      </a>
+      <a class="resource-card" href="https://drive.google.com/drive/folders/1JE-hqhlHejHCMPLTW4Wg2sI1Ck3qZMtD" target="_blank" rel="noopener noreferrer">
+        <div class="rc-icon">📋</div><div class="rc-title">Rules &amp; Regulations</div>
+        <div class="rc-desc">Community rules and enforcement policies.</div><div class="rc-link">Open in Drive →</div>
+      </a>
+    </div>
+
+    <div style="font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.5px;margin:24px 0 12px;">Contracts &amp; Financials</div>
+    <div class="resource-grid">
+      <a class="resource-card" href="https://drive.google.com/drive/folders/1BzL7haASGAtFK5gJyCsoS1y2G4ueMXMJ" target="_blank" rel="noopener noreferrer">
+        <div class="rc-icon">📑</div><div class="rc-title">Vendor Contracts</div>
+        <div class="rc-desc">Signed vendor agreements — landscaping, trash, lakes, lights, management.</div><div class="rc-link">Open in Drive →</div>
+      </a>
+      <a class="resource-card" href="https://drive.google.com/drive/folders/1gEes3d27w6QFEpd7-P2Iha6bxYuNxCcz" target="_blank" rel="noopener noreferrer">
+        <div class="rc-icon">🏦</div><div class="rc-title">Financial Statements</div>
+        <div class="rc-desc">Bank statements, monthly financials, and annual budgets.</div><div class="rc-link">Open in Drive →</div>
       </a>
       <div class="resource-card placeholder">
-        <div class="rc-icon">📇</div>
-        <div class="rc-title">Resident Records</div>
+        <div class="rc-icon">📇</div><div class="rc-title">Resident Records</div>
         <div class="rc-desc">Master inventory of all homes &mdash; see the <strong>Residents</strong> tab for the searchable directory.</div>
         <div class="rc-badge">In the Residents tab</div>
       </div>
+    </div>
+  </div>
+
+  <div id="tab-meetingrecords" style="display:none">
+    <div style="font-size:15px;font-weight:800;color:var(--navy);margin-bottom:4px;">Board Meeting Records</div>
+    <p style="font-size:13px;font-family:sans-serif;color:var(--text-m);margin:0 0 18px;">Official board meeting minutes, organized by year in the shared Drive. Links open in a new tab.<br><span style="color:#999;font-size:12px;">Note: this is the internal board archive. To publish a resident-friendly summary to the public website, use <strong>Post Public Minutes</strong>.</span></p>
+    <div class="resource-grid">
+      <a class="resource-card" href="https://drive.google.com/drive/folders/1ZH7dlxOYW-vAVlB7-hONumj_Fghez8rJ" target="_blank" rel="noopener noreferrer">
+        <div class="rc-icon">🗓️</div><div class="rc-title">2026 Minutes</div>
+        <div class="rc-desc">Current-year board meeting minutes.</div><div class="rc-link">Open in Drive →</div>
+      </a>
+      <a class="resource-card" href="https://drive.google.com/drive/folders/18nMUYU8XQv-Tp9qQa-kQvhi_m7imxMnA" target="_blank" rel="noopener noreferrer">
+        <div class="rc-icon">🗓️</div><div class="rc-title">2025 Minutes</div>
+        <div class="rc-desc">Prior-year board meeting minutes.</div><div class="rc-link">Open in Drive →</div>
+      </a>
+      <a class="resource-card" href="https://drive.google.com/drive/folders/1ZDATL4ApPgqQYHPtqE2ldgyBYGw04cL4" target="_blank" rel="noopener noreferrer">
+        <div class="rc-icon">🗓️</div><div class="rc-title">2023 Minutes</div>
+        <div class="rc-desc">Archived board meeting minutes.</div><div class="rc-link">Open in Drive →</div>
+      </a>
+      <a class="resource-card" href="https://drive.google.com/drive/folders/1hNcq--cZiEEvZTW0K1RJxtR89qte8ebD" target="_blank" rel="noopener noreferrer">
+        <div class="rc-icon">🗂️</div><div class="rc-title">All Meeting Records</div>
+        <div class="rc-desc">Full archive folder across all years.</div><div class="rc-link">Open in Drive →</div>
+      </a>
     </div>
   </div>
 
@@ -627,6 +687,8 @@
     </div>
   </div>
 
+  </div><!-- /content-area -->
+  </div><!-- /portal-layout -->
 </div>
 
 <!-- Email Preview Modal -->
@@ -845,7 +907,7 @@
 
   // ── Tabs ──────────────────────────────────────────────
   function switchTab(tab) {
-    const tabs = ["arc","violations","other","requests","announcements","minutes","residents","resources","financials","activity"];
+    const tabs = ["arc","violations","other","requests","announcements","minutes","residents","resources","meetingrecords","financials","activity"];
     if (tab === "residents" && !residentsLoaded) loadResidents();
     if (tab === "financials") loadFinancialsToggle();
     tabs.forEach(t => {
