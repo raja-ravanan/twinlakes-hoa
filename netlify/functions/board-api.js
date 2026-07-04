@@ -266,7 +266,11 @@ exports.handler = async (event) => {
           email: (row[3] || "").trim(),
           phone1: (row[4] || "").trim(),
           phone2: (row[6] || "").trim(),
-          series: (row[8] || "").trim()
+          series: (row[8] || "").trim(),
+          lot: (row[9] || "").trim(),
+          committee: (row[10] || "").trim(),
+          offender: (row[11] || "").trim(),
+          zone: (row[12] || "").trim()
         };
       })
       .sort((a, b) => a.streetName.localeCompare(b.streetName) || (parseInt(a.streetNo) || 0) - (parseInt(b.streetNo) || 0));

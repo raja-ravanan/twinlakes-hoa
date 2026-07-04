@@ -358,6 +358,7 @@
       <button class="tab" onclick="switchTab('announcements')">📣 Announcements <span class="tab-badge" id="annBadge">0</span></button>
       <button class="tab" onclick="switchTab('minutes')">📝 Post Public Minutes <span class="tab-badge" id="minBadge">0</span></button>
       <button class="tab" onclick="switchTab('residents')">📇 Residents <span class="tab-badge" id="resBadge">0</span></button>
+      <button class="tab" onclick="switchTab('map')">🗺️ Community Map</button>
       <div class="nav-sec">Documents</div>
       <button class="tab" onclick="switchTab('resources')">📁 Documents</button>
       <button class="tab" onclick="switchTab('meetingrecords')">🗂️ Meeting Records</button>
@@ -496,6 +497,45 @@
     </div>
     <div class="res-count" id="resCount"></div>
     <div id="resList"><div class="loading"><div class="spinner"></div>Loading residents...</div></div>
+  </div>
+
+  <div id="tab-map" style="display:none">
+    <style>
+      .map-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+      .map-legend{display:flex;gap:16px;flex-wrap:wrap;font-family:sans-serif;font-size:12px;align-items:center;color:var(--text-m);}
+      .map-legend .lg{display:inline-flex;align-items:center;gap:6px;}
+      .map-dot{width:12px;height:12px;border-radius:3px;display:inline-block;border:1px solid rgba(0,0,0,0.1);}
+      .map-wrap{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;}
+      .map-svg-box{flex:1;min-width:320px;background:#eef3ee;border:1px solid #e5e0d8;border-radius:12px;padding:8px;overflow:auto;}
+      .map-svg-box svg{display:block;width:100%;height:auto;}
+      .home-marker{cursor:pointer;transition:opacity .12s;}
+      .home-marker:hover{opacity:0.7;}
+      .map-detail{width:290px;flex-shrink:0;background:#fff;border:1px solid #e5e0d8;border-radius:12px;padding:20px;font-family:sans-serif;position:sticky;top:16px;}
+      .md-name{font-size:17px;font-weight:800;color:var(--navy);}
+      .md-addr{font-size:13px;color:var(--text-m);margin:2px 0 12px;}
+      .md-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid #eee;font-size:13px;}
+      .md-row .k{color:var(--text-m);} .md-row .v{font-weight:700;color:var(--text-d);text-align:right;}
+      .md-flag{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:20px;}
+      .md-flag.yes{background:#fdecea;color:#c0492e;} .md-flag.no{background:#eef0ee;color:#999;}
+      @media(max-width:820px){.map-detail{width:100%;position:static;}}
+    </style>
+    <div style="font-size:15px;font-weight:800;color:var(--navy);margin-bottom:4px;">Community Map</div>
+    <p style="font-size:13px;font-family:sans-serif;color:var(--text-m);margin:0 0 14px;">Schematic layout (approximate, grouped by street). Click any home to see its details. <span style="color:#999;">Board-only — includes confidential flags.</span></p>
+    <div class="map-head">
+      <div class="map-legend">
+        <span class="lg"><span class="map-dot" style="background:#2e7d4f;"></span>Garden</span>
+        <span class="lg"><span class="map-dot" style="background:#1B4B7A;"></span>Patriotic</span>
+        <span class="lg"><span class="map-dot" style="background:#cfcfcf;"></span>Unassigned</span>
+        <span class="lg"><span class="map-dot" style="background:#fff;border:2px solid #c0492e;"></span>Frequent offender</span>
+        <span class="lg"><span style="color:#C9A84C;font-size:15px;">★</span>Committee volunteer</span>
+      </div>
+    </div>
+    <div class="map-wrap">
+      <div class="map-svg-box" id="mapSvgBox"><div class="loading"><div class="spinner"></div>Loading map...</div></div>
+      <div class="map-detail" id="mapDetail">
+        <div style="color:var(--text-m);font-size:13px;">Click a home on the map to view its lot number, series, sprinkler zone, committee-volunteer status, and offender flag.</div>
+      </div>
+    </div>
   </div>
 
   <div id="tab-resources" style="display:none">
@@ -829,6 +869,55 @@
       <tbody>${rows}</tbody></table></div>`;
   }
 
+  // ── Community Map ─────────────────────────────────────
+  async function loadMap() {
+    if (!residentsLoaded) await loadResidents();
+    renderMap();
+  }
+  function offenderYes(v) { return /^(y|yes|true|1)/i.test((v || "").trim()); }
+  function renderMap() {
+    const box = document.getElementById("mapSvgBox");
+    if (!residentsData.length) { box.innerHTML = '<div class="loading">No resident data available.</div>'; return; }
+    const order = ["Cumberland Lake Circle","Scenic Lakes Drive","Barkley Lake Court","Cabin View Lane"];
+    const byStreet = {};
+    residentsData.forEach((r, i) => { (byStreet[r.streetName] = byStreet[r.streetName] || []).push(i); });
+    const streets = order.filter(s => byStreet[s]).concat(Object.keys(byStreet).filter(s => !order.includes(s)));
+    const perRow = 18, cell = 22, sz = 16, padX = 12, bandGap = 18, headH = 24;
+    let maxX = 0, y = 14; const parts = [];
+    streets.forEach(st => {
+      const idxs = byStreet[st].slice().sort((a, b) => (parseInt(residentsData[a].streetNo) || 0) - (parseInt(residentsData[b].streetNo) || 0));
+      parts.push(`<text x="${padX}" y="${y + 12}" font-family="sans-serif" font-size="12" font-weight="700" fill="#1B4B7A">${esc(st)} (${idxs.length})</text>`);
+      y += headH;
+      const rows = Math.ceil(idxs.length / perRow);
+      idxs.forEach((gi, k) => {
+        const col = k % perRow, row = Math.floor(k / perRow);
+        const x = padX + 12 + col * cell, yy = y + row * cell;
+        const r = residentsData[gi], ser = (r.series || "").toLowerCase();
+        const fill = ser.startsWith("garden") ? "#2e7d4f" : ser.startsWith("patriotic") ? "#1B4B7A" : "#cfcfcf";
+        const off = offenderYes(r.offender), vol = (r.committee || "").trim() !== "";
+        parts.push(`<g class="home-marker" onclick="showHome(${gi})"><title>${esc(r.name)} — ${esc(r.address)}</title>`+
+          `<rect x="${x}" y="${yy}" width="${sz}" height="${sz}" rx="3" fill="${fill}"${off ? ' stroke="#c0492e" stroke-width="2.5"' : ''}/>`+
+          (vol ? `<text x="${x + sz / 2}" y="${yy + sz - 4}" font-size="11" fill="#C9A84C" text-anchor="middle">★</text>` : '')+`</g>`);
+        maxX = Math.max(maxX, x + sz);
+      });
+      y += rows * cell + bandGap;
+    });
+    const w = Math.max(maxX + padX, 420), h = y;
+    box.innerHTML = `<svg viewBox="0 0 ${w} ${h}" xmlns="http://www.w3.org/2000/svg">${parts.join("")}</svg>`;
+  }
+  function showHome(i) {
+    const r = residentsData[i]; if (!r) return;
+    const off = offenderYes(r.offender);
+    document.getElementById("mapDetail").innerHTML =
+      `<div class="md-name">${esc(r.name)}</div><div class="md-addr">${esc(r.address)}</div>` +
+      `<div class="md-row"><span class="k">Lot number</span><span class="v">${esc(r.lot || "—")}</span></div>` +
+      `<div class="md-row"><span class="k">Series</span><span class="v">${esc(r.series || "—")}</span></div>` +
+      `<div class="md-row"><span class="k">Sprinkler zone</span><span class="v">${esc(r.zone || "—")}</span></div>` +
+      `<div class="md-row"><span class="k">Committee volunteer</span><span class="v">${r.committee ? esc(r.committee) : "—"}</span></div>` +
+      `<div class="md-row"><span class="k">Frequent offender</span><span class="v"><span class="md-flag ${off ? "yes" : "no"}">${off ? "Yes" : "No"}</span></span></div>` +
+      `<div class="md-row"><span class="k">Email</span><span class="v" style="font-weight:500;font-size:12px;">${r.email ? esc(r.email.split(";")[0].trim()) : "—"}</span></div>`;
+  }
+
   // ── Financials publish toggle (admin only) ───────────
   function setFinState(on) {
     const st = document.getElementById("finPublishState");
@@ -907,8 +996,9 @@
 
   // ── Tabs ──────────────────────────────────────────────
   function switchTab(tab) {
-    const tabs = ["arc","violations","other","requests","announcements","minutes","residents","resources","meetingrecords","financials","activity"];
+    const tabs = ["arc","violations","other","requests","announcements","minutes","residents","map","resources","meetingrecords","financials","activity"];
     if (tab === "residents" && !residentsLoaded) loadResidents();
+    if (tab === "map") loadMap();
     if (tab === "financials") loadFinancialsToggle();
     tabs.forEach(t => {
       const el = document.getElementById("tab-" + t);
