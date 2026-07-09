@@ -9,3 +9,7 @@
 
 [functions.email-digest]
   timeout = 300
+
+[functions.health-check]
+  timeout = 30
+  schedule = "0 */3 * * *"

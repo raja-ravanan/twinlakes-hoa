@@ -327,6 +327,11 @@
   </div>
 </div>
 
+<!-- Email health banner (shown only when the Gmail notification token is down) -->
+<div id="emailHealthBanner" style="display:none;background:#fdecea;border-bottom:2px solid #c0492e;color:#7a2e1d;font-family:sans-serif;font-size:14px;padding:12px 24px;text-align:center;line-height:1.5;">
+  <strong>⚠️ Email notifications are down.</strong> New resident requests are still being saved (see <a href="#" onclick="switchTab('requests');return false;" style="color:#7a2e1d;font-weight:700;">Resident Requests</a>), but the board isn't receiving email alerts. The Gmail token needs renewal. <span id="emailHealthWhen" style="opacity:0.7;"></span>
+</div>
+
 <!-- Scan Overlay -->
 <div class="scan-overlay" id="scanOverlay">
   <div class="scan-spinner"></div>
@@ -777,6 +782,7 @@
       document.querySelectorAll('[data-admin="true"]').forEach(el => { el.style.display = "none"; });
     }
     loadDashboard();
+    checkEmailHealth();
     const ls = localStorage.getItem("lastScan");
     if (ls) document.getElementById("lastScan").textContent = "Last scan: " + new Date(ls).toLocaleString();
   });
@@ -867,6 +873,25 @@
     document.getElementById("resList").innerHTML = `<div class="res-table-wrap"><table class="res-table">
       <thead><tr><th>Name</th><th>Address</th><th>Series</th><th>Email</th><th>Phone</th></tr></thead>
       <tbody>${rows}</tbody></table></div>`;
+  }
+
+  // ── Email health banner ───────────────────────────────
+  async function checkEmailHealth() {
+    try {
+      const res = await fetch("/.netlify/functions/board-api", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "getPublicSettings" })
+      });
+      const data = await res.json();
+      if (data && data.email_health === "down") {
+        const b = document.getElementById("emailHealthBanner");
+        b.style.display = "block";
+        if (data.email_checked_at) {
+          document.getElementById("emailHealthWhen").textContent =
+            "(last checked " + new Date(data.email_checked_at).toLocaleString() + ")";
+        }
+      }
+    } catch (e) { /* silent — don't block the portal on a health check */ }
   }
 
   // ── Community Map ─────────────────────────────────────

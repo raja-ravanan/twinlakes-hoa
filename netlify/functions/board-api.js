@@ -192,7 +192,12 @@ exports.handler = async (event) => {
     return {
       statusCode: 200,
       headers: { "Access-Control-Allow-Origin": "*" },
-      body: JSON.stringify({ financials_published: (map.financials_published === "true") })
+      body: JSON.stringify({
+        financials_published: (map.financials_published === "true"),
+        email_health: map.email_health || "unknown",
+        email_checked_at: map.email_checked_at || "",
+        email_health_detail: map.email_health_detail || ""
+      })
     };
   }
 
