@@ -623,6 +623,14 @@
       .finb-tbl td.n,.finb-tbl th.n{text-align:right;font-variant-numeric:tabular-nums;}
       .finb-tbl tfoot td{font-weight:800;background:#f4f2ed;border-top:2px solid var(--navy);}
       .finb-lbl{font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.5px;margin:22px 0 12px;}
+      .finb-plain{background:#eef6f0;border:1px solid #cfe6d6;border-left:4px solid #2e7d4f;border-radius:10px;padding:15px 18px;font-family:sans-serif;font-size:14px;line-height:1.6;color:var(--text-d);margin-bottom:22px;}
+      .finb-plain strong{color:#1a4a1a;}
+      .finb-bars{background:#fff;border:1px solid #e5e0d8;border-radius:10px;padding:16px 18px;margin-bottom:10px;font-family:sans-serif;}
+      .finb-bar-row{display:flex;align-items:center;gap:12px;margin:7px 0;font-size:13px;}
+      .finb-bar-mo{width:42px;flex-shrink:0;color:var(--text-m);}
+      .finb-bar-track{flex:1;background:#eef0ee;border-radius:5px;height:18px;overflow:hidden;}
+      .finb-bar-fill{height:100%;background:linear-gradient(90deg,var(--navy),#3a6ea5);border-radius:5px;}
+      .finb-bar-val{width:78px;text-align:right;font-variant-numeric:tabular-nums;font-weight:700;color:var(--navy);flex-shrink:0;}
       .finb-tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;}
       .finb-tag.m{background:#e7eef7;color:#1B4B7A;} .finb-tag.g{background:#e6f4ea;color:#2e7d4f;}
       .finb-grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
@@ -664,6 +672,10 @@
       <div class="finb-kpi"><div class="n">$4,522</div><div class="l">Dues Receivable</div><div class="s">Mar (mostly new closings)</div></div>
     </div>
 
+    <div class="finb-plain">
+      <strong>In plain terms:</strong> The HOA holds about <strong>$108,000</strong> across both associations&rsquo; checking and reserve accounts. It&rsquo;s running a <strong>healthy surplus</strong> — taking in more than it spends — and setting aside a little into reserves each month. By far the biggest expense is <strong>landscaping</strong> (~$113K/yr combined). Balances naturally dip through summer as landscaping and watering peak, then recover.
+    </div>
+
     <div class="finb-lbl">Balances by Account (June 30, 2026)</div>
     <table class="finb-tbl">
       <thead><tr><th>Association / Account</th><th class="n">Operating</th><th class="n">Reserve</th><th class="n">Total</th></tr></thead>
@@ -674,7 +686,16 @@
       <tfoot><tr><td>Combined</td><td class="n">$102,844</td><td class="n">$5,373</td><td class="n">$108,217</td></tr></tfoot>
     </table>
 
-    <div class="finb-lbl">Operating Balance Trend</div>
+    <div class="finb-lbl">Operating Balance Trend (combined)</div>
+    <div class="finb-bars">
+      <div class="finb-bar-row"><span class="finb-bar-mo">Jan</span><span class="finb-bar-track"><span class="finb-bar-fill" style="width:94.6%"></span></span><span class="finb-bar-val">$124,872</span></div>
+      <div class="finb-bar-row"><span class="finb-bar-mo">Feb</span><span class="finb-bar-track"><span class="finb-bar-fill" style="width:92.2%"></span></span><span class="finb-bar-val">$121,705</span></div>
+      <div class="finb-bar-row"><span class="finb-bar-mo">Mar</span><span class="finb-bar-track"><span class="finb-bar-fill" style="width:98.2%"></span></span><span class="finb-bar-val">$129,636</span></div>
+      <div class="finb-bar-row"><span class="finb-bar-mo">Apr</span><span class="finb-bar-track"><span class="finb-bar-fill" style="width:100%"></span></span><span class="finb-bar-val">$132,053</span></div>
+      <div class="finb-bar-row"><span class="finb-bar-mo">May</span><span class="finb-bar-track"><span class="finb-bar-fill" style="width:88.0%"></span></span><span class="finb-bar-val">$116,215</span></div>
+      <div class="finb-bar-row"><span class="finb-bar-mo">Jun</span><span class="finb-bar-track"><span class="finb-bar-fill" style="width:77.9%"></span></span><span class="finb-bar-val">$102,844</span></div>
+    </div>
+    <div class="finb-lbl" style="margin-top:16px;">Detail by Association</div>
     <table class="finb-tbl">
       <thead><tr><th>Month</th><th class="n">Master HOA</th><th class="n">Garden Homes</th><th class="n">Combined</th></tr></thead>
       <tbody>

@@ -24,6 +24,13 @@ function go(pageName) {
   window.scrollTo(0, 0);
 }
 
+// Announcements page: smooth-scroll to a section from the "On this page" side nav.
+function uJump(id) {
+  var el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  return false;
+}
+
 function toggleMenu() {
   var navLinks = document.getElementById('nav-links');
   if (navLinks) navLinks.classList.toggle('open');

@@ -629,11 +629,24 @@
         <h1 class="sec-title">Announcements</h1>
         <p class="sec-sub">The latest community notices and important announcements from your Twin Lakes at Floyds Fork board.</p>
       </section>
-      <section>
+      <section class="updates-section">
+        <aside class="updates-toc" aria-label="On this page">
+          <div class="utoc-title">On this page</div>
+          <a onclick="return uJump('dynamic-announcements')">Latest Announcements</a>
+          <a onclick="return uJump('u-committee')">Irrigation &amp; Tree Committee</a>
+          <a onclick="return uJump('u-ponds')">Pond Maintenance</a>
+          <a onclick="return uJump('u-pet')">Pet &amp; Leash Policy</a>
+          <a onclick="return uJump('u-parking')">No Overnight Parking</a>
+          <a onclick="return uJump('u-snow')">Snow &amp; Ice Removal</a>
+          <a onclick="return uJump('u-trash')">Trash Enclosures</a>
+          <a onclick="return uJump('u-schedule')">Maintenance Schedule</a>
+          <a onclick="return uJump('u-lawn')">Lawn Care Calendar</a>
+        </aside>
+        <div class="updates-main">
         <!-- Board-posted announcements (managed from the Board Portal) load here -->
         <div id="dynamic-announcements" class="notices-grid" style="margin-bottom:0;"></div>
         <div class="notices-grid">
-          <div class="notice-card notice-gold" style="grid-column:1/-1;">
+          <div class="notice-card notice-gold" id="u-committee" style="grid-column:1/-1;">
             <div class="notice-badge">Get Involved &middot; New Committee</div>
             <h3>Join the New Irrigation &amp; Tree Care Committee</h3>
             <p>Help keep our community beautiful, healthy, and water smart. We&rsquo;re looking for <strong>2 volunteers per street</strong> to learn our sprinkler systems and keep an eye on irrigation and tree health across the neighborhood. <strong>Participation is required for both Garden and Patriotic Series homes.</strong></p>
@@ -649,7 +662,7 @@
             <p style="margin-top:18px;"><strong>This is not a technical role</strong> &mdash; just an opportunity for residents to help keep our community looking its best while improving water efficiency and responsiveness. Small effort, big impact.</p>
             <p style="margin-top:10px;"><strong>Interested?</strong> Reach out to your board or property management today, or email <a href="mailto:hoa.twinlakes.board@gmail.com">hoa.twinlakes.board@gmail.com</a>.</p>
           </div>
-          <div class="notice-card notice-warning" style="grid-column:1/-1;">
+          <div class="notice-card notice-warning" id="u-pet" style="grid-column:1/-1;">
             <div class="notice-badge">Pet Owners &middot; Important Reminder</div>
             <h3>Leash Law &amp; Responsible Pet Ownership</h3>
             <p><strong>Jefferson County Code Section 91.002</strong> requires that all animals (except community cats) be kept under restraint at all times. It is illegal to walk your dog off-leash, except in designated dog parks.</p>
@@ -663,7 +676,7 @@
             </div>
             <p style="margin-top:18px;">Please keep pets leashed, license your pets, and report bites within 24 hours. Thank you for helping us create a safe and welcoming community! Questions? Contact Louisville Metro Animal Services at <strong>502-333-9072</strong>.</p>
           </div>
-          <div class="notice-card notice-info" style="grid-column:1/-1;">
+          <div class="notice-card notice-info" id="u-ponds" style="grid-column:1/-1;">
             <div class="notice-badge">Pond Maintenance &middot; June 2026</div>
             <h3>Pond Maintenance Update</h3>
             <p>The board wants to keep our community informed on the current status of the Twin Lakes ponds and the steps being taken to address recent concerns.</p>
@@ -690,12 +703,12 @@
 
             <p style="margin-top:18px;"><strong>Stay Connected</strong> &mdash; Questions or comments? Reach us at <a href="mailto:hoa.twinlakes.board@gmail.com">hoa.twinlakes.board@gmail.com</a></p>
           </div>
-          <div class="notice-card notice-warning">
+          <div class="notice-card notice-warning" id="u-parking">
             <div class="notice-badge">Important Notice</div>
             <h3>No Overnight Street Parking</h3>
             <p>No vehicles are to be parked overnight on subdivision roads at any time. This is especially critical during potential snow events to allow for efficient plowing and salting. Vehicles must be parked overnight in garages or driveways. Overnight parking on community roads violates our CC&amp;Rs.</p>
           </div>
-          <div class="notice-card notice-info">
+          <div class="notice-card notice-info" id="u-snow">
             <div class="notice-badge">Snow Policy</div>
             <h3>Snow &amp; Ice Removal Policy</h3>
             <div class="notice-detail">
@@ -705,7 +718,7 @@
               <div class="notice-detail-row"><span class="nd-label">Response Time</span><span>Contractors begin within 24 hours of snowfall. Residents report missed spots within 12 hours.</span></div>
             </div>
           </div>
-          <div class="notice-card notice-gold">
+          <div class="notice-card notice-gold" id="u-trash">
             <div class="notice-badge">Trash &amp; Recycling</div>
             <h3>Garbage Can Enclosure Guidelines</h3>
             <div class="dos-donts">
@@ -733,7 +746,7 @@
           </div>
         </div>
  
-        <div class="schedule-section">
+        <div class="schedule-section" id="u-schedule">
           <div class="schedule-header">
             <div class="sec-label">Upcoming Work</div>
             <h2 class="schedule-title">Maintenance Schedule</h2>
@@ -755,7 +768,7 @@
           <p class="table-note">Schedule updated as vendor dates are confirmed. Last updated: April 2026. Have a specific item to report? <a href="#" onclick="go('contact')">Contact us.</a></p>
         </div>
  
-        <div class="lawn-calendar">
+        <div class="lawn-calendar" id="u-lawn">
           <div class="lawn-cal-header">
             <div class="sec-label">Annual Operations</div>
             <h2 class="lawn-cal-title">2026 Lawn Care Calendar</h2>
@@ -833,6 +846,7 @@
             </div>
           </div>
         </div>
+        </div><!-- /updates-main -->
       </section>
     </div>
     <footer>
@@ -842,7 +856,7 @@
       <p class="footer-copy">&copy; 2026 Twin Lakes at Floyds Fork HOA. All rights reserved.</p>
     </footer>
   </div>
- 
+
   <!-- ═══════════════════════════════════════════ MINUTES -->
   <div id="page-minutes" class="page">
     <section class="page-header">
