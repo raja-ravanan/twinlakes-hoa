@@ -168,13 +168,15 @@
     .faq-item {
       background: var(--white);
       border: 1px solid var(--cream-border);
-      border-radius: 4px;
+      border-radius: var(--radius);
       overflow: hidden;
-      transition: border-color 0.2s;
+      box-shadow: var(--shadow-sm);
+      transition: border-color 0.2s, box-shadow 0.2s;
     }
-    .faq-item:hover { border-color: var(--gold-border); }
+    .faq-item:hover { border-color: var(--gold-border); box-shadow: var(--shadow-md); }
     .faq-question {
       width: 100%;
+      min-height: 44px;
       background: none;
       border: none;
       padding: 18px 20px;
@@ -183,12 +185,13 @@
       align-items: center;
       cursor: pointer;
       text-align: left;
-      font-size: 15px;
-      font-family: Georgia, serif;
+      font-size: 16px;
+      font-family: var(--serif);
       color: var(--navy);
       font-weight: normal;
-      line-height: 1.4;
+      line-height: 1.45;
     }
+    .faq-item.open .faq-question { background: var(--navy-light); border-bottom: 1px solid var(--cream-border); }
     .faq-question:hover { background: var(--navy-light); }
     .faq-chevron {
       width: 20px; height: 20px;
@@ -200,13 +203,12 @@
     .faq-item.open .faq-chevron { transform: rotate(180deg); }
     .faq-answer {
       display: none;
-      padding: 0 20px 18px;
+      padding: 14px 20px 18px;
       font-size: 14px;
-      font-family: sans-serif;
+      font-family: var(--sans);
       color: var(--text-s);
       line-height: 1.75;
-      border-top: 1px solid var(--cream-border);
-      padding-top: 14px;
+      background: var(--bg-soft);
     }
     .faq-item.open .faq-answer { display: block; }
     .faq-answer a { color: var(--navy); font-weight: 600; }
@@ -246,10 +248,10 @@
  
     /* ── NEW RESIDENT ── */
     .new-resident-band {
-      background: linear-gradient(135deg, var(--gold-light), #fff);
-      border-top: 1px solid var(--gold-border);
-      border-bottom: 1px solid var(--gold-border);
-      padding: 56px 2.5rem;
+      background: linear-gradient(135deg, var(--gold-light), var(--cream) 70%, var(--white));
+      border-top: 1px solid var(--hairline-gold);
+      border-bottom: 1px solid var(--hairline-gold);
+      padding: 64px 2.5rem;
     }
     .new-resident-inner {
       max-width: 1100px; margin: 0 auto;
@@ -263,24 +265,26 @@
     }
     .new-resident-left p {
       font-size: 15px; color: var(--text-m);
-      font-family: sans-serif; line-height: 1.7;
+      font-family: var(--sans); line-height: 1.75;
     }
     .new-resident-steps {
       display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
     }
     .nr-step {
       background: var(--white);
-      border: 1px solid var(--gold-border);
-      border-radius: 4px;
+      border: 1px solid var(--hairline-gold);
+      border-radius: var(--radius);
       padding: 18px;
       display: flex; gap: 14px; align-items: flex-start;
       cursor: pointer;
-      transition: border-color 0.2s, box-shadow 0.2s;
+      box-shadow: var(--shadow-sm);
+      transition: border-color 0.2s, box-shadow 0.2s ease, transform 0.2s ease;
       text-decoration: none;
     }
     .nr-step:hover {
-      border-color: var(--navy);
-      box-shadow: 0 4px 16px rgba(27,75,122,0.1);
+      border-color: var(--gold);
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
     }
     .nr-num {
       width: 28px; height: 28px;
@@ -308,10 +312,13 @@
     .vendor-card {
       background: var(--white);
       border: 1px solid var(--cream-border);
-      border-radius: 4px;
-      padding: 22px 24px;
-      border-left: 3px solid var(--navy);
+      border-radius: var(--radius);
+      padding: 24px 26px;
+      border-left: 3px solid var(--gold);
+      box-shadow: var(--shadow-sm);
+      transition: border-color 0.2s, box-shadow 0.2s ease, transform 0.2s ease;
     }
+    .vendor-card:hover { border-color: var(--gold-border); border-left-color: var(--gold); box-shadow: var(--shadow-md); transform: translateY(-2px); }
     .vendor-category {
       font-size: 10px; font-family: sans-serif;
       font-weight: 700; letter-spacing: 2px;
