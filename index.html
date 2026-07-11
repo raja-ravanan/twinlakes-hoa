@@ -403,9 +403,9 @@
       <div class="nav-group">
         <button class="nav-group-label" onclick="toggleNavGroup(this)">Documents <span class="nav-caret">&#9662;</span></button>
         <div class="nav-dropdown">
-          <a href="https://drive.google.com/file/d/1dQdZQ3sKi4SkXM-z5OnTncUEEqTTnuoX/view?usp=drive_link" target="_blank" rel="noopener noreferrer">CC&amp;Rs</a>
-          <a href="https://drive.google.com/file/d/1Jm47Xn1lJoBqkqN7tN5z4sl639Maj4f6/view?usp=drive_link" target="_blank" rel="noopener noreferrer">Bylaws</a>
-          <a href="https://drive.google.com/file/d/1FyrtPbrsm-HvCuZqVTuSm-hSNgrFZU2J/view?usp=drive_link" target="_blank" rel="noopener noreferrer">ARC Request Form</a>
+          <a href="#" onclick="return openDoc('1dQdZQ3sKi4SkXM-z5OnTncUEEqTTnuoX','Covenants, Conditions &amp; Restrictions')">CC&amp;Rs</a>
+          <a href="#" onclick="return openDoc('1Jm47Xn1lJoBqkqN7tN5z4sl639Maj4f6','Bylaws')">Bylaws</a>
+          <a href="#" onclick="return openDoc('1FyrtPbrsm-HvCuZqVTuSm-hSNgrFZU2J','ARC Request Form')">ARC Request Form</a>
           <a href="#" onclick="go('financials')" id="nav-financials">Financials</a>
         </div>
       </div>
@@ -901,12 +901,12 @@
           <div class="doc-card">
             <div class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
             <div class="doc-info"><h3>Covenants, Conditions &amp; Restrictions</h3><p>The primary governing document outlining community rules, property use restrictions, and homeowner obligations.</p></div>
-            <a href="https://drive.google.com/file/d/1dQdZQ3sKi4SkXM-z5OnTncUEEqTTnuoX/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="doc-btn">View PDF</a>
+            <a href="#" onclick="return openDoc('1dQdZQ3sKi4SkXM-z5OnTncUEEqTTnuoX','Covenants, Conditions &amp; Restrictions')" class="doc-btn">View PDF</a>
           </div>
           <div class="doc-card">
             <div class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
             <div class="doc-info"><h3>Bylaws</h3><p>Governs the internal operations of the HOA including board elections, meetings, and voting procedures.</p></div>
-            <a href="https://drive.google.com/file/d/1Jm47Xn1lJoBqkqN7tN5z4sl639Maj4f6/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="doc-btn">View PDF</a>
+            <a href="#" onclick="return openDoc('1Jm47Xn1lJoBqkqN7tN5z4sl639Maj4f6','Bylaws')" class="doc-btn">View PDF</a>
           </div>
         </div>
       </div>
@@ -919,7 +919,7 @@
           <div class="doc-card">
             <div class="doc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="#C9A84C" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg></div>
             <div class="doc-info"><h3>Architectural Guidelines</h3><p>Standards and approval requirements for exterior changes including fences, additions, landscaping, and more.</p></div>
-            <a href="https://drive.google.com/file/d/1Es1AqJ_kjEpOdZQpY1T8fc8Dj9lt1n9q/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="doc-btn">View PDF</a>
+            <a href="#" onclick="return openDoc('1Es1AqJ_kjEpOdZQpY1T8fc8Dj9lt1n9q','Architectural Guidelines')" class="doc-btn">View PDF</a>
           </div>
         </div>
       </div>
@@ -940,7 +940,7 @@
                 <span class="doc-step">3. Email Mulloy</span>
               </div>
             </div>
-            <a href="https://drive.google.com/file/d/1FyrtPbrsm-HvCuZqVTuSm-hSNgrFZU2J/view?usp=drive_link" target="_blank" rel="noopener noreferrer" class="doc-btn doc-btn-gold">Download Form</a>
+            <a href="#" onclick="return openDoc('1FyrtPbrsm-HvCuZqVTuSm-hSNgrFZU2J','ARC Request Form')" class="doc-btn doc-btn-gold">View / Download Form</a>
           </div>
         </div>
         <div class="arc-note">
@@ -1483,6 +1483,24 @@
     </footer>
   </div>
  
+  <!-- In-site Document Viewer -->
+  <div id="doc-modal" class="doc-modal" role="dialog" aria-modal="true" aria-labelledby="doc-modal-title">
+    <div class="doc-modal-backdrop" onclick="closeDoc()"></div>
+    <div class="doc-modal-panel">
+      <div class="doc-modal-bar">
+        <div class="doc-modal-title" id="doc-modal-title">Document</div>
+        <div class="doc-modal-actions">
+          <a id="doc-dl" class="doc-modal-btn" href="#" target="_blank" rel="noopener noreferrer">&#8595; Download</a>
+          <button type="button" class="doc-modal-btn" onclick="printDoc()">&#128424; Print</button>
+          <button type="button" class="doc-modal-btn primary" onclick="closeDoc()">&#10005; Close</button>
+        </div>
+      </div>
+      <div class="doc-modal-body">
+        <iframe id="doc-frame" title="Document viewer" src="" referrerpolicy="no-referrer"></iframe>
+      </div>
+    </div>
+  </div>
+
   <!-- Chat Widget -->
   <div id="chat-widget">
     <button id="chat-toggle">

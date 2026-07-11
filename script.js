@@ -31,6 +31,36 @@ function uJump(id) {
   return false;
 }
 
+// In-site document viewer — shows a Drive PDF in a modal so residents stay on
+// the site (no exposed Drive folder, no missing back button).
+var _docCurrentId = null;
+function openDoc(id, title) {
+  _docCurrentId = id;
+  document.getElementById('doc-modal-title').textContent = title || 'Document';
+  document.getElementById('doc-frame').src = 'https://drive.google.com/file/d/' + id + '/preview';
+  document.getElementById('doc-dl').href = 'https://drive.google.com/uc?export=download&id=' + id;
+  document.getElementById('doc-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  return false;
+}
+function closeDoc() {
+  document.getElementById('doc-modal').classList.remove('open');
+  document.getElementById('doc-frame').src = '';
+  document.body.style.overflow = '';
+  _docCurrentId = null;
+}
+function printDoc() {
+  // Cross-origin embeds can't be printed directly; open the file in a new tab
+  // (its viewer has a print option) without exposing the Drive folder.
+  if (_docCurrentId) window.open('https://drive.google.com/file/d/' + _docCurrentId + '/view', '_blank', 'noopener');
+}
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape') {
+    var m = document.getElementById('doc-modal');
+    if (m && m.classList.contains('open')) closeDoc();
+  }
+});
+
 function toggleMenu() {
   var navLinks = document.getElementById('nav-links');
   if (navLinks) navLinks.classList.toggle('open');
