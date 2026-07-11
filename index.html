@@ -551,27 +551,30 @@
       </div>
     </section>
  
-    <!-- NEW RESIDENT -->
-    <div class="new-resident-band">
-      <div class="new-resident-inner">
-        <div class="new-resident-left">
-          <div class="sec-label">New to Twin Lakes?</div>
-          <h2>Welcome to the neighborhood</h2>
-          <p>Everything you need to get started as a Twin Lakes homeowner. We&rsquo;re glad you&rsquo;re here.</p>
+    <!-- FEEDBACK / BETA -->
+    <section class="feedback-band">
+      <div class="fb-inner">
+        <div class="sec-label" style="justify-content:center;">Brand New &middot; We&rsquo;d Love Your Feedback</div>
+        <h2>This site is brand new &mdash; help us make it better</h2>
+        <p>We recently built this website for the Twin Lakes community, so you may come across a few rough edges. Whether it&rsquo;s something broken, something confusing, or an idea to improve it &mdash; good, bad, or a suggestion &mdash; we genuinely want to hear it. Your feedback helps the board make it better for everyone.</p>
+        <div id="fb-form" class="fb-form">
+          <div class="fb-row">
+            <input id="fb-name" type="text" placeholder="Your name (optional)" />
+            <input id="fb-email" type="email" placeholder="Your email *" />
+          </div>
+          <textarea id="fb-message" rows="4" placeholder="What&rsquo;s working, what&rsquo;s not, or what you&rsquo;d like to see…"></textarea>
+          <div class="fb-actions">
+            <button id="fb-submit" class="btn-gold" onclick="submitFeedback()">Share Feedback</button>
+            <span class="fb-or">or email us at <a href="mailto:hoa.twinlakes.board@gmail.com?subject=Website%20Feedback">hoa.twinlakes.board@gmail.com</a></span>
+          </div>
+          <div id="fb-status" class="fb-status"></div>
         </div>
-        <div class="new-resident-steps">
-          <a class="nr-step" href="https://www.facebook.com/share/g/1bh4nL3BUi/" target="_blank">
-            <div class="nr-num">1</div>
-            <div class="nr-text"><strong>Join Facebook Group</strong><span>Connect with neighbors in our private residents-only group</span></div>
-          </a>
-          <button class="nr-step" onclick="go('contact')" style="text-align:left;">
-            <div class="nr-num">2</div>
-            <div class="nr-text"><strong>Say Hello to the Board</strong><span>Introduce yourself or ask any questions via our contact form</span></div>
-          </button>
+        <div id="fb-thanks" class="fb-thanks" style="display:none;">
+          <strong>Thank you!</strong> Your feedback has been sent to the board. We appreciate you helping us improve the site.
         </div>
       </div>
-    </div>
- 
+    </section>
+
     <!-- CTA BAND -->
     <div class="cta-band">
       <div class="cta-logo-mark">TL</div>
@@ -684,11 +687,14 @@
             <p style="margin-top:18px;">Please keep pets leashed, license your pets, and report bites within 24 hours. Thank you for helping us create a safe and welcoming community! Questions? Contact Louisville Metro Animal Services at <strong>502-333-9072</strong>.</p>
           </div>
           <div class="notice-card notice-info" id="u-ponds" style="grid-column:1/-1;">
-            <div class="notice-badge">Pond Maintenance &middot; June 2026</div>
+            <div class="notice-badge">Pond Maintenance &middot; July 2026</div>
             <h3>Pond Maintenance Update</h3>
             <p>The board wants to keep our community informed on the current status of the Twin Lakes ponds and the steps being taken to address recent concerns.</p>
 
-            <h4 style="font-size:15px;color:var(--navy);margin:22px 0 8px;">The Smaller Pond</h4>
+            <h4 style="font-size:15px;color:var(--navy);margin:22px 0 8px;">July 2026 Update &mdash; Vendor Selected &amp; Treatment Underway</h4>
+            <p>The board worked with three different pond-management vendors to understand the root cause and underlying issues with the small pond, with a focus on putting a sound long-term solution in place. After a thorough analysis, the board selected <strong>Jones Management</strong>. Jones has begun their work &mdash; the first application was completed on <strong>July 9, 2026</strong>. More details will be shared shortly.</p>
+
+            <h4 style="font-size:15px;color:var(--navy);margin:22px 0 8px;">Background: The Smaller Pond</h4>
             <p>The smaller pond has experienced increased aquatic vegetation growth this season. After bringing in multiple independent vendors to assess the situation, here is what we learned:</p>
             <ul style="font-family:sans-serif;font-size:15px;color:var(--text-s);line-height:1.7;margin:8px 0 0 20px;">
               <li>The pond is shallow (under 6 feet), which makes it prone to chronic vegetation and algae growth</li>
@@ -696,17 +702,10 @@
               <li>This condition existed in prior years but was masked by blue dye treatments used by our previous vendor &mdash; it did not develop overnight</li>
               <li>Plants identified include pond weed and creeping water primrose</li>
             </ul>
-            <p style="margin-top:10px;">The board is currently evaluating proposals from qualified vendors to begin treatment. An update on the treatment start date will be shared once a vendor is selected.</p>
+            <p style="margin-top:10px;">This diagnosis guided the board&rsquo;s vendor selection and the treatment now underway (see the July update above).</p>
 
             <h4 style="font-size:15px;color:var(--navy);margin:22px 0 8px;">The Two Larger Ponds</h4>
             <p>The larger ponds are in better condition due to their greater depth. As a precaution, vendors identified early signs of invasive aquatic plant growth (alligator weed) and elevated nutrient levels that could lead to algae issues if left unaddressed. We are taking proactive steps to treat these before they become a visible problem.</p>
-
-            <h4 style="font-size:15px;color:var(--navy);margin:22px 0 8px;">Budget &amp; Vendor Context</h4>
-            <ul style="font-family:sans-serif;font-size:15px;color:var(--text-s);line-height:1.7;margin:8px 0 0 20px;">
-              <li>The 2026 lake maintenance budget increased from $2,783 (2025) to $10,123 &mdash; this reflects expanded coverage of all three ponds, compared to only one pond in 2025</li>
-              <li>The board selected Two Fish this year at ~$6,000 vs. the prior vendor&rsquo;s $10,000 proposal, retaining a reserve for situations like this</li>
-              <li>The board is now evaluating new vendor proposals and will share an update once finalized</li>
-            </ul>
 
             <p style="margin-top:18px;"><strong>Stay Connected</strong> &mdash; Questions or comments? Reach us at <a href="mailto:hoa.twinlakes.board@gmail.com">hoa.twinlakes.board@gmail.com</a></p>
           </div>
@@ -764,12 +763,11 @@
               <tr><th style="width:130px;">Date</th><th>Activity</th><th style="width:160px;">Area</th><th style="width:110px;">Status</th></tr>
             </thead>
             <tbody>
-              <tr><td><strong>Apr 2026</strong></td><td>Irrigation startup — Garden Home series (Evergreen)</td><td>All Garden Homes</td><td><span class="badge badge-gold">In Progress</span></td></tr>
-              <tr><td><strong>Apr 2026</strong></td><td>New home sprinkler installation — pending homes (Evergreen)</td><td>Newly built homes</td><td><span class="badge badge-gold">In Progress</span></td></tr>
-              <tr><td><strong>Apr 2026</strong></td><td>TruGreen Early Spring — fertilizer, broadleaf weed control, crabgrass pre-emergent</td><td>Garden Homes</td><td><span class="badge badge-blue">Scheduled</span></td></tr>
-              <tr><td><strong>Apr 2026</strong></td><td>Aphix Spring Turf Application — common areas &amp; entrances</td><td>Common areas</td><td><span class="badge badge-blue">Scheduled</span></td></tr>
-              <tr><td><strong>Apr–Nov 2026</strong></td><td>Lawn mowing &amp; edging — 30 scheduled mowings (weather dependent)</td><td>Garden Homes</td><td><span class="badge badge-blue">Scheduled</span></td></tr>
-              <tr><td><strong>TBD</strong></td><td>Additional maintenance items — schedule to be updated as confirmed</td><td>Various</td><td><span class="badge badge-muted">Pending</span></td></tr>
+              <tr><td><strong>Apr 2026</strong></td><td>Irrigation startup — Garden Home series (Evergreen)</td><td>All Garden Homes</td><td><span class="badge badge-green">Complete</span></td></tr>
+              <tr><td><strong>Apr 2026</strong></td><td>New home sprinkler installation — pending homes (Evergreen)</td><td>Newly built homes</td><td><span class="badge badge-green">Complete</span></td></tr>
+              <tr><td><strong>Apr 2026</strong></td><td>TruGreen Early Spring — fertilizer, broadleaf weed control, crabgrass pre-emergent</td><td>Garden Homes</td><td><span class="badge badge-green">Complete</span></td></tr>
+              <tr><td><strong>Apr 2026</strong></td><td>Aphix Spring Turf Application — common areas &amp; entrances</td><td>Common areas</td><td><span class="badge badge-green">Complete</span></td></tr>
+              <tr><td><strong>Apr–Nov 2026</strong></td><td>Lawn mowing &amp; edging — 30 scheduled mowings (weather dependent)</td><td>Garden Homes</td><td><span class="badge badge-gold">In Progress</span></td></tr>
             </tbody>
           </table>
           <p class="table-note">Schedule updated as vendor dates are confirmed. Last updated: April 2026. Have a specific item to report? <a href="#" onclick="go('contact')">Contact us.</a></p>
@@ -1491,7 +1489,6 @@
         <div class="doc-modal-title" id="doc-modal-title">Document</div>
         <div class="doc-modal-actions">
           <a id="doc-dl" class="doc-modal-btn" href="#" target="_blank" rel="noopener noreferrer">&#8595; Download</a>
-          <button type="button" class="doc-modal-btn" onclick="printDoc()">&#128424; Print</button>
           <button type="button" class="doc-modal-btn primary" onclick="closeDoc()">&#10005; Close</button>
         </div>
       </div>

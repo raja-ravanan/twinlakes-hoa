@@ -31,6 +31,37 @@ function uJump(id) {
   return false;
 }
 
+// Homepage feedback form — posts to the same pipeline as resident requests,
+// tagged as "Feedback", so it lands in the board's inbox and Resident Requests.
+async function submitFeedback() {
+  var email = (document.getElementById('fb-email').value || '').trim();
+  var message = (document.getElementById('fb-message').value || '').trim();
+  var name = (document.getElementById('fb-name').value || '').trim() || 'Resident';
+  var status = document.getElementById('fb-status');
+  status.style.color = '#c0492e';
+  if (!email || !message) { status.textContent = 'Please add your email and a short note.'; return; }
+  status.textContent = '';
+  var btn = document.getElementById('fb-submit');
+  var label = btn.textContent; btn.disabled = true; btn.textContent = 'Sending…';
+  try {
+    var resp = await fetch('/.netlify/functions/submit-request', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: name, email: email, requestType: 'Feedback', subject: 'Website Feedback', message: message, sendTo: 'board' })
+    });
+    var body = await resp.json();
+    if (resp.ok && body.success) {
+      document.getElementById('fb-form').style.display = 'none';
+      document.getElementById('fb-thanks').style.display = 'block';
+    } else {
+      status.textContent = (body && body.error) || 'Something went wrong. Please email us directly.';
+    }
+  } catch (e) {
+    status.textContent = 'Could not send. Please check your connection, or email us directly.';
+  } finally {
+    btn.disabled = false; btn.textContent = label;
+  }
+}
+
 // In-site document viewer — shows a Drive PDF in a modal so residents stay on
 // the site (no exposed Drive folder, no missing back button).
 var _docCurrentId = null;
@@ -48,11 +79,6 @@ function closeDoc() {
   document.getElementById('doc-frame').src = '';
   document.body.style.overflow = '';
   _docCurrentId = null;
-}
-function printDoc() {
-  // Cross-origin embeds can't be printed directly; open the file in a new tab
-  // (its viewer has a print option) without exposing the Drive folder.
-  if (_docCurrentId) window.open('https://drive.google.com/file/d/' + _docCurrentId + '/view', '_blank', 'noopener');
 }
 document.addEventListener('keydown', function (e) {
   if (e.key === 'Escape') {
