@@ -369,6 +369,7 @@
       <button class="tab" onclick="switchTab('meetingrecords')">🗂️ Meeting Records</button>
       <div class="nav-sec">Finance</div>
       <button class="tab" onclick="switchTab('financials')">📊 Financials</button>
+      <button class="tab" onclick="switchTab('budget')">💵 Budget vs Actual</button>
       <div class="nav-sec">Admin</div>
       <button class="tab" data-admin="true" onclick="switchTab('activity')">📋 Activity Log</button>
     </div>
@@ -747,6 +748,40 @@
     <p class="finb-note">Figures from Jan&ndash;May 2026 bank statements (reconciled) and the 2026 approved budgets. This is a static snapshot; to refresh, provide updated statements. Confidential &mdash; board only.</p>
   </div>
 
+  <div id="tab-budget" style="display:none">
+    <style>
+      .bud-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:0 0 4px;}
+      .bud-title{font-size:15px;font-weight:800;color:var(--navy);}
+      .bud-sub{font-size:13px;font-family:sans-serif;color:var(--text-m);margin:0 0 18px;}
+      .bud-assoc{background:#fff;border:1px solid #e5e0d8;border-radius:12px;padding:18px 20px;margin-bottom:22px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+      .bud-atop{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-bottom:1px solid #eee;padding-bottom:14px;margin-bottom:6px;}
+      .bud-aname{font-size:16px;font-weight:800;color:var(--navy);display:flex;align-items:center;gap:8px;}
+      .bud-tag{display:inline-block;font-size:10px;font-weight:700;padding:2px 9px;border-radius:20px;}
+      .bud-tag.m{background:#e7eef7;color:#1B4B7A;} .bud-tag.g{background:#e6f4ea;color:#2e7d4f;}
+      .bud-astat{display:flex;gap:20px;font-family:sans-serif;flex-wrap:wrap;}
+      .bud-astat div{text-align:right;} .bud-astat .k{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-m);}
+      .bud-astat .v{font-size:16px;font-weight:800;color:var(--navy);font-variant-numeric:tabular-nums;}
+      .bud-astat .v.rem{color:#2e7d4f;}
+      .bud-row{display:grid;grid-template-columns:34px 1.6fr 2fr auto;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid #f2efe9;font-family:sans-serif;}
+      .bud-row:last-child{border-bottom:none;}
+      .bud-ic{width:34px;height:34px;border-radius:9px;background:var(--navy-light);display:flex;align-items:center;justify-content:center;font-size:17px;}
+      .bud-nm{font-size:13.5px;color:var(--text-d);font-weight:600;}
+      .bud-bar-wrap{display:flex;flex-direction:column;gap:4px;}
+      .bud-bar{background:#eef0ee;border-radius:5px;height:9px;overflow:hidden;}
+      .bud-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--navy),#3a6ea5);}
+      .bud-fill.over{background:linear-gradient(90deg,#c0492e,#e07a5f);}
+      .bud-nums{font-size:11px;color:var(--text-m);font-variant-numeric:tabular-nums;}
+      .bud-rem{text-align:right;font-variant-numeric:tabular-nums;font-weight:700;font-size:13px;color:#2e7d4f;min-width:78px;}
+      .bud-rem.over{color:#c0492e;}
+      .bud-note{font-size:12px;color:#999;font-style:italic;font-family:sans-serif;margin-top:8px;line-height:1.5;}
+      @media(max-width:640px){.bud-row{grid-template-columns:30px 1fr auto;}.bud-bar-wrap{grid-column:1/-1;order:3;}}
+    </style>
+    <div class="bud-title">Budget vs Actual &mdash; 2026 Year-to-Date</div>
+    <p class="bud-sub">Where the money goes and what&rsquo;s left, by category &middot; through June 30, 2026 &middot; source: Mulloy monthly financial statement.</p>
+    <div id="budgetBody"></div>
+    <p class="bud-note">Figures are year-to-date actuals from the June financial statement, reconciled to invoice detail. Remaining = annual budget &minus; spent. Categories over budget are shown in red. Expect faster drawdown in H2 (summer lawn/water + the Jones pond program).</p>
+  </div>
+
   <div id="tab-activity" style="display:none">
     <div class="activity-panel">
       <div class="activity-title">Recent Activity</div>
@@ -1000,6 +1035,85 @@
     }
   }
 
+  // ── Budget vs Actual (2026 YTD, from Mulloy's June financial statement) ──
+  const BUDGET_DATA = {
+    master: { name: "Master HOA", tag: "m", budget: 133324, spent: 60549, cats: [
+      ["🚜","Lawn Cutting (common)",45938,19141],
+      ["🗑️","Trash Removal",26730,13110],
+      ["💧","Water",15145,4506],
+      ["🐟","Lake / Pond Maintenance",10123,3987],
+      ["🏦","Reserves (savings)",6081,3041],
+      ["🏢","Management Fees",5346,2664],
+      ["💡","Street Lights",4992,3265],
+      ["❄️","Snow Removal",4000,6816],
+      ["🌿","Landscape Maintenance",2600,0],
+      ["⚡","Common Area Electric",2195,315],
+      ["🛡️","Insurance",2000,2655],
+      ["🦟","Mosquito Treatments",1717,0],
+      ["🌳","Tree & Shrub Replacements",1500,0],
+      ["🔧","Irrigation Repair",1225,640],
+      ["📎","Office Expenses",975,310],
+      ["🧾","Tax Preparation",750,0],
+      ["🔧","Irrigation Maintenance",625,0],
+      ["🎄","Holiday Décor",600,0],
+      ["🔨","Maintenance & Repairs",550,0],
+      ["⚖️","Legal Fees",216,0],
+      ["📄","Annual Filing Fee",15,0],
+      ["📦","Miscellaneous (unbudgeted)",0,100]
+    ]},
+    garden: { name: "Garden Homes", tag: "g", budget: 154118, spent: 50547, cats: [
+      ["🚜","Lawn Cutting (homes)",66780,20034],
+      ["💧","Water – Irrigation",29285,4185],
+      ["🧪","Lawn Chemicals (TruGreen)",10042,3347],
+      ["🍂","Mulch – Homes",9646,8613],
+      ["🏢","Management Fees",8350,4170],
+      ["♻️","Recycling",5428,2694],
+      ["🏦","Reserves (savings)",4665,2333],
+      ["✂️","Trimming (2×/yr)",4452,0],
+      ["🌳","Tree & Shrub Replacements",4000,0],
+      ["🔧","Irrigation Maintenance",2675,3804],
+      ["🌲","Mulch – Street Trees",2608,458],
+      ["🔧","Irrigation Repair",2500,0],
+      ["🌿","Monthly Weeding",2078,534],
+      ["🏡","Landscape Maintenance",1000,0],
+      ["📎","Office Expenses",360,375],
+      ["🍁","Fall Clean-up",250,0]
+    ]}
+  };
+  function money(n){ return "$" + Math.round(n).toLocaleString(); }
+  function renderBudget() {
+    const wrap = document.getElementById("budgetBody");
+    if (wrap.dataset.done) return;
+    let html = "";
+    ["master","garden"].forEach(key => {
+      const a = BUDGET_DATA[key];
+      const rem = a.budget - a.spent, pct = Math.round(a.spent / a.budget * 100);
+      html += `<div class="bud-assoc"><div class="bud-atop">
+        <div class="bud-aname"><span class="bud-tag ${a.tag}">${a.name}</span></div>
+        <div class="bud-astat">
+          <div><div class="k">Budget</div><div class="v">${money(a.budget)}</div></div>
+          <div><div class="k">Spent (YTD)</div><div class="v">${money(a.spent)}</div></div>
+          <div><div class="k">Remaining</div><div class="v rem">${money(rem)}</div></div>
+          <div><div class="k">% Used</div><div class="v">${pct}%</div></div>
+        </div></div>`;
+      a.cats.forEach(([ic,nm,b,s]) => {
+        const r = b - s, over = s > b, w = Math.min(100, b ? Math.round(s / b * 100) : 0);
+        html += `<div class="bud-row">
+          <div class="bud-ic">${ic}</div>
+          <div class="bud-nm">${nm}</div>
+          <div class="bud-bar-wrap">
+            <div class="bud-bar"><div class="bud-fill ${over?"over":""}" style="width:${over?100:w}%"></div></div>
+            <div class="bud-nums">${money(s)} of ${money(b)} &middot; ${b?Math.round(s/b*100):0}%</div>
+          </div>
+          <div class="bud-rem ${over?"over":""}">${over?"−"+money(-r):money(r)}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    });
+    wrap.innerHTML = html;
+    wrap.dataset.done = "1";
+  }
+
   function updateStats() {
     const openARCs = dashData.arcs.filter(a => a.final_status === "Open" || !a.final_status).length;
     const openVios = dashData.violations.filter(v => v.status === "Open").length;
@@ -1043,10 +1157,11 @@
 
   // ── Tabs ──────────────────────────────────────────────
   function switchTab(tab) {
-    const tabs = ["arc","violations","other","requests","announcements","minutes","residents","map","resources","meetingrecords","financials","activity"];
+    const tabs = ["arc","violations","other","requests","announcements","minutes","residents","map","resources","meetingrecords","financials","budget","activity"];
     if (tab === "residents" && !residentsLoaded) loadResidents();
     if (tab === "map") loadMap();
     if (tab === "financials") loadFinancialsToggle();
+    if (tab === "budget") renderBudget();
     tabs.forEach(t => {
       const el = document.getElementById("tab-" + t);
       if (el) el.style.display = t === tab ? "block" : "none";

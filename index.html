@@ -644,6 +644,7 @@
           <div class="utoc-title">On this page</div>
           <a onclick="return uJump('dynamic-announcements')">Latest Announcements</a>
           <a onclick="return uJump('u-committee')">Irrigation &amp; Tree Committee</a>
+          <a onclick="return uJump('u-reminders')">Community Reminders</a>
           <a onclick="return uJump('u-ponds')">Pond Maintenance</a>
           <a onclick="return uJump('u-pet')">Pet &amp; Leash Policy</a>
           <a onclick="return uJump('u-parking')">No Overnight Parking</a>
@@ -671,6 +672,17 @@
 
             <p style="margin-top:18px;"><strong>This is not a technical role</strong> &mdash; just an opportunity for residents to help keep our community looking its best while improving water efficiency and responsiveness. Small effort, big impact.</p>
             <p style="margin-top:10px;"><strong>Interested?</strong> Reach out to your board or property management today, or email <a href="mailto:hoa.twinlakes.board@gmail.com">hoa.twinlakes.board@gmail.com</a>.</p>
+          </div>
+          <div class="notice-card notice-info" id="u-reminders" style="grid-column:1/-1;">
+            <div class="notice-badge">Reminders &middot; For All Residents</div>
+            <h3>Community Courtesy &amp; Safety Reminders</h3>
+            <p>A few friendly reminders to help keep Twin Lakes clean, safe, and welcoming for everyone.</p>
+            <div class="notice-detail">
+              <div class="notice-detail-row"><span class="nd-label">No Littering</span><span>We&rsquo;ve recently noticed litter along our sidewalks and walking paths. Please don&rsquo;t litter, and pick up after yourself. Beyond keeping our community beautiful, discarded food and trash can be picked up by pets on walks and make them sick. Please carry out what you bring and use the proper trash receptacles.</span></div>
+              <div class="notice-detail-row"><span class="nd-label">Pets On Leash</span><span>All pets must be kept on a leash at all times when outdoors &mdash; this keeps pets, neighbors, and wildlife safe. See the <strong>Leash Law &amp; Responsible Pet Ownership</strong> notice below for full details.</span></div>
+              <div class="notice-detail-row"><span class="nd-label">Fishing &mdash; Residents Only</span><span>Our community ponds are for the enjoyment of Twin Lakes residents and their guests only; non-residents are not permitted to fish. If you notice someone who is not a resident, please politely ask them to leave, or notify the board or Mulloy Properties.</span></div>
+              <div class="notice-detail-row"><span class="nd-label">No Soliciting</span><span>Twin Lakes is a no-soliciting community, and signage is posted at the entrance. You are under no obligation to engage with solicitors.</span></div>
+            </div>
           </div>
           <div class="notice-card notice-warning" id="u-pet" style="grid-column:1/-1;">
             <div class="notice-badge">Pet Owners &middot; Important Reminder</div>
@@ -1193,6 +1205,12 @@
       .fin-due .amt{font-size:22px;font-weight:800;color:var(--navy);font-family:Georgia,serif;}
       .fin-due .dd{font-size:14px;color:var(--text-m);margin-top:6px;font-family:sans-serif;line-height:1.5;}
       .fin-note{font-size:13px;color:#9a948b;margin-top:22px;font-style:italic;font-family:sans-serif;line-height:1.5;}
+      .fin-budget{background:var(--white);border:1px solid var(--cream-border);border-radius:12px;padding:22px 24px;margin-bottom:30px;box-shadow:0 1px 3px rgba(0,0,0,0.04);}
+      .fb-bar-track{background:#eef0ee;border-radius:8px;height:26px;overflow:hidden;position:relative;}
+      .fb-bar-fill{height:100%;background:linear-gradient(90deg,#1B4B7A,#3a6ea5);border-radius:8px 0 0 8px;display:flex;align-items:center;justify-content:flex-end;}
+      .fb-legend{display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-top:12px;font-family:sans-serif;font-size:15px;color:var(--text-s);}
+      .fb-legend strong{color:var(--navy);font-family:Georgia,serif;font-size:19px;}
+      .fb-note{font-family:sans-serif;font-size:14px;color:var(--text-m);line-height:1.6;margin-top:14px;}
       @media(max-width:600px){.fin-dues{grid-template-columns:1fr;}}
     </style>
     <section style="padding-top:8px;" id="fin-comingsoon">
@@ -1211,6 +1229,16 @@
         <div class="fin-card"><div class="big">$108K+</div><div class="lbl">Total funds on hand<br>(operating + reserves)</div></div>
         <div class="fin-card"><div class="big">Growing</div><div class="lbl">Reserve fund, built<br>every month</div></div>
         <div class="fin-card"><div class="big">$0</div><div class="lbl">Debt &amp; bank /<br>late fees</div></div>
+      </div>
+
+      <p class="fin-block-label">2026 Budget at a Glance</p>
+      <div class="fin-budget">
+        <div class="fb-bar-track"><div class="fb-bar-fill" style="width:39%;"></div></div>
+        <div class="fb-legend">
+          <span><strong>~$111K</strong> spent so far (about 39%)</span>
+          <span style="text-align:right;"><strong>~$287K</strong> total 2026 budget</span>
+        </div>
+        <p class="fb-note">Through June, the community has used about <strong>39% of its 2026 budget</strong> &mdash; running favorably and on track. Spending naturally picks up over the summer for lawn care, irrigation, and pond treatment, with reserves set aside each month for the future.</p>
       </div>
 
       <p class="fin-block-label">How Your Dues Are Spent</p>
