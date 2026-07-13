@@ -46,12 +46,12 @@ function httpsReq(method, hostname, path, headers, body) {
 
 // ── Board Members ─────────────────────────────────────────
 const BOARD_MEMBERS = {
-  tony:   { name: "Tony Backert",       role: "President",       password: "TL2026#TB", isAdmin: false },
-  yashu:  { name: "Yashu M Basavaraju", role: "Vice President",  password: "TL2026#YB", isAdmin: false },
-  ramana: { name: "Ramana N",           role: "Treasurer",       password: "TL2026#RN", isAdmin: false },
-  raja:   { name: "Raja Ravanan",       role: "Secretary",       password: "TL2026#RR", isAdmin: true  },
-  aimee:  { name: "Aimee Green",        role: "Member at Large", password: "TL2026#AG", isAdmin: false },
-  mike:   { name: "Mike Schnell",       role: "Member at Large", password: "TL2026#MS", isAdmin: false },
+  tony:   { name: "Tony Backert",       role: "President",       password: "mapletiger42", isAdmin: false },
+  yashu:  { name: "Yashu M Basavaraju", role: "Vice President",  password: "oceanbreeze17", isAdmin: false },
+  ramana: { name: "Ramana N",           role: "Treasurer",       password: "coppermoon88", isAdmin: false },
+  raja:   { name: "Raja Ravanan",       role: "Secretary",       password: "silverfox23", isAdmin: true  },
+  aimee:  { name: "Aimee Green",        role: "Member at Large", password: "goldenpine55", isAdmin: false },
+  mike:   { name: "Mike Schnell",       role: "Member at Large", password: "riverstone31", isAdmin: false },
 };
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
@@ -194,6 +194,7 @@ exports.handler = async (event) => {
       headers: { "Access-Control-Allow-Origin": "*" },
       body: JSON.stringify({
         financials_published: (map.financials_published === "true"),
+        ai_suggestions: (map.ai_suggestions === "true"),
         email_health: map.email_health || "unknown",
         email_checked_at: map.email_checked_at || "",
         email_health_detail: map.email_health_detail || ""
@@ -482,6 +483,24 @@ exports.handler = async (event) => {
     if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
     await sheetsUpdate(googleToken, `${tab}!${colLetter}${rowIndex + 2}`, [[status]]);
     await logActivity(googleToken, session.username, `status_changed_to_${status}`, itemId, itemType, "");
+    return { statusCode: 200, body: JSON.stringify({ success: true }) };
+  }
+
+  // ── EDIT AN ARC RECORD (admin only) — correct AI-misread fields ──
+  if (action === "updateARC") {
+    if (!session.isAdmin) return { statusCode: 403, body: JSON.stringify({ error: "Admin only" }) };
+    const { itemId, fields } = data || {};
+    const arcs = await getSheetData(googleToken, "ARC_Requests");
+    const rowIndex = arcs.findIndex(a => a.id === itemId);
+    if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+    const row = rowIndex + 2;
+    const COLS = { date_received: "B", homeowner_name: "C", homeowner_email: "D", address: "E", request_type: "F", description: "G", final_status: "AO" };
+    const updates = [];
+    for (const [k, col] of Object.entries(COLS)) {
+      if (fields && typeof fields[k] === "string") updates.push(sheetsUpdate(googleToken, `ARC_Requests!${col}${row}`, [[fields[k]]]));
+    }
+    await Promise.all(updates);
+    await logActivity(googleToken, session.username, "edited_arc", itemId, "arc", "");
     return { statusCode: 200, body: JSON.stringify({ success: true }) };
   }
 

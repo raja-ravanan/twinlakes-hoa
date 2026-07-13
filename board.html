@@ -51,11 +51,11 @@
 
     /* ── SIDEBAR LAYOUT ── */
     .portal-layout { display:flex; gap:20px; align-items:flex-start; }
-    .sidebar { width:230px; flex-shrink:0; background:var(--white); border:1px solid #ddd; border-radius:10px; padding:10px; position:sticky; top:16px; }
+    .sidebar { width:212px; flex-shrink:0; background:var(--white); border:1px solid #ddd; border-radius:10px; padding:8px; position:sticky; top:16px; }
     .content-area { flex:1; min-width:0; }
-    .nav-sec { font-size:10px; font-family:sans-serif; font-weight:700; color:#aaa; text-transform:uppercase; letter-spacing:1px; padding:12px 12px 5px; }
-    .nav-sec:first-child { padding-top:4px; }
-    .sidebar-menu .tab { display:flex; align-items:center; width:100%; text-align:left; padding:9px 12px; margin-bottom:2px; gap:7px; font-size:13.5px; }
+    .nav-sec { font-size:9.5px; font-family:sans-serif; font-weight:700; color:#b0b0b0; text-transform:uppercase; letter-spacing:1.2px; padding:9px 12px 3px; border-top:1px solid #f0eee9; margin-top:3px; }
+    .nav-sec:first-child { padding-top:3px; border-top:none; margin-top:0; }
+    .sidebar-menu .tab { display:flex; align-items:center; width:100%; text-align:left; padding:7px 12px; margin-bottom:1px; gap:8px; font-size:13px; border-radius:7px; }
     .sidebar-menu .tab .tab-badge { margin-left:auto; }
     @media (max-width:860px) {
       .portal-layout { flex-direction:column; }
@@ -108,6 +108,40 @@
     .arc-id-row { display:flex; align-items:center; gap:10px; margin-bottom:6px; flex-wrap:wrap; }
     .arc-id { font-size:13px; font-family:sans-serif; font-weight:700; color:var(--navy); }
     .arc-type-badge { font-size:11px; font-family:sans-serif; font-weight:600; padding:3px 10px; border-radius:12px; background:var(--navy); color:var(--white); letter-spacing:0.5px; }
+    /* ── ARC GRID ── */
+    .arc-grid-wrap { background:var(--white); border:1px solid #e5e0d8; border-radius:12px; overflow-x:auto; box-shadow:0 1px 3px rgba(0,0,0,0.04); }
+    .arc-grid { width:100%; border-collapse:collapse; font-family:sans-serif; font-size:13px; min-width:900px; }
+    .arc-grid thead th { background:var(--navy-dark); color:#fff; text-align:left; padding:11px 12px; font-size:10.5px; text-transform:uppercase; letter-spacing:0.5px; font-weight:700; white-space:nowrap; position:sticky; top:0; }
+    .arc-grid td { padding:11px 12px; border-top:1px solid #eee; vertical-align:middle; color:var(--text-d); }
+    .arc-grow:hover td { background:#faf9f6; }
+    .arc-c-id { font-weight:700; color:var(--navy); white-space:nowrap; }
+    .arc-c-date { white-space:nowrap; color:var(--text-m); }
+    .arc-c-owner { font-weight:600; }
+    .arc-c-desc { color:var(--text-m); max-width:240px; }
+    .arc-c-votes { white-space:nowrap; font-weight:700; color:var(--navy); }
+    .arc-myvote { font-size:10px; font-weight:400; color:var(--text-m); }
+    .arc-c-act { white-space:nowrap; }
+    .btn-action { background:var(--gold); color:var(--navy-dark); border:none; padding:7px 14px; border-radius:6px; font-size:12px; font-weight:700; font-family:sans-serif; cursor:pointer; }
+    .btn-action:hover { background:#b8973e; }
+    .btn-edit { background:none; border:1px solid #ddd; border-radius:6px; padding:6px 9px; margin-left:5px; cursor:pointer; font-size:13px; }
+    .btn-edit:hover { border-color:var(--gold); }
+    .arc-detail-row td { background:#f7f4ee; padding:0; }
+    .arc-body-open { padding:18px 20px; }
+    .arc-fulldesc { background:#fff; border:1px solid #e5e0d8; border-radius:8px; padding:14px 16px; margin-bottom:16px; }
+    .arc-fulldesc-text { font-family:sans-serif; font-size:13px; color:var(--text-d); line-height:1.6; margin-top:6px; white-space:normal; }
+    .arc-filter-chip { display:inline-flex; align-items:center; gap:10px; background:#eef4fb; border:1px solid #bcd4ee; border-radius:20px; padding:6px 14px; font-family:sans-serif; font-size:12.5px; color:var(--navy); margin-bottom:12px; }
+    .arc-filter-chip a { color:#c0492e; cursor:pointer; font-weight:700; }
+    /* Drillable KPI cards */
+    .stat-card.drillable { cursor:pointer; transition:transform .12s, box-shadow .15s; position:relative; }
+    .stat-card.drillable:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(15,45,74,0.10); }
+    .stat-drill { font-size:10px; font-family:sans-serif; font-weight:700; color:var(--gold-dark, #8B6914); text-transform:uppercase; letter-spacing:0.5px; margin-top:8px; opacity:0; transition:opacity .15s; }
+    .stat-card.drillable:hover .stat-drill { opacity:1; }
+    /* Edit ARC form */
+    .ae-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+    .ae-field label { display:block; font-size:11px; font-family:sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:0.5px; color:var(--text-m); margin-bottom:5px; }
+    .ae-field input, .ae-field select, .ae-field textarea { width:100%; font-family:sans-serif; font-size:14px; padding:9px 11px; border:1px solid #ddd; border-radius:6px; outline:none; }
+    .ae-field input:focus, .ae-field select:focus, .ae-field textarea:focus { border-color:var(--gold); }
+    @media (max-width:600px){ .ae-grid { grid-template-columns:1fr; } }
     .age-badge { font-size:11px; font-family:sans-serif; font-weight:600; padding:3px 10px; border-radius:12px; }
     .age-red { background:#fdf0f0; color:var(--red); }
     .age-yellow { background:#fef9e7; color:#b7770d; }
@@ -344,10 +378,10 @@
 
   <!-- Stats Row -->
   <div class="stats-row" id="statsRow">
-    <div class="stat-card urgent"><div class="stat-num" id="statOpenARC">—</div><div class="stat-label">Open ARC Requests</div></div>
-    <div class="stat-card warning" data-admin="true"><div class="stat-num" id="statOpenVio">—</div><div class="stat-label">Open Violations</div></div>
-    <div class="stat-card"><div class="stat-num" id="statPendingVotes">—</div><div class="stat-label">Awaiting My Vote</div></div>
-    <div class="stat-card good"><div class="stat-num" id="statResolved">—</div><div class="stat-label">Resolved This Month</div></div>
+    <div class="stat-card urgent drillable" onclick="drillKpi('open')"><div class="stat-num" id="statOpenARC">—</div><div class="stat-label">Open ARC Requests</div><div class="stat-drill">View →</div></div>
+    <div class="stat-card warning drillable" data-admin="true" onclick="drillKpi('violations')"><div class="stat-num" id="statOpenVio">—</div><div class="stat-label">Open Violations</div><div class="stat-drill">View →</div></div>
+    <div class="stat-card drillable" onclick="drillKpi('mine')"><div class="stat-num" id="statPendingVotes">—</div><div class="stat-label">Awaiting My Vote</div><div class="stat-drill">View →</div></div>
+    <div class="stat-card good drillable" onclick="drillKpi('resolved')"><div class="stat-num" id="statResolved">—</div><div class="stat-label">Resolved This Month</div><div class="stat-drill">View →</div></div>
   </div>
 
   <!-- Sidebar + content layout -->
@@ -399,6 +433,10 @@
 
   <!-- Tab Panels -->
   <div id="tab-arc">
+    <div id="arcAdminBar" style="display:none;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:12px;font-family:sans-serif;font-size:13px;color:var(--text-m);">
+      <span>Show AI suggestions</span>
+      <label class="switch"><input type="checkbox" id="aiToggle" onchange="toggleAiSuggestions()"><span class="sl"></span></label>
+    </div>
     <div id="arcList"><div class="loading"><div class="spinner"></div>Loading ARC requests...</div></div>
     <button class="archived-toggle" onclick="toggleArchived('arc')" id="arcArchiveBtn" style="display:none">▶ Show archived requests (90+ days old)</button>
     <div class="archived-section" id="arcArchived"></div>
@@ -813,6 +851,37 @@
   </div>
 </div>
 
+<!-- Edit ARC Modal (admin only) -->
+<div class="modal-overlay" id="arcEditModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Edit ARC Record — <span id="arcEditId"></span></h3>
+      <button class="modal-close" onclick="closeArcEdit()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="arcEditIdHidden"/>
+      <p style="font-size:12px;font-family:sans-serif;color:var(--text-m);margin-bottom:14px;">Correct any field the scan captured incorrectly. Only admins can edit. Votes are not changed here.</p>
+      <div class="ae-grid">
+        <div class="ae-field"><label>Submitted date</label><input type="date" id="ae-date"/></div>
+        <div class="ae-field"><label>Request type</label>
+          <select id="ae-type"><option>Fence</option><option>Deck</option><option>Landscaping</option><option>Paint</option><option>Lighting</option><option>Other</option></select>
+        </div>
+        <div class="ae-field"><label>Owner name</label><input type="text" id="ae-owner"/></div>
+        <div class="ae-field"><label>Owner email</label><input type="text" id="ae-email"/></div>
+        <div class="ae-field" style="grid-column:1/-1;"><label>Address</label><input type="text" id="ae-address"/></div>
+        <div class="ae-field" style="grid-column:1/-1;"><label>Description</label><textarea id="ae-desc" rows="5"></textarea></div>
+        <div class="ae-field"><label>Status</label>
+          <select id="ae-status"><option>Open</option><option>Approved</option><option>Denied</option><option>Tie</option></select>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
+        <button class="btn-logout" style="color:var(--text-m);" onclick="closeArcEdit()">Cancel</button>
+        <button class="btn-scan" id="arcEditSave" onclick="saveArcEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="toast" id="toast"></div>
 
@@ -833,7 +902,10 @@
     currentUser = JSON.parse(user);
     document.getElementById("userName").textContent = currentUser.name;
     document.getElementById("userRole").textContent = currentUser.role;
-    if (currentUser.isAdmin) document.getElementById("scanBtnWrap").style.display = "flex";
+    if (currentUser.isAdmin) {
+      document.getElementById("scanBtnWrap").style.display = "flex";
+      document.getElementById("arcAdminBar").style.display = "flex";
+    }
     // Board members see only ARC Requests, Announcements, Meeting Minutes.
     // Admin-only tabs/cards (Violations, Other Items, Resident Requests, Activity Log) are hidden for non-admins.
     if (!currentUser.isAdmin) {
@@ -949,7 +1021,43 @@
             "(last checked " + new Date(data.email_checked_at).toLocaleString() + ")";
         }
       }
+      // AI suggestions flag (off by default) — re-render ARCs if it changed
+      if (data && !!data.ai_suggestions !== aiEnabled) {
+        aiEnabled = !!data.ai_suggestions;
+        const t = document.getElementById("aiToggle"); if (t) t.checked = aiEnabled;
+        if (dashData && dashData.arcs) renderARCs(dashData.arcs);
+      }
     } catch (e) { /* silent — don't block the portal on a health check */ }
+  }
+  async function toggleAiSuggestions() {
+    const want = document.getElementById("aiToggle").checked;
+    const d = await api({ action: "setSetting", data: { key: "ai_suggestions", value: want ? "true" : "false" } });
+    if (d && d.success) { aiEnabled = want; renderARCs(dashData.arcs); showToast(want ? "AI suggestions enabled" : "AI suggestions hidden", "success"); }
+    else { document.getElementById("aiToggle").checked = !want; showToast("Could not update", "error"); }
+  }
+  // ── Edit an ARC record (admin only) ───────────────────
+  function openArcEdit(id) {
+    const arc = (dashData.arcs || []).find(a => a.id === id); if (!arc) return;
+    const set = (f, v) => { const el = document.getElementById(f); if (el) el.value = v || ""; };
+    document.getElementById("arcEditId").textContent = arc.id;
+    document.getElementById("arcEditIdHidden").value = arc.id;
+    set("ae-date", arc.date_received ? new Date(arc.date_received).toISOString().slice(0,10) : "");
+    set("ae-owner", arc.homeowner_name); set("ae-email", arc.homeowner_email);
+    set("ae-address", arc.address); set("ae-type", arc.request_type);
+    set("ae-desc", arc.description); set("ae-status", arc.final_status || "Open");
+    document.getElementById("arcEditModal").classList.add("show");
+  }
+  function closeArcEdit() { document.getElementById("arcEditModal").classList.remove("show"); }
+  async function saveArcEdit() {
+    const id = document.getElementById("arcEditIdHidden").value;
+    const val = f => (document.getElementById(f).value || "").trim();
+    const fields = { date_received: val("ae-date"), homeowner_name: val("ae-owner"), homeowner_email: val("ae-email"),
+      address: val("ae-address"), request_type: val("ae-type"), description: val("ae-desc"), final_status: val("ae-status") };
+    const btn = document.getElementById("arcEditSave"); btn.disabled = true; btn.textContent = "Saving…";
+    const d = await api({ action: "updateARC", data: { itemId: id, fields } });
+    btn.disabled = false; btn.textContent = "Save Changes";
+    if (d && d.success) { showToast("ARC record updated", "success"); closeArcEdit(); await loadDashboard(); }
+    else { showToast((d && d.error) || "Update failed", "error"); }
   }
 
   // ── Community Map ─────────────────────────────────────
@@ -1183,33 +1291,89 @@
   }
 
   // ── ARC Rendering ─────────────────────────────────────
+  let aiEnabled = false; // toggled by admin; hides AI suggestions by default
+
   function renderARCs(arcs) {
-    const active = arcs.filter(a => {
-      const days = parseInt(a.days_open) || 0;
-      return days <= 90;
-    });
+    const active = arcs.filter(a => (parseInt(a.days_open) || 0) <= 90);
     const archived = arcs.filter(a => parseInt(a.days_open) > 90);
-
-    document.getElementById("arcList").innerHTML = active.length
-      ? active.map(renderARCCard).join("")
-      : '<div class="empty-state"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><div class="empty-title">No ARC requests found</div><p>Scan the inbox to load new requests.</p></div>';
-
+    const filtered = arcApplyFilter(active);
+    document.getElementById("arcList").innerHTML = filtered.length
+      ? arcGrid(filtered)
+      : '<div class="empty-state"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><div class="empty-title">No ARC requests match</div><p>Adjust the filters, or scan the inbox for new requests.</p></div>';
     if (archived.length > 0) {
       document.getElementById("arcArchiveBtn").style.display = "block";
-      document.getElementById("arcArchived").innerHTML = archived.map(a => renderARCCard(a, true)).join("");
+      document.getElementById("arcArchived").innerHTML = arcGrid(archived);
     }
   }
 
-  function renderARCCard(arc, isArchived = false) {
-    const myVoteKey = currentUser.username + "_vote";
-    const myVote = arc[myVoteKey] || "";
+  // Drill from a KPI stat card into a filtered ARC view
+  function drillKpi(which) {
+    if (which === "violations") { if (currentUser.isAdmin) switchTab("violations"); return; }
+    arcQuickFilter = which; // open | mine | resolved
+    switchTab("arc");
+    renderARCs(dashData.arcs || []);
+  }
+  function clearArcFilter() { arcQuickFilter = "all"; renderARCs(dashData.arcs || []); }
+
+  // KPI/quick filter for the ARC grid (set by clicking a stat card)
+  let arcQuickFilter = "all";
+  function arcApplyFilter(list) {
+    if (arcQuickFilter === "mine") {
+      return list.filter(a => { const mv = a[currentUser.username + "_vote"]; return (!mv || mv === "") && (a.final_status === "Open" || !a.final_status); });
+    }
+    if (arcQuickFilter === "open") return list.filter(a => a.final_status === "Open" || !a.final_status);
+    if (arcQuickFilter === "resolved") return list.filter(a => a.final_status === "Approved" || a.final_status === "Denied");
+    return list;
+  }
+
+  function arcGrid(arcs) {
+    const rows = arcs.map(arcRow).join("");
+    const labels = { mine: "Awaiting My Vote", open: "Open requests", resolved: "Resolved" };
+    const chip = arcQuickFilter !== "all"
+      ? `<div class="arc-filter-chip">Showing: <strong>${labels[arcQuickFilter] || arcQuickFilter}</strong> <a onclick="clearArcFilter()">✕ clear</a></div>` : "";
+    return chip + `<div class="arc-grid-wrap"><table class="arc-grid">
+      <thead><tr>
+        <th>ARC ID</th><th>Submitted</th><th>Owner</th><th>Address</th><th>Type</th>
+        <th>Description</th><th>Status</th><th>Votes</th><th>Action</th>
+      </tr></thead>
+      <tbody>${rows}</tbody></table></div>`;
+  }
+
+  function arcRow(arc) {
+    const status = arc.final_status || "Open";
+    const voteCount = parseInt(arc.vote_count) || 0;
     const days = parseInt(arc.days_open) || 0;
-    const ageClass = days > 14 ? "age-red" : days > 7 ? "age-yellow" : "age-green";
-    const ageText = days === 0 ? "Today" : days === 1 ? "1 day" : `${days} days`;
+    const dt = arc.date_received ? new Date(arc.date_received).toLocaleDateString() : "—";
+    const rawDesc = (arc.description || "").replace(/<[^>]*>/g, "").replace(/\s+/g, " ").trim();
+    const desc = rawDesc.slice(0, 110);
+    const myVote = arc[currentUser.username + "_vote"] || "";
+    return `<tr class="arc-grow">
+      <td class="arc-c-id">${esc(arc.id)}${arc.conflict_flag === "yes" ? ' <span title="Conflict check" style="color:#c0492e">⚠️</span>' : ""}</td>
+      <td class="arc-c-date">${dt}</td>
+      <td class="arc-c-owner">${esc(arc.homeowner_name || "Unknown")}</td>
+      <td>${esc(arc.address || "—")}</td>
+      <td><span class="arc-type-badge">${esc(arc.request_type || "Request")}</span></td>
+      <td class="arc-c-desc" title="${esc(rawDesc).slice(0,300)}">${esc(desc)}${rawDesc.length > 110 ? "…" : ""}</td>
+      <td><span class="status-badge status-${status.replace(/\s.*/, "")}">${esc(status)}</span></td>
+      <td class="arc-c-votes">${voteCount}/6${myVote ? `<div class="arc-myvote">you: ${esc(myVote)}</div>` : ""}</td>
+      <td class="arc-c-act">
+        <button class="btn-action" onclick="toggleArcDetail('${arc.id}')">Take Action</button>
+        ${currentUser.isAdmin ? `<button class="btn-edit" title="Edit record" onclick="openArcEdit('${arc.id}')">✏️</button>` : ""}
+      </td>
+    </tr>
+    <tr class="arc-detail-row" id="arcdetail-${arc.id}" style="display:none"><td colspan="9">${arcDetailBody(arc)}</td></tr>`;
+  }
+
+  function toggleArcDetail(id) {
+    const el = document.getElementById("arcdetail-" + id);
+    if (el) el.style.display = el.style.display === "none" ? "table-row" : "none";
+  }
+
+  function arcDetailBody(arc) {
+    const myVote = arc[currentUser.username + "_vote"] || "";
     const status = arc.final_status || "Open";
     const isMajority = status === "Approved" || status === "Denied";
     const attachments = arc.attachment_urls ? arc.attachment_urls.split(",").filter(u => u.trim()) : [];
-
     const memberVotes = [
       { key: "tony", name: "Tony" }, { key: "yashu", name: "Yashu" },
       { key: "ramana", name: "Ramana" }, { key: "raja", name: "Raja" },
@@ -1218,34 +1382,13 @@
       const v = arc[m.key + "_vote"] || "Pending";
       return `<div class="vote-member"><div class="vote-member-name">${m.name}</div><div class="vote-member-vote vote-${v}">${v}</div></div>`;
     }).join("");
-
     const voteCount = parseInt(arc.vote_count) || 0;
 
     return `
-<div class="arc-card ${isArchived ? 'archived' : ''}" id="arc-${arc.id}">
-  <div class="arc-header" onclick="toggleCard('arc-body-${arc.id}')">
-    <div class="arc-meta">
-      <div class="arc-id-row">
-        <span class="arc-id">${arc.id}</span>
-        <span class="arc-type-badge">${arc.request_type || "Request"}</span>
-        <span class="age-badge ${ageClass}">${ageText} old</span>
-        ${arc.conflict_flag === "yes" ? '<span class="conflict-flag">⚠️ Conflict Check</span>' : ""}
-      </div>
-      <div class="arc-name">${arc.homeowner_name || "Unknown"}</div>
-      <div class="arc-address">📍 ${arc.address || "Unknown address"}</div>
-      <div class="arc-date">Received: ${arc.date_received ? new Date(arc.date_received).toLocaleDateString() : "Unknown"} · ${arc.email_subject || ""}</div>
-    </div>
-    <div class="arc-status-col">
-      <span class="status-badge status-${status.replace(/\s.*/,'')}">${status}</span>
-      <div style="font-size:12px;font-family:sans-serif;color:var(--text-m);margin-top:6px;">${voteCount}/6 votes</div>
-      ${myVote ? `<div style="font-size:11px;font-family:sans-serif;margin-top:4px;color:var(--text-m)">Your vote: <strong>${myVote}</strong></div>` : ""}
-    </div>
-  </div>
+  <div class="arc-body-open">
 
-  <div class="arc-body" id="arc-body-${arc.id}">
-
-    <!-- AI Summary -->
-    <div class="ai-summary-box">
+    <!-- AI Summary (hidden unless an admin enables it) -->
+    ${aiEnabled ? `<div class="ai-summary-box">
       <div class="ai-label">🤖 AI Summary <span style="font-weight:normal;font-style:italic;color:#666;font-size:10px;">— Generated by Claude AI</span></div>
       <div class="ai-summary-text">${arc.ai_summary || "No AI summary available."}</div>
       <span class="ai-rec ai-rec-${arc.ai_recommendation}">${arc.ai_recommendation ? "AI Suggests: " + arc.ai_recommendation : ""}</span>
@@ -1258,7 +1401,10 @@
         </div>
       </div>
       <div class="ai-warning">⚠️ This analysis is AI-generated for board review only. The board makes all final decisions.</div>
-    </div>
+    </div>` : ""}
+
+    <!-- Full request description -->
+    <div class="arc-fulldesc"><div class="attachments-title">📝 Request Details</div><div class="arc-fulldesc-text">${esc((arc.description || "No description.")).replace(/\n/g,"<br>")}</div></div>
 
     <!-- Attachments -->
     <div class="attachments-section">
@@ -1301,8 +1447,7 @@
       <button class="btn-notify ${arc.notified_mulloy==='Yes'?'sent':''}" onclick="openEmailModal('${arc.id}')">${arc.notified_mulloy==='Yes'?'✓ Notification Sent':'📧 Notify Mulloy'}</button>
     </div>` : ""}
 
-  </div>
-</div>`;
+  </div>`;
   }
 
   // ── Violation Rendering ───────────────────────────────
@@ -1799,6 +1944,7 @@
 
   // ── Filter ────────────────────────────────────────────
   function filterItems() {
+    arcQuickFilter = "all"; // manual filters override any KPI drill
     const search = document.getElementById("searchInput").value.toLowerCase();
     const status = document.getElementById("statusFilter").value;
     const type = document.getElementById("typeFilter").value;
