@@ -226,6 +226,14 @@
     .private-note-label { font-size:12px; font-family:sans-serif; color:var(--text-m); margin-top:10px; margin-bottom:4px; }
     .btn-submit-vote { background:var(--navy); color:var(--gold); border:none; padding:10px 24px; border-radius:6px; font-size:13px; font-family:sans-serif; font-weight:700; cursor:pointer; transition:all 0.2s; margin-top:10px; }
     .btn-submit-vote:hover { background:var(--gold); color:var(--navy-dark); }
+    /* Admin: record votes on behalf */
+    .onbehalf-section { border-top:1px dashed #d8cfa8; margin-top:14px; padding-top:14px; }
+    .onbehalf-label { font-size:12px; font-family:sans-serif; font-weight:700; color:var(--navy); margin-bottom:10px; text-transform:uppercase; letter-spacing:0.5px; }
+    .onbehalf-hint { font-weight:400; text-transform:none; letter-spacing:0; color:var(--text-m); font-size:11px; }
+    .onbehalf-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:12px; }
+    .onbehalf-row { display:flex; flex-direction:column; gap:4px; font-family:sans-serif; font-size:12px; font-weight:600; color:var(--navy); }
+    .onbehalf-row select { padding:7px 8px; border:1px solid #ddd; border-radius:6px; font-family:sans-serif; font-size:13px; background:#fff; color:var(--text-d); }
+    @media (max-width:640px) { .onbehalf-grid { grid-template-columns:repeat(2,1fr); } }
 
     /* Notify Mulloy */
     .notify-section { background:linear-gradient(135deg,#F5EDD6,#FBF8F0); border:1px solid #dfc07a; border-radius:8px; padding:16px 20px; margin-bottom:18px; }
@@ -390,6 +398,7 @@
     <div class="sidebar-menu">
       <div class="nav-sec">Workflow</div>
       <button class="tab active" onclick="switchTab('arc')">🏗️ ARC Requests <span class="tab-badge" id="arcBadge">0</span></button>
+      <button class="tab" data-admin="true" onclick="switchTab('concerns')">📌 Concerns &amp; Requests <span class="tab-badge" id="conBadge">0</span></button>
       <button class="tab" data-admin="true" onclick="switchTab('violations')">⚠️ Violations <span class="tab-badge" id="vioBadge">0</span></button>
       <button class="tab" data-admin="true" onclick="switchTab('other')">📂 Other Items <span class="tab-badge" id="othBadge">0</span></button>
       <button class="tab" data-admin="true" onclick="switchTab('requests')">📨 Resident Requests <span class="tab-badge" id="reqBadge">0</span></button>
@@ -440,6 +449,13 @@
     <div id="arcList"><div class="loading"><div class="spinner"></div>Loading ARC requests...</div></div>
     <button class="archived-toggle" onclick="toggleArchived('arc')" id="arcArchiveBtn" style="display:none">▶ Show archived requests (90+ days old)</button>
     <div class="archived-section" id="arcArchived"></div>
+  </div>
+
+  <div id="tab-concerns" style="display:none">
+    <p style="font-family:sans-serif;font-size:13px;color:var(--text-m);line-height:1.6;margin-bottom:16px;max-width:760px;">
+      Items that came in as ARC requests but are really <strong>general concerns or service requests</strong> (a shrub-replacement concern, a lawn-service skip, a question to Mulloy) — not architectural review requests. Filing them here keeps the ARC list clean. To move an item in or out, click <strong>Edit</strong> and change the request type.
+    </p>
+    <div id="conList"><div class="loading"><div class="spinner"></div>Loading…</div></div>
   </div>
 
   <div id="tab-violations" style="display:none">
@@ -864,7 +880,7 @@
       <div class="ae-grid">
         <div class="ae-field"><label>Submitted date</label><input type="date" id="ae-date"/></div>
         <div class="ae-field"><label>Request type</label>
-          <select id="ae-type"><option>Fence</option><option>Deck</option><option>Landscaping</option><option>Paint</option><option>Lighting</option><option>Other</option></select>
+          <select id="ae-type"><option>Fence</option><option>Deck</option><option>Landscaping</option><option>Paint</option><option>Lighting</option><option>Other</option><option>Concern / Non-ARC</option></select>
         </div>
         <div class="ae-field"><label>Owner name</label><input type="text" id="ae-owner"/></div>
         <div class="ae-field"><label>Owner email</label><input type="text" id="ae-email"/></div>
@@ -1224,13 +1240,15 @@
   }
 
   function updateStats() {
-    const openARCs = dashData.arcs.filter(a => a.final_status === "Open" || !a.final_status).length;
+    const realArcs = dashData.arcs.filter(a => !isConcern(a));
+    const concernCount = dashData.arcs.length - realArcs.length;
+    const openARCs = realArcs.filter(a => a.final_status === "Open" || !a.final_status).length;
     const openVios = dashData.violations.filter(v => v.status === "Open").length;
-    const pendingMyVote = dashData.arcs.filter(a => {
+    const pendingMyVote = realArcs.filter(a => {
       const myVoteKey = currentUser.username + "_vote";
       return (!a[myVoteKey] || a[myVoteKey] === "") && (a.final_status === "Open" || !a.final_status);
     }).length;
-    const resolved = dashData.arcs.filter(a => {
+    const resolved = realArcs.filter(a => {
       const d = new Date(a.date_received);
       const now = new Date();
       return (a.final_status === "Approved" || a.final_status === "Denied") &&
@@ -1242,6 +1260,8 @@
     document.getElementById("statPendingVotes").textContent = pendingMyVote;
     document.getElementById("statResolved").textContent = resolved;
     document.getElementById("arcBadge").textContent = openARCs;
+    const conBadge = document.getElementById("conBadge");
+    if (conBadge) conBadge.textContent = concernCount;
     document.getElementById("vioBadge").textContent = openVios;
     document.getElementById("othBadge").textContent = dashData.others.filter(o => o.needs_attention === "yes").length;
 
@@ -1266,7 +1286,7 @@
 
   // ── Tabs ──────────────────────────────────────────────
   function switchTab(tab) {
-    const tabs = ["arc","violations","other","requests","announcements","minutes","residents","map","resources","meetingrecords","financials","budget","activity"];
+    const tabs = ["arc","concerns","violations","other","requests","announcements","minutes","residents","map","resources","meetingrecords","financials","budget","activity"];
     if (tab === "residents" && !residentsLoaded) loadResidents();
     if (tab === "map") loadMap();
     if (tab === "financials") loadFinancialsToggle();
@@ -1282,6 +1302,7 @@
   // ── Render All ────────────────────────────────────────
   function renderAll() {
     renderARCs(dashData.arcs);
+    renderConcerns();
     renderViolations(dashData.violations);
     renderOthers(dashData.others);
     renderRequests();
@@ -1293,9 +1314,15 @@
   // ── ARC Rendering ─────────────────────────────────────
   let aiEnabled = false; // toggled by admin; hides AI suggestions by default
 
+  // Records reclassified (via Edit) as a non-ARC concern/request are shown in the
+  // Concerns tab instead of the ARC grid. Sentinel type set by the edit modal.
+  const CONCERN_TYPE = "Concern / Non-ARC";
+  function isConcern(a) { return (a.request_type || "").trim().toLowerCase().startsWith("concern"); }
+
   function renderARCs(arcs) {
-    const active = arcs.filter(a => (parseInt(a.days_open) || 0) <= 90);
-    const archived = arcs.filter(a => parseInt(a.days_open) > 90);
+    const real = arcs.filter(a => !isConcern(a));
+    const active = real.filter(a => (parseInt(a.days_open) || 0) <= 90);
+    const archived = real.filter(a => parseInt(a.days_open) > 90);
     const filtered = arcApplyFilter(active);
     document.getElementById("arcList").innerHTML = filtered.length
       ? arcGrid(filtered)
@@ -1304,6 +1331,34 @@
       document.getElementById("arcArchiveBtn").style.display = "block";
       document.getElementById("arcArchived").innerHTML = arcGrid(archived);
     }
+  }
+
+  // ── Concerns / Non-ARC Rendering ──────────────────────
+  function renderConcerns() {
+    const list = (dashData.arcs || []).filter(isConcern);
+    const el = document.getElementById("conList");
+    if (!el) return;
+    if (!list.length) {
+      el.innerHTML = '<div class="empty-state"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><div class="empty-title">No concerns yet</div><p>To move an item here, open an ARC request, click ✏️ Edit, and set the type to &ldquo;Concern / Non-ARC&rdquo;.</p></div>';
+      return;
+    }
+    el.innerHTML = list.map(c => {
+      const dt = c.date_received ? new Date(c.date_received).toLocaleDateString() : "—";
+      const desc = esc((c.description || "No description.")).replace(/\n/g, "<br>");
+      return `<div class="other-card">
+        <div style="flex:1;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;">
+            <span class="other-category">${esc(c.request_type || "Concern")}</span>
+            <span class="arc-c-id">${esc(c.id)}</span>
+            <span class="arc-c-date">${dt}</span>
+          </div>
+          <div class="arc-name">${esc(c.homeowner_name || "Unknown")}</div>
+          <div class="arc-address">${esc(c.address || "—")}</div>
+          <div class="arc-fulldesc-text" style="margin-top:8px;">${desc}</div>
+        </div>
+        ${currentUser.isAdmin ? `<button class="btn-edit" title="Edit / recategorize" onclick="openArcEdit('${c.id}')">✏️ Edit</button>` : ""}
+      </div>`;
+    }).join("");
   }
 
   // Drill from a KPI stat card into a filtered ARC view
@@ -1378,11 +1433,28 @@
       { key: "tony", name: "Tony" }, { key: "yashu", name: "Yashu" },
       { key: "ramana", name: "Ramana" }, { key: "raja", name: "Raja" },
       { key: "aimee", name: "Aimee" }, { key: "mike", name: "Mike" }
-    ].map(m => {
+    ];
+    const memberVotesHtml = memberVotes.map(m => {
       const v = arc[m.key + "_vote"] || "Pending";
       return `<div class="vote-member"><div class="vote-member-name">${m.name}</div><div class="vote-member-vote vote-${v}">${v}</div></div>`;
     }).join("");
     const voteCount = parseInt(arc.vote_count) || 0;
+
+    // Admin-only: record votes already cast by email, on behalf of each member.
+    const voteOpts = ["", "Approve", "Deny", "Conditional"];
+    const onBehalfHtml = currentUser.isAdmin ? `
+      <div class="onbehalf-section">
+        <div class="onbehalf-label">✍️ Record votes on behalf (admin) <span class="onbehalf-hint">— set each member's vote as cast by email</span></div>
+        <div class="onbehalf-grid">
+          ${memberVotes.map(m => {
+            const cur = arc[m.key + "_vote"] || "";
+            return `<label class="onbehalf-row"><span>${m.name}</span>
+              <select id="ob-${arc.id}-${m.key}">${voteOpts.map(o => `<option value="${o}" ${o===cur?"selected":""}>${o||"— Pending —"}</option>`).join("")}</select>
+            </label>`;
+          }).join("")}
+        </div>
+        <button class="btn-submit-vote" onclick="saveVotesOnBehalf('${arc.id}')">Save recorded votes</button>
+      </div>` : "";
 
     return `
   <div class="arc-body-open">
@@ -1419,8 +1491,9 @@
     <!-- Vote Tracker -->
     <div class="vote-section">
       <div class="vote-title">Board Votes (${voteCount}/6 cast — 4 needed for majority)</div>
-      <div class="vote-grid">${memberVotes}</div>
+      <div class="vote-grid">${memberVotesHtml}</div>
       <div class="vote-counter">Approve: <strong>${[arc.tony_vote,arc.yashu_vote,arc.ramana_vote,arc.raja_vote,arc.aimee_vote,arc.mike_vote].filter(v=>v==="Approve"||v==="Conditional").length}</strong> · Deny: <strong>${[arc.tony_vote,arc.yashu_vote,arc.ramana_vote,arc.raja_vote,arc.aimee_vote,arc.mike_vote].filter(v=>v==="Deny").length}</strong> · Pending: <strong>${[arc.tony_vote,arc.yashu_vote,arc.ramana_vote,arc.raja_vote,arc.aimee_vote,arc.mike_vote].filter(v=>!v||v==="").length}</strong></div>
+      ${onBehalfHtml}
 
       <!-- My Vote -->
       <div class="my-vote-section">
@@ -1863,6 +1936,21 @@
     showToast(`Vote submitted: ${vote}`, "success");
     if (data.newStatus && data.newStatus !== "Open") showToast(`🎉 Majority reached! Status: ${data.newStatus}`, "success");
     await loadDashboard();
+  }
+
+  // Admin records votes cast by email, on behalf of members.
+  async function saveVotesOnBehalf(arcId) {
+    const members = ["tony","yashu","ramana","raja","aimee","mike"];
+    const votes = {};
+    members.forEach(k => { const el = document.getElementById(`ob-${arcId}-${k}`); if (el) votes[k] = el.value; });
+    const btn = event.target; btn.disabled = true; const orig = btn.textContent; btn.textContent = "Saving…";
+    const data = await api({ action: "adminSetVotes", data: { itemId: arcId, votes } });
+    btn.disabled = false; btn.textContent = orig;
+    if (data && data.success) {
+      showToast("Votes recorded on behalf of the board", "success");
+      if (data.newStatus && data.newStatus !== "Open") showToast(`🎉 Majority reached! Status: ${data.newStatus}`, "success");
+      await loadDashboard();
+    } else { showToast((data && data.error) || "Failed to record votes", "error"); }
   }
 
   async function addComment(vioId) {

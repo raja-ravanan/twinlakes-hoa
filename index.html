@@ -319,6 +319,18 @@
       transition: border-color 0.2s, box-shadow 0.2s ease, transform 0.2s ease;
     }
     .vendor-card:hover { border-color: var(--gold-border); border-left-color: var(--gold); box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .vendor-icon {
+      width: 44px; height: 44px;
+      background: var(--navy-light);
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      border: 1px solid var(--navy-soft);
+      margin-bottom: 14px;
+      transition: background 0.2s;
+    }
+    .vendor-card:hover .vendor-icon { background: var(--navy); }
+    .vendor-card:hover .vendor-icon svg { stroke: var(--cream); }
+    .vendor-icon svg { width: 22px; height: 22px; stroke: var(--navy); fill: none; }
     .vendor-category {
       font-size: 10px; font-family: sans-serif;
       font-weight: 700; letter-spacing: 2px;
@@ -545,7 +557,7 @@
       <h2 class="sec-title">Here to serve our community</h2>
       <p class="sec-sub">The Twin Lakes HOA board works year-round to keep the neighborhood safe, beautiful, and well-maintained.</p>
       <div class="card-grid">
-        <div class="card"><div class="card-num">01</div><h3>Neighborhood upkeep</h3><p>Regular landscaping via TruGreen and Aphix, irrigation maintenance, and pond care keep Twin Lakes looking its best year-round.</p></div>
+        <div class="card"><div class="card-num">01</div><h3>Neighborhood upkeep</h3><p>Regular landscaping and lawn care, irrigation maintenance, and pond care keep Twin Lakes looking its best year-round.</p></div>
         <div class="card"><div class="card-num">02</div><h3>Community standards</h3><p>Our CC&amp;Rs and Architectural Guidelines ensure the beauty and property values of Twin Lakes are preserved for everyone.</p></div>
         <div class="card"><div class="card-num">03</div><h3>Stay informed</h3><p>Check our Updates page for maintenance schedules, community notices, and board announcements — or ask our AI assistant below.</p></div>
       </div>
@@ -981,18 +993,56 @@
     <section style="padding-top:8px;">
       <div class="vendor-grid">
         <div class="vendor-card">
+          <div class="vendor-icon"><svg viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 21c4.5-2.5 7-6 7-10a7 7 0 10-14 0c0 4 2.5 7.5 7 10z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v9M12 12l2.5-2M12 14l-2.5-2"/></svg></div>
           <div class="vendor-category">Lawn Treatments</div>
           <div class="vendor-name">TruGreen</div>
-          <div class="vendor-scope">Fertilizer, weed control, and crabgrass pre-emergent — Garden Homes only</div>
-          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> 6 treatment visits, April – December</div>
+          <div class="vendor-scope">Fertilizing and weed-control lawn treatments — Garden Homes</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> Seasonal treatment visits, spring – fall</div>
         </div>
         <div class="vendor-card">
-          <div class="vendor-category">Mowing &amp; Common Areas</div>
+          <div class="vendor-icon"><svg viewBox="0 0 24 24" stroke-width="1.8"><circle cx="6" cy="7" r="2.4" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="17" r="2.4" stroke-linecap="round" stroke-linejoin="round"/><path stroke-linecap="round" stroke-linejoin="round" d="M8 8.5L20 16M8 15.5L20 8"/></svg></div>
+          <div class="vendor-category">Landscaping &amp; Mowing</div>
+          <div class="vendor-name">Melendez</div>
+          <div class="vendor-scope">Full landscaping and lawn mowing for Garden Homes — front &amp; back</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> Regular mowing season, April – November</div>
+        </div>
+        <div class="vendor-card">
+          <div class="vendor-icon"><svg viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3l2.5 2.5L12 8 9.5 5.5 12 3zM4 20h16M6 20V11l3-2M18 20V11l-3-2M9 9h6"/></svg></div>
+          <div class="vendor-category">Common Areas</div>
           <div class="vendor-name">Aphix</div>
-          <div class="vendor-scope">Turf applications for common areas and entrances; mowing for Garden Homes</div>
-          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> 30 mowings, April – November</div>
+          <div class="vendor-scope">Turf applications and upkeep for common areas and neighborhood entrances</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg> Entrances &amp; shared green space</div>
         </div>
         <div class="vendor-card">
+          <div class="vendor-icon"><svg viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8l-2.5 4.3a1 1 0 00.87 1.5H8M7 8l1.4-2.4a1 1 0 01.87-.5h1.3M7 8l2 1.2M17 8l2.5 4.3a1 1 0 01-.87 1.5H16M17 8l-2 1.2M14.5 19.3a1 1 0 01-.87.5H9.3a1 1 0 01-.87-1.5L10 15M13 15l1.5 2.6"/></svg></div>
+          <div class="vendor-category">Trash &amp; Recycling</div>
+          <div class="vendor-name">EcoTech</div>
+          <div class="vendor-scope">Weekly trash and recycling collection for Garden Homes</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg> Included in the Garden Home $185/mo fee</div>
+        </div>
+        <div class="vendor-card">
+          <div class="vendor-icon"><svg viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8.5a2.5 2.5 0 012.5 2.5v3a2.5 2.5 0 01-5 0v-3A2.5 2.5 0 0112 8.5zM10 8.6L8.5 7m0 0V5m0 2H6.5M14 8.6L15.5 7m0 0V5m0 2H17.5M9.5 11.5h-4m0-1.5v3m9-1.5h4m0-1.5v3M10 15l-1.8 1.8m0 0v1.7m5.6-3.5L15.6 16.8m0 0v1.7"/></svg></div>
+          <div class="vendor-category">Mosquito Treatments</div>
+          <div class="vendor-name">Mosquito 911</div>
+          <div class="vendor-scope">Seasonal mosquito treatments to keep common areas and ponds comfortable</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> Applied through mosquito season</div>
+        </div>
+        <div class="vendor-card">
+          <div class="vendor-icon"><svg viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3c3 4 5 7 5 10a5 5 0 01-10 0c0-3 2-6 5-10z"/><path stroke-linecap="round" stroke-linejoin="round" d="M13.5 12.5a2 2 0 01-1.5 3"/></svg></div>
+          <div class="vendor-category">Pond Management</div>
+          <div class="vendor-name">Jones Management</div>
+          <div class="vendor-scope">Pond care and treatment — algae and aquatic vegetation control across our ponds</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12c2-2 4-2 6 0s4 2 6 0 4-2 6 0M3 17c2-2 4-2 6 0s4 2 6 0 4-2 6 0"/></svg> First 2026 application completed July 9</div>
+        </div>
+        <div class="vendor-card">
+          <div class="vendor-icon"><svg viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 13c1.7 2.2 2.7 3.7 2.7 5a2.7 2.7 0 01-5.4 0c0-1.3 1-2.8 2.7-5z"/><path stroke-linecap="round" stroke-linejoin="round" d="M12 10V4M12 4l-3 2M12 4l3 2M6 8l-2 1M18 8l2 1"/></svg></div>
+          <div class="vendor-category">Irrigation</div>
+          <div class="vendor-name">Evergreen</div>
+          <div class="vendor-scope">Sprinkler startup, shutdown, and servicing for the Garden Home series</div>
+          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> Spring startup &amp; fall shutdown annually</div>
+        </div>
+        <div class="vendor-card">
+          <div class="vendor-icon"><svg viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M3 21V9l9-6 9 6v12M9 21v-6h6v6"/></svg></div>
           <div class="vendor-category">Property Management</div>
           <div class="vendor-name">Mulloy Properties</div>
           <div class="vendor-scope">Day-to-day management, resident communications, vendor coordination, billing</div>
@@ -1000,22 +1050,11 @@
           <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg> edouglas@mulloyproperties.com</div>
         </div>
         <div class="vendor-card">
+          <div class="vendor-icon"><svg viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18M3 12h18M5.6 5.6l12.8 12.8M18.4 5.6L5.6 18.4M12 3l-2 2m2-2l2 2m-2 16l-2-2m2 2l2-2M3 12l2-2m-2 2l2 2m16-2l-2-2m2 2l-2 2"/></svg></div>
           <div class="vendor-category">Snow Removal</div>
           <div class="vendor-name">Snow Contractor</div>
           <div class="vendor-scope">Plowing and de-icing of all subdivision roads and common areas</div>
           <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg> Begins after 3&rdquo; accumulation, within 24 hrs</div>
-        </div>
-        <div class="vendor-card">
-          <div class="vendor-category">Pond &amp; Irrigation</div>
-          <div class="vendor-name">Pond &amp; Irrigation Contractor</div>
-          <div class="vendor-scope">Fountain maintenance, filter cleaning, irrigation startup/shutdown, pipe repairs</div>
-          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg> Spring startup &amp; fall shutdown annually</div>
-        </div>
-        <div class="vendor-card">
-          <div class="vendor-category">Tree &amp; Sidewalk</div>
-          <div class="vendor-name">General Maintenance</div>
-          <div class="vendor-scope">Tree trimming (storm damage), sidewalk crack repair and sealing</div>
-          <div class="vendor-detail"><svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/></svg> Oak Lane corridor &amp; Lakeside Drive</div>
         </div>
       </div>
     </section>

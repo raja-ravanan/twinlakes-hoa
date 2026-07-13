@@ -456,6 +456,47 @@ exports.handler = async (event) => {
     return { statusCode: 200, body: JSON.stringify({ success: true, newStatus, voteCount: votes.length }) };
   }
 
+  // ── ADMIN: RECORD VOTES ON BEHALF (votes already cast by email) ──
+  if (action === "adminSetVotes") {
+    if (!session.isAdmin) return { statusCode: 403, body: JSON.stringify({ error: "Admin only" }) };
+    const { itemId, votes } = data || {};
+    const arcs = await getSheetData(googleToken, "ARC_Requests");
+    const rowIndex = arcs.findIndex(a => a.id === itemId);
+    if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+
+    const sheetRow = rowIndex + 2;
+    const voteColMap = { tony: "P", yashu: "T", ramana: "X", raja: "AB", aimee: "AF", mike: "AJ" };
+    const timeColMap = { tony: "S", yashu: "W", ramana: "AA", raja: "AE", aimee: "AI", mike: "AM" };
+    const now = new Date().toISOString();
+
+    const updates = [];
+    for (const [k, v] of Object.entries(votes || {})) {
+      if (!voteColMap[k]) continue;
+      updates.push(sheetsUpdate(googleToken, `ARC_Requests!${voteColMap[k]}${sheetRow}`, [[v || ""]]));
+      if (v) updates.push(sheetsUpdate(googleToken, `ARC_Requests!${timeColMap[k]}${sheetRow}`, [[now]]));
+    }
+    await Promise.all(updates);
+
+    // Recount and re-derive status using the same rule as castVote.
+    const updatedArcs = await getSheetData(googleToken, "ARC_Requests");
+    const arc = updatedArcs[rowIndex];
+    const castVotes = ["tony_vote","yashu_vote","ramana_vote","raja_vote","aimee_vote","mike_vote"].map(key => arc[key]).filter(x => x && x !== "");
+    const approveCount = castVotes.filter(x => x === "Approve" || x === "Conditional").length;
+    const denyCount = castVotes.filter(x => x === "Deny").length;
+
+    let newStatus = arc.final_status;
+    if (approveCount >= 4) newStatus = "Approved";
+    else if (denyCount >= 4) newStatus = "Denied";
+    else if (approveCount === 3 && denyCount === 3) newStatus = "Tie - Tony Decides";
+
+    await sheetsUpdate(googleToken, `ARC_Requests!AO${sheetRow}`, [[castVotes.length.toString()]]);
+    await sheetsUpdate(googleToken, `ARC_Requests!AP${sheetRow}`, [[newStatus || "Open"]]);
+
+    await logActivity(googleToken, session.username, "recorded_votes_on_behalf", itemId, "ARC", `${Object.keys(votes || {}).length} member vote(s) recorded`);
+
+    return { statusCode: 200, body: JSON.stringify({ success: true, newStatus, voteCount: castVotes.length }) };
+  }
+
   // ── ADD VIOLATION COMMENT ──
   if (action === "addComment") {
     const { itemId, comment } = data;

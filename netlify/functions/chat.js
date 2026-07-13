@@ -32,9 +32,9 @@ Secretary: Raja Ravanan · Members at Large: Aimee Green, Mike Schnell
 ═══════════ DUES & THE TWO SERIES ═══════════
 - ALL homeowners pay $895/year in HOA dues (billed annually).
 - Garden Home Series homeowners pay an ADDITIONAL $185/month for full lawn & landscape service.
-- Garden Home $185/month covers: front & back lawn mowing, irrigation (managed by Evergreen),
-  mulching, weeding, fertilizer/weed spraying, bush trimming, street-tree maintenance, and
-  trash & recycling pickup.
+- Garden Home $185/month covers: front & back lawn mowing (Melendez), irrigation (managed by
+  Evergreen), mulching, weeding, fertilizer/weed spraying, bush trimming, street-tree
+  maintenance, and trash & recycling pickup (EcoTech).
 - Patriot Series pays the $895/year only. Lawn mowing, irrigation, trash service, AND their own
   trees & shrubs are the OWNER'S responsibility. Dead trees in the Patriot section are the
   homeowner's responsibility to replace — ideally in the fall planting season with an approved
@@ -72,9 +72,12 @@ Secretary: Raja Ravanan · Members at Large: Aimee Green, Mike Schnell
   or Mulloy. To volunteer, email hoa.twinlakes.board@gmail.com.
 
 ═══════════ LAWN CARE (2026) ═══════════
-- TruGreen treats Garden Homes (fertilizer, broadleaf weed control, crabgrass pre-emergent)
-  across the season (spring through late fall). Aphix treats common areas & entrances.
-- 30 scheduled mowings April–November for Garden Homes (includes trimming/edging to sidewalk).
+- Melendez handles landscaping and lawn mowing for Garden Homes (front & back), across the
+  mowing season (roughly April–November, weather dependent; includes trimming/edging to sidewalk).
+- TruGreen provides fertilizing and weed-control lawn treatments for Garden Homes (fertilizer,
+  broadleaf weed control, crabgrass pre-emergent) across the season.
+- Aphix maintains the common areas and neighborhood entrances (turf applications & upkeep).
+- Mosquito 911 provides seasonal mosquito treatments for common areas and ponds.
 
 ═══════════ SNOW & ICE ═══════════
 - Snow removal begins at 3" accumulation; de-icing for icy conditions regardless of depth.
@@ -83,7 +86,8 @@ Secretary: Raja Ravanan · Members at Large: Aimee Green, Mike Schnell
   within 12 hours to Eddie Douglas.
 
 ═══════════ TRASH & GARBAGE-CAN ENCLOSURES ═══════════
-- Garden Home trash & recycling is included in the $185/month fee. Patriot owners arrange their own.
+- Garden Home trash & recycling (provided by EcoTech) is included in the $185/month fee.
+  Patriot owners arrange their own.
 - Building an enclosure needs ARC approval first. Place in side/rear yards, minimize street
   visibility, use approved materials (brick, stone, stucco, painted wood), with a closable
   door/gate kept closed. No unfinished plywood, corrugated metal, or plastic panels. Colors
