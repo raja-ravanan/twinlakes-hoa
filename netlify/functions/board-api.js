@@ -247,7 +247,7 @@ exports.handler = async (event) => {
 
     return {
       statusCode: 200,
-      body: JSON.stringify({ arcs, violations, others, requests, announcements, minutes, activity: activityRows })
+      body: JSON.stringify({ arcs: arcs.filter(a => a.id), violations, others, requests, announcements, minutes, activity: activityRows })
     };
   }
 
@@ -542,6 +542,37 @@ exports.handler = async (event) => {
     }
     await Promise.all(updates);
     await logActivity(googleToken, session.username, "edited_arc", itemId, "arc", "");
+    return { statusCode: 200, body: JSON.stringify({ success: true }) };
+  }
+
+  // ── ADD AN ARC RECORD / CONCERN (admin only) — manually create an entry ──
+  if (action === "addARC") {
+    if (!session.isAdmin) return { statusCode: 403, body: JSON.stringify({ error: "Admin only" }) };
+    const f = data?.fields || {};
+    const prefix = /concern/i.test(f.request_type || "") ? "CON-" : "ARC-";
+    const id = prefix + Date.now().toString(36).toUpperCase();
+    const date = (f.date_received || new Date().toISOString().slice(0, 10)).trim();
+    // Columns A-G: id, date_received, homeowner_name, homeowner_email, address, request_type, description
+    // Remaining columns left blank; empty final_status renders as "Open".
+    await sheetsAppend(googleToken, "ARC_Requests!A:G", [[
+      id, date,
+      (f.homeowner_name || "").trim(), (f.homeowner_email || "").trim(),
+      (f.address || "").trim(), (f.request_type || "Other").trim(), (f.description || "").trim()
+    ]]);
+    await logActivity(googleToken, session.username, "added_arc", id, "arc", (f.request_type || "").slice(0, 60));
+    return { statusCode: 200, body: JSON.stringify({ success: true, id }) };
+  }
+
+  // ── DELETE AN ARC RECORD / CONCERN (admin only) — blanks the row so it disappears ──
+  if (action === "deleteARC") {
+    if (!session.isAdmin) return { statusCode: 403, body: JSON.stringify({ error: "Admin only" }) };
+    const { itemId } = data || {};
+    const arcs = await getSheetData(googleToken, "ARC_Requests");
+    const rowIndex = arcs.findIndex(a => a.id === itemId);
+    if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+    const row = rowIndex + 2;
+    await sheetsUpdate(googleToken, `ARC_Requests!A${row}:AV${row}`, [Array(48).fill("")]);
+    await logActivity(googleToken, session.username, "deleted_arc", itemId, "arc", "");
     return { statusCode: 200, body: JSON.stringify({ success: true }) };
   }
 

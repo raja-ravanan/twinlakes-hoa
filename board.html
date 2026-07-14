@@ -446,6 +446,9 @@
       <span>Show AI suggestions</span>
       <label class="switch"><input type="checkbox" id="aiToggle" onchange="toggleAiSuggestions()"><span class="sl"></span></label>
     </div>
+    <div id="arcAddBar" style="display:none;margin-bottom:12px;">
+      <button class="btn-scan" onclick="openArcAdd()">＋ Add ARC / Concern</button>
+    </div>
     <div id="arcList"><div class="loading"><div class="spinner"></div>Loading ARC requests...</div></div>
     <button class="archived-toggle" onclick="toggleArchived('arc')" id="arcArchiveBtn" style="display:none">▶ Show archived requests (90+ days old)</button>
     <div class="archived-section" id="arcArchived"></div>
@@ -455,6 +458,9 @@
     <p style="font-family:sans-serif;font-size:13px;color:var(--text-m);line-height:1.6;margin-bottom:16px;max-width:760px;">
       Items that came in as ARC requests but are really <strong>general concerns or service requests</strong> (a shrub-replacement concern, a lawn-service skip, a question to Mulloy) — not architectural review requests. Filing them here keeps the ARC list clean. To move an item in or out, click <strong>Edit</strong> and change the request type.
     </p>
+    <div id="conAddBar" style="display:none;margin-bottom:12px;">
+      <button class="btn-scan" onclick="openArcAdd()">＋ Add Concern / Request</button>
+    </div>
     <div id="conList"><div class="loading"><div class="spinner"></div>Loading…</div></div>
   </div>
 
@@ -641,8 +647,208 @@
   </div>
 
   <div id="tab-meetingrecords" style="display:none">
+    <style>
+      .mr-archive { max-width: 900px; }
+      .mr-entry { background:#fff; border:1px solid #e5e0d8; border-radius:10px; margin-bottom:10px; overflow:hidden; }
+      .mr-entry > summary { list-style:none; cursor:pointer; padding:14px 18px; display:flex; justify-content:space-between; align-items:center; gap:14px; font-family:sans-serif; }
+      .mr-entry > summary::-webkit-details-marker { display:none; }
+      .mr-entry > summary:hover { background:#faf9f6; }
+      .mr-entry .mr-title { font-weight:700; color:var(--navy); font-size:14px; }
+      .mr-entry .mr-when { font-size:11.5px; color:var(--text-m); font-weight:700; text-transform:uppercase; letter-spacing:0.4px; }
+      .mr-entry[open] > summary { border-bottom:1px solid #f0ece2; }
+      .mr-body { padding:16px 20px; font-family:sans-serif; font-size:13.5px; color:var(--text-d); line-height:1.65; }
+      .mr-body h5 { font-family:Georgia,serif; font-size:14px; color:var(--navy); margin:16px 0 5px; }
+      .mr-body p { margin:0 0 8px; }
+      .mr-body ul { margin:5px 0 10px; padding-left:20px; } .mr-body li { margin-bottom:4px; }
+      .mr-body .mr-att { font-size:12.5px; color:var(--text-m); font-style:italic; margin-bottom:6px; }
+      .mr-body strong { color:var(--navy); }
+    </style>
     <div style="font-size:15px;font-weight:800;color:var(--navy);margin-bottom:4px;">Board Meeting Records</div>
-    <p style="font-size:13px;font-family:sans-serif;color:var(--text-m);margin:0 0 18px;">Official board meeting minutes, organized by year in the shared Drive. Links open in a new tab.<br><span style="color:#999;font-size:12px;">Note: this is the internal board archive. To publish a resident-friendly summary to the public website, use <strong>Post Public Minutes</strong>.</span></p>
+    <p style="font-size:13px;font-family:sans-serif;color:var(--text-m);margin:0 0 18px;">Formal minutes of the 2025–2026 transition are archived in-portal below; year folders are also linked in the shared Drive.<br><span style="color:#999;font-size:12px;">Note: this is the internal board archive. To publish a resident-friendly summary to the public website, use <strong>Post Public Minutes</strong>.</span></p>
+
+    <div style="font-size:13px;font-weight:800;color:var(--navy);margin:6px 0 10px;text-transform:uppercase;letter-spacing:0.5px;">Transition Minutes (Oct 2025 – Mar 2026)</div>
+    <div class="mr-archive">
+
+      <details class="mr-entry"><summary><span class="mr-title">Oct 30, 2025 — First Board Working Session</span><span class="mr-when">Oct 30, 2025</span></summary>
+        <div class="mr-body">
+          <p class="mr-att">Location: Residence of Mike Schnell. Present: Renee Kuhlman (Mulloy) + Tony Backert, Ramana N, Yashu Basavaraju, Mike Schnell, Aimee Green, Raja Ravanan, Peter Fotos (all 7; quorum met). Peter Fotos later retired in Dec 2025.</p>
+          <p>First working session of the newly elected homeowner Board. Developer (Elite/Mike Bentley) to step down Dec 31, 2025; Garden-Home construction completing through ~March 2026.</p>
+          <h5>Decisions & Votes</h5>
+          <ul>
+            <li><strong>Trash vendor → EcoTech</strong> (Republic contract expires Dec 31; 60-day notice by Nov 1). Lower cost, 3-year price guarantee (5% cap yrs 4–5), cancellation clause. <em>(Subject to contract execution.)</em></li>
+            <li><strong>Additional "Residents Only" pond sign — approved 3–2</strong> (2 abstained).</li>
+            <li><strong>Homeowner tree-removal request — denied.</strong> Arborist (Lopez) confirmed the tree healthy; Board policy: do not remove healthy trees; consider limb trimming only.</li>
+          </ul>
+          <h5>Discussion (deferred)</h5>
+          <ul>
+            <li>Board terms/officers: Renee recommended 2-year staggered terms; officers to be seated before developer resigns. Deferred.</li>
+            <li>2026 budget (provisional): must be approved in Nov, mailed by Dec 1. Two associations / one tax ID / separate bank accounts. Garden monthly $175→$185. Home-count to verify. Banking Republic→Western Alliance; payments Zego→ClickPay.</li>
+            <li>Insurance: D&O to be added once developer steps down. Committees recommended (ARC, landscaping, irrigation, grounds, social). Website/portal proposed.</li>
+          </ul>
+          <h5>Action Items</h5>
+          <ul><li>Renee: EcoTech contract / Republic non-renewal; provide vendor contracts; verify home counts.</li><li>Board: questions to Mike (bonds, MSD, erosion); finalize budget; schedule internal meeting.</li></ul>
+        </div>
+      </details>
+
+      <details class="mr-entry"><summary><span class="mr-title">Nov 10, 2025 — Officers & Committees</span><span class="mr-when">Nov 10, 2025</span></summary>
+        <div class="mr-body">
+          <p class="mr-att">Location: Residence of Tony Backert. Board-only session; quorum met. Property manager not present (input relayed).</p>
+          <h5>Decisions</h5>
+          <ul>
+            <li><strong>Officers elected:</strong> President — Tony Backert (6–0); Vice President — Yashu Basavaraju; Treasurer — Ramana N; Secretary — Raja Ravanan; Members at Large — Mike Schnell, Aimee Green, Peter Fotos.</li>
+            <li><strong>Six committees established:</strong> ARC, Communication (website/social — Raja w/ Yashu), Contracts/Vendor Relations (incl. insurance & irrigation), Safety (Mike), Social, Beautification & Grounds (Peter Fotos). Finance Committee = board members only, chaired by Treasurer.</li>
+            <li><strong>Process model:</strong> committees research → Board decides → President communicates to Renee → Renee executes.</li>
+            <li><strong>EcoTech confirmed</strong> with optional yard-waste $5/mo; Renee to confirm collection day.</li>
+            <li><strong>2026 assessments (provisional):</strong> Garden $175→$185/mo; HOA $775→$895/yr to build reserve.</li>
+          </ul>
+          <h5>Deferred / Action</h5>
+          <ul><li>Questions for developer: reserve left, –$15K (2024), –$24K (2025) deficit, MSD/bonds, ARC codes.</li><li>Insurance (D&O) review; Facebook + website; first community meeting targeted early March 2026.</li></ul>
+        </div>
+      </details>
+
+      <details class="mr-entry"><summary><span class="mr-title">Nov 23, 2025 — 2026 Assessment Vote</span><span class="mr-when">Nov 23, 2025</span></summary>
+        <div class="mr-body">
+          <p class="mr-att">Held via Zoom. Present: Tony, Yashu, Raja, Aimee. Absent: Ramana N (traveling), Peter Fotos.</p>
+          <h5>Decision & Vote</h5>
+          <p>On a motion by Tony Backert, the Board voted <strong>in favor</strong> to set <strong>2026 assessments: HOA $895/yr (from $775, ~13.5%)</strong> and <strong>Garden Homes $185/mo (from $175)</strong>. Impact: ~+$120/yr Patriot, ~+$240/yr Garden. To be locked by Friday, mailed by Dec 1.</p>
+          <h5>Rationale (recorded)</h5>
+          <ul>
+            <li>First self-funded year; HOA reserve ~$141. Developer obligated to leave only $3,000. Approved dues build ~$9–10K (HOA) + ~$4,500 (Garden) reserve.</li>
+            <li>Cash-flow: annual dues once, garden monthly, costs mid-year — reserve avoids mid-year special assessments.</li>
+            <li>The –$15,000 (2024): Elite put in ~$50K, withdrew ~$15K unspent at year-end.</li>
+          </ul>
+          <h5>Action</h5>
+          <ul><li>Include explanatory note with dues invoice. Raja: 2025 expenditure review for March. No warranty on irrigation (repair line ~$2,000).</li></ul>
+        </div>
+      </details>
+
+      <details class="mr-entry"><summary><span class="mr-title">Dec 7, 2025 — Resignation, ARC Decisions</span><span class="mr-when">Dec 7, 2025</span></summary>
+        <div class="mr-body">
+          <p class="mr-att">Held via Zoom. Present: Tony, Ramana, Raja, Aimee, Yashu, Mike Schnell (quorum). Absent: Peter Fotos (resigning).</p>
+          <h5>Decisions</h5>
+          <ul>
+            <li><strong>Resignation of Peter Fotos accepted;</strong> Board operates with six through the March meeting, then adds a seventh. Beautification reassigned to Aimee Green.</li>
+            <li><strong>March 10, 2026 community meeting confirmed.</strong></li>
+            <li><strong>Barclay Lake lighting (15805 Barclay Lake Ct):</strong> installed without ARC — require an ARC, not approved as-is; must match the approved standard (concealed wiring, matches home; Nov–Jan only).</li>
+            <li><strong>Fence ARC (Ethan):</strong> approvable pending maintenance-gap confirmation; adopted a supplemental fence ARC form.</li>
+            <li><strong>EcoTech contract:</strong> correct language to the 3-year guarantee.</li>
+            <li><strong>Newsletter:</strong> no board-member photos. <strong>Minutes:</strong> not routinely distributed on request. <strong>Cadence:</strong> Dec 21 catch-up → Jan 4.</li>
+          </ul>
+          <h5>In Progress</h5>
+          <ul><li>Insurance: Aimee gathering 5 quotes (renewal March). Ramana: line-by-line 2025 review. Raja: HOA website portal (~$399/yr).</li></ul>
+        </div>
+      </details>
+
+      <details class="mr-entry"><summary><span class="mr-title">Dec 21, 2025 — Communication & Records</span><span class="mr-when">Dec 21, 2025</span></summary>
+        <div class="mr-body">
+          <p class="mr-att">Held via Zoom. Present: Tony, Ramana, Raja, Aimee, Yashu, Mike Schnell (quorum). Seat vacant (Peter Fotos resigned).</p>
+          <h5>Decisions</h5>
+          <ul>
+            <li><strong>Communication protocol:</strong> Renee remains residents' first contact; Board limits its Mulloy communication to ~2 designated members; Facebook/HOA email/feedback form are supplemental, not duplication.</li>
+            <li><strong>Shared HOA Google Drive</strong> repository created (by Raja) so records aren't dependent on Renee's inbox.</li>
+            <li><strong>Newsletter approved</strong> (remove "Financial Review committee"; shelve broad volunteer page until after March; no board photos; adopt flyer format).</li>
+            <li><strong>Trash-can screening guidelines</strong> to be developed for March (must match home, hide cans, solid floor, ARC required).</li>
+            <li><strong>ARC form:</strong> adopt the "Office Use Only" section to record decisions. Request formal developer transition documentation.</li>
+            <li><strong>March 10 confirmed at the church;</strong> members prepare 2–3 slides; biweekly meetings at 6:30 PM.</li>
+          </ul>
+        </div>
+      </details>
+
+      <details class="mr-entry"><summary><span class="mr-title">Jan 4, 2026 — ARC Tracking & Financial Review</span><span class="mr-when">Jan 4, 2026</span></summary>
+        <div class="mr-body">
+          <p class="mr-att">Held via Zoom. Present: Tony, Ramana, Raja, Aimee, Mike Schnell (quorum). Absent: Yashu Basavaraju. Association Federal EIN 83-2702217 recorded (internal).</p>
+          <h5>Decisions</h5>
+          <ul>
+            <li><strong>Adopted an ARC tracking sheet;</strong> reviews to happen live on biweekly calls; target turnaround ≤ ~1 month.</li>
+            <li><strong>ARC approvals:</strong> Cumberland Lake Circle Court fence (complete); 1901 Scenic Lake Dr LED roof lights (approved — standard example); Raja's 16004 temporary brick edging (approved with conditions — resubmit permanent ARC in spring); Barclay Lake lighting still open.</li>
+            <li><strong>Newsletter:</strong> revert name to "Twin Lakes," resident name poll, gate/entrance masthead, real photos, committee section.</li>
+            <li><strong>Volunteers accepted</strong> (Jeff Graham, Becky Arthur, Kenyata Metcalf, Lisa) for Safety & Social.</li>
+          </ul>
+          <h5>Financial Review / Follow-ups</h5>
+          <ul><li>Insurance ~Feb 1 (current $393 → expected $3–4K; Auto-Owners + Erie; named-entity status on Mulloy). StrongRoom access; 2 more calls; approve invoices before payment. Developer written confirmation; entrance island; retention-basin dam (MSD).</li></ul>
+        </div>
+      </details>
+
+      <details class="mr-entry"><summary><span class="mr-title">Jan 18, 2026 — Oversight Pivot</span><span class="mr-when">Jan 18, 2026</span></summary>
+        <div class="mr-body">
+          <p class="mr-att">Held via Zoom. Present: Tony, Ramana, Yashu, Raja, Aimee, Mike Schnell (quorum).</p>
+          <h5>Decisions</h5>
+          <ul>
+            <li><strong>Close out forensic 2025 review;</strong> at March, Mulloy presents 2025 wrap-up, Board presents 2026 work + budget comparison. Reaffirmed <strong>oversight/audit role</strong> (agenda: ARCs → financials → policies → committees).</li>
+            <li><strong>Mulloy communication</strong> restricted to Yashu & Ramana (invoices) + Tony (general); keep it professional.</li>
+            <li><strong>No formal Neighborhood Watch</strong> (low crime) — publish safety contacts/tips instead.</li>
+            <li><strong>Consolidate to one Facebook group;</strong> delete the duplicate; verify members vs. directory.</li>
+            <li>Newsletter monthly, 3rd week. Community yard sale to be raised in March.</li>
+          </ul>
+          <h5>In Progress</h5>
+          <ul><li>Erie quote ~$1,900; questionnaire to Mulloy. Request monthly statements + bank statements. Retention basin — MSD responsibility.</li></ul>
+        </div>
+      </details>
+
+      <details class="mr-entry"><summary><span class="mr-title">Feb 1, 2026 — Contracts Finalized, Developer Walk</span><span class="mr-when">Feb 1, 2026</span></summary>
+        <div class="mr-body">
+          <p class="mr-att">In person, residence of Tony Backert. Present: Tony, Raja, Aimee, Mike Schnell (quorum). Absent: Yashu, Ramana. Eddie Douglas transitioning in as Mulloy contact.</p>
+          <h5>Accomplishments</h5>
+          <ul><li>Contracts finalized: <strong>Aphix, TrueGreen (renewed), Two Fish</strong> (pond vendor). Snow policy published. Invoice-approval process (Ramana + Tony/Yashu). Barclay Lake lights removed.</li></ul>
+          <h5>Decisions</h5>
+          <ul>
+            <li><strong>New ARC — fence 15950 Cumberland Lake Circle — approved;</strong> members spot-check installations by area.</li>
+            <li><strong>Common-area tree guideline</strong> (pending written developer confirmation): removal allowed only if professional, bank undisturbed, cuttings hauled away — relayed verbally, not a formal written policy.</li>
+            <li><strong>TrueGreen option for Patriot homes</strong> — poll interest at March meeting, no committed price.</li>
+            <li>No contractor endorsements. Newsletter named <strong>"Twin Lakes News"</strong> (64 responses). Add water-safety + dues reminders.</li>
+          </ul>
+          <h5>Developer Walk / Open</h5>
+          <ul><li>Retention basin (MSD), tree plan, bank erosion, debris/old Aiken Rd cleanup. Insurance leaning to larger umbrella (~$10M); questionnaire pending. 2025 financials pending; delinquent-dues list; bank access/change.</li></ul>
+        </div>
+      </details>
+
+      <details class="mr-entry"><summary><span class="mr-title">Feb 15, 2026 — March-Meeting Prep & Financials</span><span class="mr-when">Feb 15, 2026</span></summary>
+        <div class="mr-body">
+          <p class="mr-att">In person, residence of Tony Backert. Present: Tony, Ramana, Raja, Aimee, Mike Schnell (quorum). Absent: Yashu (traveling — India).</p>
+          <h5>Decisions</h5>
+          <ul>
+            <li><strong>March 10 presentation finalized</strong> (accomplishments → 2026 plans → financials → Q&A); draft ~Feb 20–21; dress rehearsal March 1.</li>
+            <li><strong>Zoom option</strong> (Raja co-host); pre-meeting question survey; <strong>opt-in neighborhood directory;</strong> paper-notification opt-out.</li>
+            <li>Committees remain board-only for votes; ARC "Office Use Only" adoption; stay with Mulloy through 2026.</li>
+          </ul>
+          <h5>Financial Review (to clarify with Mulloy)</h5>
+          <ul><li>Year-end 2025 in spreadsheet form; developer reserve $3,000 confirmed; water-bill allocation (13 meters, ~$29,285 budget) via StrongRoom; Aphix level-monthly billing (~$37,697); unexplained items; 5th-of-month reporting; late-fee/bylaw alignment. HOA mailing address: 15958 Cumberland Lake Circle, c/o Mulloy (Dept 525).</li></ul>
+        </div>
+      </details>
+
+      <details class="mr-entry"><summary><span class="mr-title">Mar 1, 2026 — Dress Rehearsal</span><span class="mr-when">Mar 1, 2026</span></summary>
+        <div class="mr-body">
+          <p class="mr-att">In person, residence of Tony Backert. Present: Tony, Ramana, Raja, Aimee, Mike Schnell, Yashu (quorum).</p>
+          <h5>March 10 Deck Finalized</h5>
+          <ul>
+            <li><strong>Accomplishments:</strong> five vendor contracts reviewed (Aphix, TrueGreen, Melendez, Two Fish, EcoTech) w/ trash savings + 3-year lock; invoice-verification process; 14 ARC approvals to date; newsletter + Facebook; policies.</li>
+            <li><strong>2026 initiatives:</strong> developer items; lake bubblers; geese; mosquitoes; delinquent-dues review; insurance; reserves.</li>
+            <li><strong>Financials:</strong> 2025 vs 2026 by category, HOA vs Garden; reserves vs special assessments.</li>
+          </ul>
+          <h5>Decisions/Notes</h5>
+          <ul><li>Roads become city responsibility once bonds release. Delinquent dues: 26 households (~2× last year). Geese: investigate laser deterrents. Newsletter likely quarterly. Insurance: current ~$3,400 policy through March 16 renewal; entrance/monument replacement value ~$240K.</li></ul>
+        </div>
+      </details>
+
+      <details class="mr-entry" open><summary><span class="mr-title">Mar 10, 2026 — First Annual Community Meeting</span><span class="mr-when">Mar 10, 2026</span></summary>
+        <div class="mr-body">
+          <p class="mr-att">At the church (in person + Zoom). Attendance: 42 households + Zoom. Board: Tony (Pres), Yashu (VP), Ramana (Treas), Raja (Sec), Aimee, Mike Schnell. Management: Eddie Douglas (Mulloy).</p>
+          <p>The community's first true HOA annual meeting. A resident-facing recap and the complete public minutes are published on the website's <strong>Meeting Minutes</strong> page. Summary of record:</p>
+          <h5>Accomplishments</h5>
+          <ul><li>Met every 2 weeks since election; reviewed vendor contracts. EcoTech (below prior cost, 3-yr lock); TrueGreen Patriot-home rate ($30–40); Two Fish + ~20 grass carp; Melendez/Aphix/Evergreen continue; 14 ARC approvals; snow/lighting/garbage policies; Twin Lakes News + Facebook.</li></ul>
+          <h5>2026 Initiatives</h5>
+          <ul><li>Developer items; lake bubblers (~$3,500 each, phased ~3 yrs); geese (laser deterrent; don't feed); mosquitoes; delinquent-dues process (2027); community events.</li></ul>
+          <h5>Financials</h5>
+          <ul><li>Two budgets — HOA ~$133K, Garden ~$154K (~$280K total). 2025 HOA ended ~+$5,800; Garden ~–$13K covered by developer (turned over debt-free). ~$10K into 2026 reserves; dues increase avoids special assessments. Both budgets posted online.</li></ul>
+          <h5>Q&A</h5>
+          <ul><li>Old Aiken Rd debris (Elite, cleared ~mid-summer); construction damage → Elite customer care; roads/sidewalks become city's after bond release; Aiken Rd shoulder → Metro Council; retention basin → MSD (ongoing); Facebook for package coordination.</li></ul>
+          <p style="margin-top:10px;"><em>Recorded by Raja Ravanan, Secretary.</em></p>
+        </div>
+      </details>
+
+    </div>
+
+    <div style="font-size:13px;font-weight:800;color:var(--navy);margin:24px 0 10px;text-transform:uppercase;letter-spacing:0.5px;">Drive Archive (by year)</div>
     <div class="resource-grid">
       <a class="resource-card" href="https://drive.google.com/drive/folders/1ZH7dlxOYW-vAVlB7-hONumj_Fghez8rJ" target="_blank" rel="noopener noreferrer">
         <div class="rc-icon">🗓️</div><div class="rc-title">2026 Minutes</div>
@@ -871,7 +1077,7 @@
 <div class="modal-overlay" id="arcEditModal">
   <div class="modal">
     <div class="modal-header">
-      <h3>Edit ARC Record — <span id="arcEditId"></span></h3>
+      <h3 id="arcEditHeading">Edit ARC Record — <span id="arcEditId"></span></h3>
       <button class="modal-close" onclick="closeArcEdit()">✕</button>
     </div>
     <div class="modal-body">
@@ -921,6 +1127,8 @@
     if (currentUser.isAdmin) {
       document.getElementById("scanBtnWrap").style.display = "flex";
       document.getElementById("arcAdminBar").style.display = "flex";
+      document.getElementById("arcAddBar").style.display = "block";
+      document.getElementById("conAddBar").style.display = "block";
     }
     // Board members see only ARC Requests, Announcements, Meeting Minutes.
     // Admin-only tabs/cards (Violations, Other Items, Resident Requests, Activity Log) are hidden for non-admins.
@@ -1055,6 +1263,7 @@
   function openArcEdit(id) {
     const arc = (dashData.arcs || []).find(a => a.id === id); if (!arc) return;
     const set = (f, v) => { const el = document.getElementById(f); if (el) el.value = v || ""; };
+    document.getElementById("arcEditHeading").innerHTML = 'Edit ARC Record — <span id="arcEditId"></span>';
     document.getElementById("arcEditId").textContent = arc.id;
     document.getElementById("arcEditIdHidden").value = arc.id;
     set("ae-date", arc.date_received ? new Date(arc.date_received).toISOString().slice(0,10) : "");
@@ -1064,16 +1273,38 @@
     document.getElementById("arcEditModal").classList.add("show");
   }
   function closeArcEdit() { document.getElementById("arcEditModal").classList.remove("show"); }
+
+  // Open the modal in "add" mode (empty id) to create a new ARC record or concern.
+  function openArcAdd() {
+    const set = (f, v) => { const el = document.getElementById(f); if (el) el.value = v || ""; };
+    document.getElementById("arcEditHeading").textContent = "Add ARC / Concern";
+    document.getElementById("arcEditIdHidden").value = "";   // empty id ⇒ add mode
+    set("ae-date", new Date().toISOString().slice(0, 10));
+    set("ae-owner", ""); set("ae-email", ""); set("ae-address", "");
+    document.getElementById("ae-type").value = "Other";
+    set("ae-desc", ""); document.getElementById("ae-status").value = "Open";
+    document.getElementById("arcEditModal").classList.add("show");
+  }
+
   async function saveArcEdit() {
     const id = document.getElementById("arcEditIdHidden").value;
     const val = f => (document.getElementById(f).value || "").trim();
     const fields = { date_received: val("ae-date"), homeowner_name: val("ae-owner"), homeowner_email: val("ae-email"),
       address: val("ae-address"), request_type: val("ae-type"), description: val("ae-desc"), final_status: val("ae-status") };
     const btn = document.getElementById("arcEditSave"); btn.disabled = true; btn.textContent = "Saving…";
-    const d = await api({ action: "updateARC", data: { itemId: id, fields } });
+    const d = id
+      ? await api({ action: "updateARC", data: { itemId: id, fields } })
+      : await api({ action: "addARC", data: { fields } });
     btn.disabled = false; btn.textContent = "Save Changes";
-    if (d && d.success) { showToast("ARC record updated", "success"); closeArcEdit(); await loadDashboard(); }
-    else { showToast((d && d.error) || "Update failed", "error"); }
+    if (d && d.success) { showToast(id ? "ARC record updated" : "Entry added", "success"); closeArcEdit(); await loadDashboard(); }
+    else { showToast((d && d.error) || "Save failed", "error"); }
+  }
+
+  async function deleteArc(id) {
+    if (!confirm("Delete this record permanently? This cannot be undone.")) return;
+    const d = await api({ action: "deleteARC", data: { itemId: id } });
+    if (d && d.success) { showToast("Record deleted", "success"); await loadDashboard(); }
+    else { showToast((d && d.error) || "Delete failed", "error"); }
   }
 
   // ── Community Map ─────────────────────────────────────
@@ -1356,7 +1587,10 @@
           <div class="arc-address">${esc(c.address || "—")}</div>
           <div class="arc-fulldesc-text" style="margin-top:8px;">${desc}</div>
         </div>
-        ${currentUser.isAdmin ? `<button class="btn-edit" title="Edit / recategorize" onclick="openArcEdit('${c.id}')">✏️ Edit</button>` : ""}
+        ${currentUser.isAdmin ? `<div style="display:flex;flex-direction:column;gap:6px;">
+          <button class="btn-edit" title="Edit / recategorize" onclick="openArcEdit('${c.id}')">✏️ Edit</button>
+          <button class="btn-edit" title="Delete record" onclick="deleteArc('${c.id}')">🗑️ Delete</button>
+        </div>` : ""}
       </div>`;
     }).join("");
   }
@@ -1413,7 +1647,8 @@
       <td class="arc-c-votes">${voteCount}/6${myVote ? `<div class="arc-myvote">you: ${esc(myVote)}</div>` : ""}</td>
       <td class="arc-c-act">
         <button class="btn-action" onclick="toggleArcDetail('${arc.id}')">Take Action</button>
-        ${currentUser.isAdmin ? `<button class="btn-edit" title="Edit record" onclick="openArcEdit('${arc.id}')">✏️</button>` : ""}
+        ${currentUser.isAdmin ? `<button class="btn-edit" title="Edit record" onclick="openArcEdit('${arc.id}')">✏️</button>
+        <button class="btn-edit" title="Delete record" onclick="deleteArc('${arc.id}')">🗑️</button>` : ""}
       </td>
     </tr>
     <tr class="arc-detail-row" id="arcdetail-${arc.id}" style="display:none"><td colspan="9">${arcDetailBody(arc)}</td></tr>`;
