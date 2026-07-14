@@ -8,8 +8,12 @@
   <style>
     :root {
       --navy:#1B4B7A; --navy-dark:#0F2D4A; --gold:#C9A84C; --gold-light:#F5EDD6;
-      --cream:#FAF7F2; --text:#12202e; --text-m:#5a6a7a; --white:#fff;
+      --gold-dark:#8B6914; --cream:#FAF7F2; --text:#12202e; --text-d:#2c3e50;
+      --text-m:#5a6a7a; --navy-light:#EEF3F8; --white:#fff;
       --red:#e74c3c; --yellow:#f39c12; --green:#27ae60; --red-light:#fdf0f0;
+    }
+    a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+      outline: 3px solid var(--gold); outline-offset: 2px; border-radius: 4px;
     }
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family: Georgia, serif; background:#F0EDE8; color:var(--text); min-height:100vh; }
@@ -93,7 +97,7 @@
     .rc-icon { font-size:28px; margin-bottom:10px; }
     .rc-title { font-size:16px; font-weight:800; color:var(--navy); margin-bottom:6px; }
     .rc-desc { font-size:13px; font-family:sans-serif; color:var(--text-m); line-height:1.5; margin-bottom:14px; }
-    .rc-link { font-size:12px; font-family:sans-serif; font-weight:700; color:var(--gold); text-transform:uppercase; letter-spacing:0.5px; }
+    .rc-link { font-size:12px; font-family:sans-serif; font-weight:700; color:var(--navy); text-transform:uppercase; letter-spacing:0.5px; }
     .resource-card.placeholder { border-left-color:#ccc; opacity:0.75; cursor:default; }
     .resource-card.placeholder:hover { box-shadow:none; transform:none; }
     .rc-badge { display:inline-block; font-size:11px; font-family:sans-serif; font-weight:700; color:#999; background:#f0eee9; padding:3px 10px; border-radius:20px; }
@@ -224,7 +228,7 @@
     .conditions-area textarea:focus { border-color:var(--gold); }
     .private-note-area textarea { width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:6px; font-size:13px; font-family:sans-serif; outline:none; resize:vertical; min-height:60px; margin-top:8px; }
     .private-note-label { font-size:12px; font-family:sans-serif; color:var(--text-m); margin-top:10px; margin-bottom:4px; }
-    .btn-submit-vote { background:var(--navy); color:var(--gold); border:none; padding:10px 24px; border-radius:6px; font-size:13px; font-family:sans-serif; font-weight:700; cursor:pointer; transition:all 0.2s; margin-top:10px; }
+    .btn-submit-vote { background:var(--navy); color:var(--cream); border:none; padding:10px 24px; border-radius:6px; font-size:13px; font-family:sans-serif; font-weight:700; cursor:pointer; transition:all 0.2s; margin-top:10px; }
     .btn-submit-vote:hover { background:var(--gold); color:var(--navy-dark); }
     /* Admin: record votes on behalf */
     .onbehalf-section { border-top:1px dashed #d8cfa8; margin-top:14px; padding-top:14px; }
@@ -239,7 +243,7 @@
     .notify-section { background:linear-gradient(135deg,#F5EDD6,#FBF8F0); border:1px solid #dfc07a; border-radius:8px; padding:16px 20px; margin-bottom:18px; }
     .notify-title { font-size:13px; font-family:sans-serif; font-weight:700; color:#8B6914; margin-bottom:10px; }
     .notify-desc { font-size:13px; font-family:sans-serif; color:#5a4a1a; line-height:1.6; margin-bottom:12px; }
-    .btn-notify { background:var(--navy); color:var(--gold); border:none; padding:10px 20px; border-radius:6px; font-size:13px; font-family:sans-serif; font-weight:700; cursor:pointer; }
+    .btn-notify { background:var(--navy); color:var(--cream); border:none; padding:10px 20px; border-radius:6px; font-size:13px; font-family:sans-serif; font-weight:700; cursor:pointer; }
     .btn-notify:hover { background:var(--gold); color:var(--navy-dark); }
     .btn-notify.sent { background:#27ae60; color:#fff; cursor:default; }
 
@@ -257,7 +261,7 @@
     .email-field input:focus, .email-field textarea:focus { border-color:var(--gold); }
     .email-field textarea { min-height:200px; resize:vertical; }
     .modal-footer { padding:16px 24px; border-top:1px solid #eee; display:flex; gap:10px; justify-content:flex-end; background:#FAFAFA; border-radius:0 0 12px 12px; }
-    .btn-send { background:var(--navy); color:var(--gold); border:none; padding:12px 28px; border-radius:6px; font-size:14px; font-family:sans-serif; font-weight:700; cursor:pointer; }
+    .btn-send { background:var(--navy); color:var(--cream); border:none; padding:12px 28px; border-radius:6px; font-size:14px; font-family:sans-serif; font-weight:700; cursor:pointer; }
     .btn-cancel { background:none; border:1px solid #ddd; padding:12px 20px; border-radius:6px; font-size:14px; font-family:sans-serif; cursor:pointer; color:var(--text-m); }
 
     /* Violation Card */
@@ -277,7 +281,7 @@
     .add-comment { display:flex; gap:10px; margin-top:12px; }
     .add-comment input { flex:1; padding:9px 12px; border:1px solid #ddd; border-radius:6px; font-size:13px; font-family:sans-serif; outline:none; }
     .add-comment input:focus { border-color:var(--gold); }
-    .btn-comment { background:var(--navy); color:var(--gold); border:none; padding:9px 18px; border-radius:6px; font-size:13px; font-family:sans-serif; font-weight:600; cursor:pointer; white-space:nowrap; }
+    .btn-comment { background:var(--navy); color:var(--cream); border:none; padding:9px 18px; border-radius:6px; font-size:13px; font-family:sans-serif; font-weight:600; cursor:pointer; white-space:nowrap; }
 
     /* Other Items */
     .other-card { background:var(--white); border-radius:8px; border:1px solid #ddd; padding:18px 20px; margin-bottom:12px; display:flex; gap:16px; align-items:flex-start; }
@@ -480,7 +484,7 @@
         <div style="font-size:11px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;">New</div>
       </div>
       <div style="background:#fff;border:1px solid #e5e0d8;border-radius:10px;padding:12px 18px;min-width:110px;">
-        <div style="font-size:24px;font-weight:800;color:var(--gold);" id="reqStatProgress">0</div>
+        <div style="font-size:24px;font-weight:800;color:var(--gold-dark);" id="reqStatProgress">0</div>
         <div style="font-size:11px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;">In Progress</div>
       </div>
       <div style="background:#fff;border:1px solid #e5e0d8;border-radius:10px;padding:12px 18px;min-width:110px;">

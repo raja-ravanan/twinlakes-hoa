@@ -6,23 +6,29 @@
   <title>Board Portal — Twin Lakes HOA</title>
   <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet"/>
   <style>
+    :root {
+      --navy:#1B4B7A; --navy-dark:#0F2D4A; --gold:#C9A84C; --gold-deep:#B8973E;
+      --cream:#FAF7F2; --cream-note:#FBF8F0; --gold-border:#dfc07a; --text-m:#5a6a7a;
+      --white:#fff; --line:#ddd; --red-light:#fdf0f0; --red-border:#f5c6c6; --red-dark:#6b1a1a;
+    }
     * { margin:0; padding:0; box-sizing:border-box; }
-    body { font-family: Georgia, serif; background: #0F2D4A; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
-    .card { background:#fff; border-radius:16px; padding:48px 40px; max-width:440px; width:100%; box-shadow:0 24px 64px rgba(0,0,0,0.3); border-top:4px solid #C9A84C; text-align:center; }
-    .logo { width:64px; height:64px; background:linear-gradient(135deg,#1B4B7A,#0F2D4A); border-radius:50%; border:2px solid #C9A84C; display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:22px; font-style:italic; color:#C9A84C; font-family:Georgia,serif; }
-    .eyebrow { font-size:11px; font-family:sans-serif; letter-spacing:3px; text-transform:uppercase; color:#C9A84C; margin-bottom:8px; }
-    h1 { font-size:26px; color:#1B4B7A; font-weight:normal; margin-bottom:6px; }
-    .subtitle { font-size:14px; color:#5a6a7a; font-style:italic; margin-bottom:32px; }
-    .notice { background:#FBF8F0; border:1px solid #dfc07a; border-left:3px solid #C9A84C; border-radius:4px; padding:12px 16px; margin-bottom:24px; font-size:13px; font-family:sans-serif; color:#5a4a1a; text-align:left; line-height:1.6; }
+    body { font-family: Georgia, serif; background: var(--navy-dark); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+    .card { background:var(--white); border-radius:16px; padding:48px 40px; max-width:440px; width:100%; box-shadow:0 24px 64px rgba(0,0,0,0.3); border-top:4px solid var(--gold); text-align:center; }
+    .logo { width:64px; height:64px; background:linear-gradient(135deg,var(--navy),var(--navy-dark)); border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:22px; font-style:italic; color:var(--gold); font-family:Georgia,serif; }
+    .eyebrow { font-size:11px; font-family:sans-serif; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+    h1 { font-size:26px; color:var(--navy); font-weight:normal; margin-bottom:6px; }
+    .subtitle { font-size:14px; color:var(--text-m); font-style:italic; margin-bottom:32px; }
+    .notice { background:var(--cream-note); border:1px solid var(--gold-border); border-left:3px solid var(--gold); border-radius:4px; padding:12px 16px; margin-bottom:24px; font-size:13px; font-family:sans-serif; color:#5a4a1a; text-align:left; line-height:1.6; }
     .form-group { margin-bottom:18px; text-align:left; }
     label { display:block; font-size:11px; font-family:sans-serif; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#2c3e50; margin-bottom:7px; }
-    input { width:100%; padding:12px 14px; border:1px solid #ddd; border-radius:6px; font-size:15px; font-family:sans-serif; outline:none; transition:border-color 0.2s; }
-    input:focus { border-color:#C9A84C; }
-    button { width:100%; background:linear-gradient(135deg,#1B4B7A,#0F2D4A); color:#C9A84C; border:none; padding:16px; border-radius:8px; font-size:15px; font-family:sans-serif; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; margin-top:8px; }
-    button:hover { background:linear-gradient(135deg,#C9A84C,#B8973E); color:#1B4B7A; }
-    .error { background:#fdf0f0; border:1px solid #f5c6c6; border-radius:6px; padding:12px; font-size:13px; font-family:sans-serif; color:#6b1a1a; margin-top:16px; display:none; }
+    input { width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:6px; font-size:15px; font-family:sans-serif; outline:none; transition:border-color 0.2s; }
+    input:focus { border-color:var(--gold); }
+    button { width:100%; background:linear-gradient(135deg,var(--navy),var(--navy-dark)); color:var(--cream); border:none; padding:16px; border-radius:8px; font-size:15px; font-family:sans-serif; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; margin-top:8px; }
+    button:hover { background:linear-gradient(135deg,var(--gold),var(--gold-deep)); color:var(--navy); }
+    .error { background:var(--red-light); border:1px solid var(--red-border); border-radius:6px; padding:12px; font-size:13px; font-family:sans-serif; color:var(--red-dark); margin-top:16px; display:none; }
     .back-link { margin-top:20px; font-size:13px; font-family:sans-serif; color:#999; }
-    .back-link a { color:#1B4B7A; text-decoration:none; }
+    .back-link a { color:var(--navy); text-decoration:none; }
+    a:focus-visible, button:focus-visible, input:focus-visible { outline:3px solid var(--gold); outline-offset:2px; border-radius:4px; }
   </style>
 </head>
 <body>
@@ -31,13 +37,13 @@
     <div class="eyebrow">Board Members Only</div>
     <h1>Board Portal</h1>
     <p class="subtitle">Twin Lakes at Floyds Fork HOA</p>
-    <div class="notice">🔒 <strong>Restricted to Board members only.</strong> This portal is for the Twin Lakes HOA board. If you&rsquo;re a resident, everything you need — documents, announcements, requests, and contacts — is on the <a href="/" style="color:#1B4B7A;font-weight:700;">main website</a>.</div>
+    <div class="notice">🔒 <strong>Restricted to Board members only.</strong> This portal is for the Twin Lakes HOA board. If you&rsquo;re a resident, everything you need — documents, announcements, requests, and contacts — is on the <a href="/" style="color:var(--navy);font-weight:700;">main website</a>.</div>
     <div class="form-group">
-      <label>Username</label>
+      <label for="username">Username</label>
       <input type="text" id="username" placeholder="e.g. raja" autocomplete="username"/>
     </div>
     <div class="form-group">
-      <label>Password</label>
+      <label for="password">Password</label>
       <input type="password" id="password" placeholder="Your board password" autocomplete="current-password"/>
     </div>
     <button onclick="login()">Sign In to Board Portal</button>
