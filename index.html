@@ -1341,7 +1341,7 @@
       .fin-block-label{font-size:13px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.5px;margin:0 0 16px;}
       .fin-donut-wrap{display:flex;align-items:center;gap:32px;flex-wrap:wrap;margin-bottom:30px;}
       .fin-donut{width:190px;height:190px;border-radius:50%;flex-shrink:0;background:conic-gradient(
-        #1B4B7A 0turn 0.52turn,#4f7cad 0.52turn 0.70turn,#C9A84C 0.70turn 0.81turn,
+        var(--navy) 0turn 0.52turn,#4f7cad 0.52turn 0.70turn,var(--gold) 0.70turn 0.81turn,
         #6fae86 0.81turn 0.85turn,#9db9d4 0.85turn 0.90turn,#e0cd92 0.90turn 0.94turn,#c4beb2 0.94turn 1turn);}
       .fin-legend{font-size:15px;line-height:2;font-family:sans-serif;color:var(--text-s);}
       .fin-legend .dot{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:9px;vertical-align:middle;}
@@ -1388,11 +1388,11 @@
 
       <p class="fin-block-label">How Your Dues Are Spent</p>
       <div class="fin-donut-wrap">
-        <div class="fin-donut"></div>
+        <div class="fin-donut" role="img" aria-label="How dues are spent: landscaping and grounds 52%, water and irrigation 18%, trash and recycling 11%, utilities insurance and other 6%, management 5%, lakes and ponds 4%, reserves 4%."></div>
         <div class="fin-legend">
-          <div><span class="dot" style="background:#1B4B7A;"></span>Landscaping &amp; grounds &mdash; <strong>52%</strong></div>
+          <div><span class="dot" style="background:var(--navy);"></span>Landscaping &amp; grounds &mdash; <strong>52%</strong></div>
           <div><span class="dot" style="background:#4f7cad;"></span>Water &amp; irrigation &mdash; <strong>18%</strong></div>
-          <div><span class="dot" style="background:#C9A84C;"></span>Trash &amp; recycling &mdash; <strong>11%</strong></div>
+          <div><span class="dot" style="background:var(--gold);"></span>Trash &amp; recycling &mdash; <strong>11%</strong></div>
           <div><span class="dot" style="background:#6fae86;"></span>Lakes &amp; ponds &mdash; <strong>4%</strong></div>
           <div><span class="dot" style="background:#9db9d4;"></span>Management &mdash; <strong>5%</strong></div>
           <div><span class="dot" style="background:#e0cd92;"></span>Reserves (savings) &mdash; <strong>4%</strong></div>
