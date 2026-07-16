@@ -350,12 +350,15 @@ exports.handler = async (event) => {
     const summary  = (data?.summary || "").trim();
     const attendees = (data?.attendees || "").trim();
     if (!meetingDate || !title || !summary) return { statusCode: 400, body: JSON.stringify({ error: "Meeting date, title and summary are required" }) };
+    // Draft minutes are saved unpublished (visible in the portal for review,
+    // not on the website) until the board clicks Publish.
+    const status = (data?.status === "draft" || data?.status === "unpublished") ? "unpublished" : "published";
     const id = "MIN-" + Date.now().toString(36).toUpperCase();
     await sheetsAppend(googleToken, "Minutes!A:G", [[
-      id, meetingDate, title, summary, "published", session.name, attendees
+      id, meetingDate, title, summary, status, session.name, attendees
     ]]);
-    await logActivity(googleToken, session.username, "posted_minutes", id, "minutes", title.slice(0, 100));
-    return { statusCode: 200, body: JSON.stringify({ success: true, id }) };
+    await logActivity(googleToken, session.username, status === "published" ? "posted_minutes" : "drafted_minutes", id, "minutes", title.slice(0, 100));
+    return { statusCode: 200, body: JSON.stringify({ success: true, id, status }) };
   }
 
   // ── UPDATE MEETING MINUTES (edit text and/or change published status) ──

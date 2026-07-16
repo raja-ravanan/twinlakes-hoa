@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Twin Lakes HOA — Special Community Meeting Minutes (July 14, 2026)</title>
+<style>
+  :root{
+    --blue:#1B4B7A; --blue-dark:#0F2D4A; --blue-mid:#3a6ea5;
+    --gray-d:#3a3f4a; --gray-m:#5a636e; --gray-l:#8a929c;
+    --line:#d7dde4; --panel:#f4f6f8; --panel-line:#dbe3ec; --ink:#22282f;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    font-family:'Aptos','Calibri','Segoe UI','Helvetica Neue',Arial,sans-serif;
+    font-size:11pt; line-height:1.55; color:var(--ink); background:#e9edf1;
+  }
+  .page-wrap{max-width:8.5in; margin:0 auto; background:#fff;}
+  .doc{padding:0.7in 0.85in;}
+
+  /* Screen toolbar */
+  .toolbar{position:sticky; top:0; z-index:20; background:var(--blue-dark); color:#fff;
+    display:flex; justify-content:space-between; align-items:center; gap:12px; padding:12px 18px; font-size:13px;}
+  .toolbar .t-title{font-weight:600; letter-spacing:.3px;}
+  .toolbar button{background:#fff; color:var(--blue-dark); border:none; border-radius:6px;
+    padding:9px 18px; font-size:13px; font-weight:700; cursor:pointer; font-family:inherit;}
+  .toolbar button:hover{background:var(--blue); color:#fff;}
+
+  /* Headings */
+  h1{font-size:18pt; color:var(--blue); font-weight:700; letter-spacing:.2px;}
+  h2{font-size:14pt; color:var(--gray-d); font-weight:700; margin:0 0 4px;}
+  h3{font-size:12pt; color:var(--gray-d); font-weight:700; margin:16px 0 4px;}
+  p{margin:0 0 9px;}
+  ul{margin:6px 0 12px 22px;} li{margin-bottom:4px;}
+  strong{color:var(--blue-dark);}
+
+  .rule{height:2px; background:linear-gradient(90deg,var(--blue),var(--blue-mid) 60%,transparent); border:none; margin:6px 0 16px;}
+  .rule-thin{height:1px; background:var(--line); border:none; margin:14px 0;}
+
+  /* Section header w/ icon */
+  .sec{margin-top:26px;}
+  .sec-head{display:flex; align-items:center; gap:11px; margin-bottom:2px;}
+  .sec-ic{width:30px; height:30px; flex:0 0 30px; border-radius:7px; background:var(--panel);
+    border:1px solid var(--panel-line); display:flex; align-items:center; justify-content:center;}
+  .sec-ic svg{width:17px; height:17px; stroke:var(--blue); fill:none; stroke-width:1.7;}
+  .sec-num{font-size:10pt; font-weight:700; color:var(--blue-mid); letter-spacing:1px; text-transform:uppercase;}
+
+  /* Cover */
+  .cover{min-height:9.3in; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0.85in;}
+  .cover img{width:120px; height:auto; margin-bottom:26px;}
+  .cover .org{font-size:13pt; color:var(--gray-m); letter-spacing:2px; text-transform:uppercase; font-weight:700;}
+  .cover .title{font-size:30pt; color:var(--blue); font-weight:700; line-height:1.15; margin:16px 0 6px;}
+  .cover .sub{font-size:13pt; color:var(--gray-d);}
+  .cover .cover-rule{width:180px; height:3px; background:var(--blue); margin:26px auto 22px; border:none;}
+  .cover .meta{font-size:11pt; color:var(--gray-m); line-height:1.9;}
+  .cover .meta b{color:var(--blue-dark);}
+  .cover .site{margin-top:30px; font-size:10.5pt; color:var(--blue-mid); font-weight:700; letter-spacing:.5px;}
+
+  /* Tables */
+  table.info, table.action{width:100%; border-collapse:collapse; margin:8px 0 14px; font-size:10.5pt;}
+  table.info td{border:1px solid var(--line); padding:9px 13px; vertical-align:top;}
+  table.info td.k{background:var(--panel); font-weight:700; color:var(--blue-dark); width:32%;}
+  table.action{border:1px solid var(--line);}
+  table.action th{background:var(--blue); color:#fff; text-align:left; padding:9px 13px; font-size:9.5pt; letter-spacing:.6px; text-transform:uppercase;}
+  table.action td{border-top:1px solid var(--line); padding:9px 13px; vertical-align:top;}
+  table.action tr:nth-child(even) td{background:#fafbfc;}
+  .status{display:inline-block; font-size:9pt; font-weight:700; padding:2px 9px; border-radius:11px;}
+  .status.prog{background:#fdf3e0; color:#9a6a12;}
+  .status.ongoing{background:#e7f0fb; color:var(--blue);}
+
+  /* Callout boxes */
+  .callout{background:var(--panel); border:1px solid var(--panel-line); border-left:4px solid var(--blue);
+    border-radius:6px; padding:14px 18px; margin:12px 0 16px;}
+  .callout.direction{border-left-color:var(--blue);}
+  .callout.note{border-left-color:var(--blue-mid);}
+  .callout .co-label{font-size:9.5pt; font-weight:800; letter-spacing:1px; text-transform:uppercase; color:var(--blue-dark); margin-bottom:7px; display:flex; align-items:center; gap:8px;}
+  .callout .co-label svg{width:15px; height:15px; stroke:var(--blue); fill:none; stroke-width:1.8;}
+  .callout ul{margin:4px 0 0 20px;} .callout p:last-child{margin-bottom:0;}
+
+  .check-list{list-style:none; margin:6px 0 0; padding:0;}
+  .check-list li{margin-bottom:7px; padding-left:26px; position:relative;}
+  .check-list li::before{content:"✔"; position:absolute; left:0; top:0; color:var(--blue); font-weight:800;}
+
+  /* TOC */
+  .toc{margin:8px 0 10px;}
+  .toc a{display:flex; align-items:baseline; text-decoration:none; color:var(--ink); padding:7px 0; border-bottom:1px dotted var(--line); font-size:11pt;}
+  .toc a:hover{color:var(--blue);}
+  .toc .toc-n{color:var(--blue-mid); font-weight:700; width:34px; flex:0 0 34px;}
+
+  /* Signature */
+  .sig-grid{display:grid; grid-template-columns:1fr 1fr; gap:40px; margin-top:30px;}
+  .sig-line{border-top:1.5px solid var(--gray-d); margin-top:52px; padding-top:7px; font-size:10.5pt; color:var(--gray-m);}
+  .sig-line b{color:var(--blue-dark); display:block; font-size:11pt;}
+
+  /* Running header/footer (print only) */
+  .run-head,.run-foot{display:none;}
+
+  @media print{
+    body{background:#fff;}
+    .page-wrap{max-width:none; box-shadow:none;}
+    .doc{padding:0;}
+    .no-print{display:none !important;}
+    @page{ size:letter; margin:0.9in 0.75in; }
+    .run-head{display:block; position:fixed; top:-0.62in; left:0; right:0; font-size:8.5pt; color:var(--gray-l);
+      border-bottom:.5pt solid var(--line); padding-bottom:4px; display:flex; justify-content:space-between;}
+    .run-foot{display:block; position:fixed; bottom:-0.62in; left:0; right:0; font-size:8.5pt; color:var(--gray-l);
+      border-top:.5pt solid var(--line); padding-top:4px; display:flex; justify-content:space-between;}
+    .page-break{break-before:page;}
+    .sec, h2, h3{break-inside:avoid;}
+    h1,h2,h3{break-after:avoid;}
+    table.action, table.info, .callout{break-inside:avoid;}
+    .cover{min-height:auto; padding:1.4in 0.4in;}
+  }
+</style>
+</head>
+<body>
+
+<div class="toolbar no-print">
+  <span class="t-title">Twin Lakes HOA — Special Community Meeting Minutes</span>
+  <button onclick="window.print()">🖨&nbsp; Print / Save as PDF</button>
+</div>
+
+<!-- Running header/footer repeat on each printed page -->
+<div class="run-head"><span>Twin Lakes HOA &nbsp;·&nbsp; Special Community Meeting Minutes</span><span>July 14, 2026</span></div>
+<div class="run-foot"><span>www.twinlakeslouisville.com</span><span>Twin Lakes Homeowners Association</span></div>
+
+<div class="page-wrap">
+
+  <!-- ══════════════ COVER ══════════════ -->
+  <div class="cover">
+    <img src="logo.png" alt="Twin Lakes HOA logo"/>
+    <div class="org">Twin Lakes Homeowners Association</div>
+    <div class="title">Special Community<br/>Meeting Minutes</div>
+    <div class="sub">Special Community Meeting</div>
+    <hr class="cover-rule"/>
+    <div class="meta">
+      <div><b>Date:</b> July 14, 2026</div>
+      <div><b>Location:</b> Twin Lakes HOA Community Meeting</div>
+      <div><b>Called By:</b> Board of Directors</div>
+      <div><b>Prepared By:</b> Board Secretary</div>
+    </div>
+    <div class="site">www.twinlakeslouisville.com</div>
+  </div>
+
+  <div class="doc">
+
+    <!-- ══════════════ MEETING INFORMATION ══════════════ -->
+    <div class="page-break"></div>
+    <h1>Meeting Information</h1>
+    <hr class="rule"/>
+    <table class="info">
+      <tr><td class="k">Date</td><td>July 14, 2026</td></tr>
+      <tr><td class="k">Location</td><td>Twin Lakes HOA Community Meeting</td></tr>
+      <tr><td class="k">Meeting Type</td><td>Special Community Meeting</td></tr>
+      <tr><td class="k">Called By</td><td>Board of Directors</td></tr>
+      <tr><td class="k">Attendance</td><td>Board Members, Mulloy Properties representatives, invited vendor representatives, and approximately 60 homeowners.</td></tr>
+      <tr><td class="k">Prepared By</td><td>Board Secretary</td></tr>
+    </table>
+
+    <h2 style="margin-top:26px;">Table of Contents</h2>
+    <hr class="rule-thin"/>
+    <div class="toc">
+      <a href="#s1"><span class="toc-n">1</span><span>Call to Order</span></a>
+      <a href="#s2"><span class="toc-n">2</span><span>Pond Management Update</span></a>
+      <a href="#s3"><span class="toc-n">3</span><span>Financial Report</span></a>
+      <a href="#s4"><span class="toc-n">4</span><span>HOA Tax ID Structure</span></a>
+      <a href="#s5"><span class="toc-n">5</span><span>Election Process</span></a>
+      <a href="#s6"><span class="toc-n">6</span><span>HOA Website</span></a>
+      <a href="#s7"><span class="toc-n">7</span><span>Landscaping and Common Area Maintenance</span></a>
+      <a href="#s8"><span class="toc-n">8</span><span>Communication</span></a>
+      <a href="#s9"><span class="toc-n">9</span><span>Resident Questions</span></a>
+      <a href="#summary"><span class="toc-n">—</span><span>Summary of Board Direction &amp; Meeting Summary</span></a>
+      <a href="#signatures"><span class="toc-n">—</span><span>Approval &amp; Signatures</span></a>
+    </div>
+
+    <!-- ══════════════ 1. CALL TO ORDER ══════════════ -->
+    <div class="page-break"></div>
+    <div class="sec" id="s1">
+      <div class="sec-head">
+        <span class="sec-ic"><svg viewBox="0 0 24 24"><path d="M17 20h5v-2a4 4 0 00-3-3.87M9 20H4v-2a4 4 0 013-3.87m0 0a4 4 0 118 0M12 7a3 3 0 100-6 3 3 0 000 6z"/></svg></span>
+        <div><div class="sec-num">Section 1</div><h2>Call to Order</h2></div>
+      </div>
+      <hr class="rule"/>
+      <p>The meeting was called to order by the Board President.</p>
+      <p>The President welcomed residents and explained that the Special Community Meeting was being held to address questions raised by homeowners, provide updates on several HOA matters, and improve communication regarding current community issues.</p>
+      <p>The meeting agenda included:</p>
+      <ul>
+        <li>Pond Management</li>
+        <li>Financial Update</li>
+        <li>HOA Tax ID Structure</li>
+        <li>Election Process</li>
+        <li>HOA Website</li>
+        <li>Landscaping and Maintenance</li>
+        <li>Resident Questions</li>
+      </ul>
+    </div>
+
+    <!-- ══════════════ 2. POND MANAGEMENT ══════════════ -->
+    <div class="page-break"></div>
+    <div class="sec" id="s2">
+      <div class="sec-head">
+        <span class="sec-ic"><svg viewBox="0 0 24 24"><path d="M12 3c3.5 4.5 6 8 6 11a6 6 0 01-12 0c0-3 2.5-6.5 6-11z"/></svg></span>
+        <div><div class="sec-num">Section 2</div><h2>Pond Management Update</h2></div>
+      </div>
+      <hr class="rule"/>
+      <h3>Background</h3>
+      <p>The Board reviewed the history of pond maintenance following the transition from the developer.</p>
+      <p>It was explained that previous maintenance contracts did not include the level of service ultimately required for all three ponds. During this year's budgeting process, the Board solicited multiple proposals for comprehensive pond management.</p>
+      <p>Due to limited operating funds and reserve balances, the Board selected a lower-cost vendor after reviewing pricing and publicly available references. The Board explained that the decision was made in an effort to balance fiscal responsibility with expected service levels.</p>
+      <p>During the spring season, the Board monitored the vendor's performance and communicated concerns regarding the condition of the ponds. As conditions continued to deteriorate and responsiveness declined, the Board terminated the contract and requested proposals from additional qualified pond management companies.</p>
+      <p>Following onsite evaluations and proposal reviews, the Board selected <strong>Jones Lake Management</strong> to provide services for the remainder of the season.</p>
+
+      <h3>Pond Management Presentation</h3>
+      <p>Jones Lake Management provided an overview of the current condition of the ponds. The representative explained that:</p>
+      <ul>
+        <li>The small pond is significantly different from the two larger lakes.</li>
+        <li>The small pond is shallow and receives substantial stormwater runoff.</li>
+        <li>Nutrient loading from runoff, organic material, fertilizer, and other environmental factors contributes to accelerated vegetation growth.</li>
+        <li>The larger lakes currently require only limited maintenance and do not require aggressive treatment.</li>
+      </ul>
+      <p>The representative explained the current treatment strategy, which consists of treating portions of the pond at a time in order to prevent oxygen depletion and reduce the risk of fish kills.</p>
+      <p>Estimated visible improvement was projected within approximately <strong>6–8 weeks</strong>, with continued improvement expected through consistent maintenance.</p>
+
+      <h3>Resident Discussion</h3>
+      <p>Residents asked numerous questions regarding: causes of the current pond conditions; previous maintenance decisions; construction runoff; pond dye; grass carp; aeration; bubblers; mosquito control; grass clippings and fertilizer practices; dredging; MSD requirements; and long-term maintenance planning.</p>
+      <p>The vendor explained that while several environmental factors have contributed to current conditions, long-term improvement will require continued maintenance combined with nutrient reduction and other best management practices.</p>
+      <p>The Board emphasized that no single factor caused the current condition and acknowledged that lessons were learned during the transition between vendors.</p>
+
+      <div class="callout direction">
+        <div class="co-label"><svg viewBox="0 0 24 24"><path d="M5 13l4 4L19 7"/></svg> Board Direction</div>
+        <ul>
+          <li>Jones Lake Management will continue providing biweekly treatments.</li>
+          <li>Progress will continue to be monitored throughout the season.</li>
+          <li>Long-term improvement options, including aeration and other capital improvements, will continue to be evaluated as funding permits.</li>
+          <li>Pond depth measurements will be obtained to assist with future planning.</li>
+          <li>Landscaping practices around the ponds will continue to be reviewed.</li>
+        </ul>
+      </div>
+      <div class="callout note">
+        <div class="co-label"><svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg> Important Note</div>
+        <p style="margin:0;">No formal Board action was requested or taken.</p>
+      </div>
+    </div>
+
+    <!-- ══════════════ 3. FINANCIAL REPORT ══════════════ -->
+    <div class="page-break"></div>
+    <div class="sec" id="s3">
+      <div class="sec-head">
+        <span class="sec-ic"><svg viewBox="0 0 24 24"><path d="M3 3v18h18M7 15l3-3 3 3 5-6"/></svg></span>
+        <div><div class="sec-num">Section 3</div><h2>Financial Report</h2></div>
+      </div>
+      <hr class="rule"/>
+      <p>The Treasurer presented an independently prepared financial worksheet for discussion.</p>
+      <p>During the presentation, several homeowners noted that the figures differed from the monthly financial reports regularly prepared by Mulloy Properties.</p>
+      <p>The Board President clarified that:</p>
+      <ul>
+        <li>The worksheet presented during the meeting had not previously been presented to or reviewed by the Board.</li>
+        <li>The Board's monthly financial oversight has been based upon the financial reports prepared by Mulloy Properties, which serve as the Association's official management financial reports.</li>
+        <li>Based upon those reports, the Board had not concluded that the Association had materially exceeded its approved operating budget.</li>
+      </ul>
+      <p>The Treasurer explained that the worksheet was developed using invoices, bank statements, and other financial information that he was independently reconciling and stated that additional reconciliation work remained.</p>
+      <p>Several homeowners expressed confusion regarding the differences between the two financial presentations and requested clarification regarding which information represented the Association's official financial position.</p>
+      <p>The Board explained that differences may exist because of reconciliation timing, reporting periods, invoice timing, or differing methodologies. The Board agreed that reconciliation should occur before any conclusions are drawn regarding the Association's financial position.</p>
+
+      <h3>Financial Oversight Process</h3>
+      <p>The Board reviewed its existing financial oversight procedures, including:</p>
+      <ul>
+        <li>Monthly review of management financial reports.</li>
+        <li>Invoice review and approval.</li>
+        <li>Budget monitoring.</li>
+        <li>Multiple approval levels prior to payment.</li>
+        <li>Ongoing reserve monitoring.</li>
+      </ul>
+      <p>The Board also noted that duplicate invoices and billing discrepancies had been identified and corrected during the normal review process.</p>
+
+      <h3>Budget Status</h3>
+      <p>The Board reported that:</p>
+      <ul>
+        <li>HOA operating expenses generally remain within budget.</li>
+        <li>Garden Home operating expenses continue to be monitored.</li>
+        <li>Higher-than-anticipated expenses have primarily resulted from snow removal, insurance, irrigation maintenance, and utility costs.</li>
+        <li>Reserve funding has continued during the year.</li>
+      </ul>
+      <p>The Board reiterated its commitment to managing Association funds prudently while maintaining required community services.</p>
+
+      <h3>Action Items</h3>
+      <table class="action">
+        <thead><tr><th style="width:52%;">Action Item</th><th style="width:28%;">Responsible Party</th><th style="width:20%;">Status</th></tr></thead>
+        <tbody>
+          <tr><td>Reconcile the independently prepared worksheet with the official management financial reports.</td><td>Treasurer / Board</td><td><span class="status prog">In Progress</span></td></tr>
+          <tr><td>Review and explain any material differences.</td><td>Board</td><td><span class="status prog">In Progress</span></td></tr>
+          <tr><td>Continue providing periodic financial updates using the Association's official financial records.</td><td>Board</td><td><span class="status ongoing">Ongoing</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ══════════════ 4. TAX ID ══════════════ -->
+    <div class="page-break"></div>
+    <div class="sec" id="s4">
+      <div class="sec-head">
+        <span class="sec-ic"><svg viewBox="0 0 24 24"><path d="M9 7h6M9 11h6M9 15h4M6 3h12a1 1 0 011 1v16a1 1 0 01-1 1H6a1 1 0 01-1-1V4a1 1 0 011-1z"/></svg></span>
+        <div><div class="sec-num">Section 4</div><h2>HOA Tax ID Structure</h2></div>
+      </div>
+      <hr class="rule"/>
+      <p>The Board explained that Twin Lakes was established as a single legal entity by the developer.</p>
+      <p>Questions were raised regarding whether Garden Homes and Patriot Homes should operate under separate tax identification numbers.</p>
+      <p>The Board explained that maintaining a single entity provides:</p>
+      <ul>
+        <li>Lower administrative costs.</li>
+        <li>Simplified accounting.</li>
+        <li>Reserve tax advantages.</li>
+        <li>Single insurance structure.</li>
+        <li>Shared responsibility for common areas and amenities.</li>
+      </ul>
+      <p>The Board further explained that creating separate entities would introduce additional legal, financial, accounting, insurance, and governance complexities.</p>
+      <div class="callout note"><div class="co-label"><svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg> Important Note</div><p style="margin:0;">No Board action was taken.</p></div>
+    </div>
+
+    <!-- ══════════════ 5. ELECTIONS ══════════════ -->
+    <div class="page-break"></div>
+    <div class="sec" id="s5">
+      <div class="sec-head">
+        <span class="sec-ic"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4M21 12v7a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1h11"/></svg></span>
+        <div><div class="sec-num">Section 5</div><h2>Election Process</h2></div>
+      </div>
+      <hr class="rule"/>
+      <p>The Board presented a preliminary roadmap for the 2026 Board election process. The anticipated schedule includes:</p>
+      <ul>
+        <li><strong>Early Fall</strong> — Election notification distributed by Mulloy Properties.</li>
+        <li><strong>September</strong> — Candidate nominations.</li>
+        <li><strong>October</strong> — In-person election.</li>
+        <li><strong>January 1, 2027</strong> — Beginning of new Board term.</li>
+      </ul>
+      <p>The Board explained that additional election procedures remain under review to ensure compliance with the governing documents.</p>
+      <p>Residents suggested several ideas for future consideration, including staggered Board terms and improved transition planning. The Board acknowledged these suggestions and indicated they would be reviewed as part of future governance discussions.</p>
+      <div class="callout note"><div class="co-label"><svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg> Important Note</div><p style="margin:0;">No changes to election procedures were adopted during this meeting.</p></div>
+    </div>
+
+    <!-- ══════════════ 6. WEBSITE ══════════════ -->
+    <div class="page-break"></div>
+    <div class="sec" id="s6">
+      <div class="sec-head">
+        <span class="sec-ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 3.5 6 3.5 9s-1 6.5-3.5 9c-2.5-2.5-3.5-6-3.5-9S9.5 5.5 12 3z"/></svg></span>
+        <div><div class="sec-num">Section 6</div><h2>HOA Website</h2></div>
+      </div>
+      <hr class="rule"/>
+      <p>The Board introduced the newly developed HOA website. The website is intended to improve communication, transparency, and homeowner access to Association information. Current features include:</p>
+      <ul>
+        <li>Governing documents.</li>
+        <li>Vendor directory.</li>
+        <li>Board information.</li>
+        <li>Community updates.</li>
+        <li>Online homeowner request submission.</li>
+        <li>Resource library.</li>
+      </ul>
+      <p>The Board encouraged residents to utilize the website as the primary source for Association information, and indicated additional enhancements will continue to be added.</p>
+    </div>
+
+    <!-- ══════════════ 7. LANDSCAPING ══════════════ -->
+    <div class="page-break"></div>
+    <div class="sec" id="s7">
+      <div class="sec-head">
+        <span class="sec-ic"><svg viewBox="0 0 24 24"><path d="M12 22V12M12 12C12 7 8 4 3 4c0 5 3 8 9 8zM12 12c0-4 3-7 8-7 0 4-3 7-8 7z"/></svg></span>
+        <div><div class="sec-num">Section 7</div><h2>Landscaping and Common Area Maintenance</h2></div>
+      </div>
+      <hr class="rule"/>
+      <p>Residents raised concerns regarding: grass cutting; weed control; common area maintenance; tree replacement; shrub maintenance; and street lighting.</p>
+      <p>The Board agreed to review reported maintenance concerns with the applicable contractors and inspect specific locations identified by homeowners.</p>
+      <p>The Board also clarified maintenance responsibilities for Garden Homes and Patriot Homes where applicable under the governing documents.</p>
+    </div>
+
+    <!-- ══════════════ 8. COMMUNICATION ══════════════ -->
+    <div class="page-break"></div>
+    <div class="sec" id="s8">
+      <div class="sec-head">
+        <span class="sec-ic"><svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></span>
+        <div><div class="sec-num">Section 8</div><h2>Communication</h2></div>
+      </div>
+      <hr class="rule"/>
+      <p>Several homeowners requested more frequent communication from the Board. The Board responded that communication currently includes:</p>
+      <ul>
+        <li>Community newsletters.</li>
+        <li>Board meetings.</li>
+        <li>HOA website updates.</li>
+        <li>Correspondence through Mulloy Properties.</li>
+      </ul>
+      <p>The Board stated that the new website is intended to improve transparency by providing centralized access to Association information and documents.</p>
+    </div>
+
+    <!-- ══════════════ 9. RESIDENT QUESTIONS ══════════════ -->
+    <div class="page-break"></div>
+    <div class="sec" id="s9">
+      <div class="sec-head">
+        <span class="sec-ic"><svg viewBox="0 0 24 24"><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01M12 22a10 10 0 100-20 10 10 0 000 20z"/></svg></span>
+        <div><div class="sec-num">Section 9</div><h2>Resident Questions</h2></div>
+      </div>
+      <hr class="rule"/>
+      <p>Additional homeowner questions and comments addressed: the Kentucky Planned Community Act; governing documents; committee development; vendor oversight; contract management; tree replacement responsibilities; irrigation; snow removal; street lighting; and community maintenance standards.</p>
+      <p>The Board responded to questions as time permitted and noted several items for future follow-up.</p>
+    </div>
+
+    <!-- ══════════════ SUMMARY ══════════════ -->
+    <div class="page-break"></div>
+    <div class="sec" id="summary">
+      <div class="sec-head">
+        <span class="sec-ic"><svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4M21 12v7a1 1 0 01-1 1H4a1 1 0 01-1-1V5a1 1 0 011-1h11"/></svg></span>
+        <div><div class="sec-num">Summary</div><h2>Summary of Board Direction</h2></div>
+      </div>
+      <hr class="rule"/>
+      <p>During the meeting, the Board confirmed its intent to:</p>
+      <div class="callout direction">
+        <ul class="check-list">
+          <li>Continue Jones Lake Management's current treatment program.</li>
+          <li>Monitor pond recovery throughout the season.</li>
+          <li>Evaluate future long-term pond improvement projects.</li>
+          <li>Reconcile financial reports presented during the meeting with the Association's official management financial reports.</li>
+          <li>Continue prudent financial oversight.</li>
+          <li>Proceed with election planning for Fall 2026.</li>
+          <li>Continue expanding the HOA website.</li>
+          <li>Review landscaping and maintenance concerns raised by residents.</li>
+        </ul>
+      </div>
+      <div class="callout note"><div class="co-label"><svg viewBox="0 0 24 24"><path d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg> Important Note</div><p style="margin:0;">No formal motions or votes requiring Board action were taken during this meeting.</p></div>
+
+      <h3>Adjournment</h3>
+      <p>There being no further business, the meeting was adjourned. The Board thanked the residents for their attendance, participation, and questions, and encouraged homeowners to continue using the HOA website and established communication channels to stay informed and submit future requests.</p>
+    </div>
+
+    <!-- ══════════════ SIGNATURES ══════════════ -->
+    <div class="page-break"></div>
+    <div class="sec" id="signatures">
+      <div class="sec-head">
+        <span class="sec-ic"><svg viewBox="0 0 24 24"><path d="M3 17c3-1 5-5 8-5s4 3 7 1M4 21h16"/></svg></span>
+        <div><div class="sec-num">Approval</div><h2>Approval &amp; Signatures</h2></div>
+      </div>
+      <hr class="rule"/>
+      <p>These minutes are submitted for review and approval as the official record of the Twin Lakes Homeowners Association Special Community Meeting held July 14, 2026.</p>
+      <div class="sig-grid">
+        <div>
+          <div class="sig-line"><b>Prepared by</b>Board Secretary</div>
+        </div>
+        <div>
+          <div class="sig-line"><b>Approved by</b>Board President</div>
+        </div>
+      </div>
+      <div style="margin-top:44px; max-width:300px;">
+        <div class="sig-line"><b>Date Approved</b>&nbsp;</div>
+      </div>
+    </div>
+
+  </div><!-- /doc -->
+</div><!-- /page-wrap -->
+</body>
+</html>

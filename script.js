@@ -279,6 +279,33 @@ function escapeHtmlText(s) {
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 }
 
+// Safe lightweight formatter for meeting-minute summaries.
+// Escapes everything first, then renders a small, known subset:
+//   "## Heading"  -> <h4>        "* " / "- " / "• "  -> bullet list
+//   "**bold**"    -> <strong>    blank line          -> paragraph break
+function formatMinutesSummary(raw) {
+  var lines = String(raw == null ? '' : raw).split('\n');
+  var html = '', inList = false;
+  function closeList() { if (inList) { html += '</ul>'; inList = false; } }
+  for (var i = 0; i < lines.length; i++) {
+    var t = lines[i].trim();
+    if (!t) { closeList(); continue; }
+    if (/^(\*|-|•)\s+/.test(t)) {
+      if (!inList) { html += '<ul>'; inList = true; }
+      html += '<li>' + escapeHtmlText(t.replace(/^(\*|-|•)\s+/, '')) + '</li>';
+    } else if (/^#{1,3}\s+/.test(t)) {
+      closeList();
+      html += '<h4>' + escapeHtmlText(t.replace(/^#{1,3}\s+/, '')) + '</h4>';
+    } else {
+      closeList();
+      html += '<p>' + escapeHtmlText(t) + '</p>';
+    }
+  }
+  closeList();
+  // Bold (**text**) — applied after escaping, so injecting <strong> is safe.
+  return html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+}
+
 function formatAnnouncementDate(iso) {
   // Parse plain YYYY-MM-DD as a LOCAL date to avoid UTC off-by-one.
   var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec((iso || '').trim());
@@ -392,7 +419,7 @@ async function loadMinutes() {
     container.innerHTML = groups.map(function(g, gi) {
       var openClass = gi === 0 ? ' open' : '';   // most recent month expanded by default
       var entries = g.items.map(function(m) {
-        var summaryHtml = escapeHtmlText(m.summary).replace(/\n/g, '<br>');
+        var summaryHtml = formatMinutesSummary(m.summary);
         var dateStr = formatAnnouncementDate(m.meeting_date);
         var attendees = (m.attendees || '').trim();
         var attendeesHtml = attendees

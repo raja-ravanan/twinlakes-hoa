@@ -16,6 +16,9 @@
     a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
       outline: 3px solid var(--gold); outline-offset: 2px; border-radius: 4px;
     }
+    .mm-preview p { margin:0 0 9px; }
+    .mm-h { font-family:Georgia,serif; font-size:14.5px; color:var(--navy); margin:14px 0 5px; }
+    .mm-ul { margin:5px 0 10px; padding-left:20px; } .mm-ul li { margin-bottom:4px; }
     * { margin:0; padding:0; box-sizing:border-box; }
     body { font-family: Georgia, serif; background:#F0EDE8; color:var(--text); min-height:100vh; }
 
@@ -417,6 +420,7 @@
       <div class="nav-sec">Documents</div>
       <button class="tab" onclick="switchTab('resources')">📁 Documents</button>
       <button class="tab" onclick="switchTab('meetingrecords')">🗂️ Meeting Records</button>
+      <button class="tab" onclick="switchTab('specialmtg')">🗒️ Special Meeting</button>
       <div class="nav-sec">Finance</div>
       <button class="tab" onclick="switchTab('financials')">📊 Financials</button>
       <button class="tab" onclick="switchTab('budget')">💵 Budget vs Actual</button>
@@ -539,7 +543,7 @@
   <div id="tab-minutes" style="display:none">
     <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:22px;margin-bottom:24px;">
       <div style="font-size:15px;font-weight:800;color:var(--navy);margin-bottom:6px;">Post Meeting Minutes</div>
-      <p style="font-size:13px;font-family:sans-serif;color:var(--text-m);margin:0 0 16px;">This appears immediately on the public website's <strong>Minutes</strong> page. No coding or deploys needed.</p>
+      <p style="font-size:13px;font-family:sans-serif;color:var(--text-m);margin:0 0 16px;"><strong>Save as Draft</strong> to review it in the portal first (not shown to residents), then click <strong>Publish to Website</strong> once the President approves. Or <strong>Publish now</strong> to post it live immediately. No coding or deploys needed.</p>
       <label style="display:block;font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;margin-bottom:4px;">Meeting Date</label>
       <input type="date" id="minDate" class="search-input" style="width:100%;margin-bottom:14px;"/>
       <label style="display:block;font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;margin-bottom:4px;">Title</label>
@@ -548,7 +552,8 @@
       <input type="text" id="minAttendees" class="search-input" style="width:100%;margin-bottom:14px;" placeholder="e.g. Tony, Mike, Yashu, Aimee, Raja"/>
       <label style="display:block;font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;margin-bottom:4px;">Summary</label>
       <textarea id="minSummary" rows="8" style="width:100%;font-family:sans-serif;font-size:14px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;resize:vertical;margin-bottom:14px;" placeholder="Write the resident-friendly meeting summary here. Line breaks are preserved."></textarea>
-      <button class="btn-scan" id="minPostBtn" onclick="postMinutes()">Publish Meeting Minutes</button>
+      <button class="btn-scan" id="minDraftBtn" onclick="postMinutes('draft')" style="background:#eef2f7;color:var(--navy);border:1px solid #cdd8e6;">💾 Save as Draft (for review)</button>
+      <button class="btn-scan" id="minPostBtn" onclick="postMinutes('published')" style="margin-left:10px;">📢 Publish now</button>
       <span id="minPostMsg" style="font-size:13px;font-family:sans-serif;margin-left:12px;"></span>
     </div>
     <div style="font-size:13px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:12px;">Posted Meeting Minutes</div>
@@ -874,6 +879,15 @@
         <div class="rc-desc">Full archive folder across all years.</div><div class="rc-link">Open in Drive →</div>
       </a>
     </div>
+  </div>
+
+  <div id="tab-specialmtg" style="display:none">
+    <div style="font-size:15px;font-weight:800;color:var(--navy);margin-bottom:4px;">Special Community Meeting — July 14, 2026</div>
+    <p style="font-size:13px;font-family:sans-serif;color:var(--text-m);margin:0 0 14px;max-width:760px;">Polished executive minutes document, formatted for official records, email, and printing. Open the full document to <strong>print or save as PDF</strong>.</p>
+    <div style="margin-bottom:14px;">
+      <a class="btn-scan" href="special-meeting-jul-2026.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none;display:inline-block;">📄 Open full document &nbsp;/&nbsp; Print to PDF ↗</a>
+    </div>
+    <iframe src="special-meeting-jul-2026.html" title="Special Community Meeting Minutes — July 14, 2026" style="width:100%;height:78vh;border:1px solid var(--line);border-radius:10px;background:#fff;"></iframe>
   </div>
 
   <div id="tab-financials" style="display:none">
@@ -1524,7 +1538,7 @@
 
   // ── Tabs ──────────────────────────────────────────────
   function switchTab(tab) {
-    const tabs = ["arc","concerns","violations","other","requests","announcements","minutes","residents","map","resources","meetingrecords","financials","budget","activity"];
+    const tabs = ["arc","concerns","violations","other","requests","announcements","minutes","residents","map","resources","meetingrecords","specialmtg","financials","budget","activity"];
     if (tab === "residents" && !residentsLoaded) loadResidents();
     if (tab === "map") loadMap();
     if (tab === "financials") loadFinancialsToggle();
@@ -1869,6 +1883,29 @@
     return String(s || "").replace(/[&<>"']/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
   }
 
+  // Mirrors the resident site's minutes formatter (## heading, * bullets, **bold**).
+  function formatMinutesSummary(raw) {
+    const lines = String(raw || "").split("\n");
+    let html = "", inList = false;
+    const closeList = () => { if (inList) { html += "</ul>"; inList = false; } };
+    for (let ln of lines) {
+      const t = ln.trim();
+      if (!t) { closeList(); continue; }
+      if (/^(\*|-|•)\s+/.test(t)) {
+        if (!inList) { html += '<ul class="mm-ul">'; inList = true; }
+        html += "<li>" + escapeHtml(t.replace(/^(\*|-|•)\s+/, "")) + "</li>";
+      } else if (/^#{1,3}\s+/.test(t)) {
+        closeList();
+        html += '<h4 class="mm-h">' + escapeHtml(t.replace(/^#{1,3}\s+/, "")) + "</h4>";
+      } else {
+        closeList();
+        html += "<p>" + escapeHtml(t) + "</p>";
+      }
+    }
+    closeList();
+    return html.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+  }
+
   function renderRequestCard(r) {
     const status = r.status || "New";
     let notes = [];
@@ -2043,7 +2080,7 @@
     el.innerHTML = list.map(m => {
       const published = (m.status || "published") === "published";
       const dateStr = m.meeting_date ? new Date(m.meeting_date).toLocaleDateString() : "";
-      const summaryHtml = escapeHtml(m.summary || "").replace(/\n/g, "<br>");
+      const summaryHtml = formatMinutesSummary(m.summary || "");
       const attendeesHtml = (m.attendees || "").trim()
         ? `<div style="font-size:12px;font-family:sans-serif;color:var(--text-m);margin:0 0 10px;"><strong style="color:var(--navy);">In attendance:</strong> ${escapeHtml(m.attendees)}</div>`
         : '';
@@ -2051,41 +2088,46 @@
 <div style="background:#fff;border:1px solid var(--line);border-left:4px solid ${published ? 'var(--gold)' : '#bbb'};border-radius:10px;padding:18px;margin-bottom:14px;">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
     <div style="font-size:16px;font-weight:800;color:var(--navy);">${escapeHtml(m.title || "(untitled)")}</div>
-    <span style="font-size:11px;font-family:sans-serif;font-weight:700;text-transform:uppercase;padding:3px 10px;border-radius:20px;${published ? 'background:#fff7e6;color:#9a7d24;' : 'background:#f0f0f0;color:#888;'}">${published ? 'Live on website' : 'Hidden'}</span>
+    <span style="font-size:11px;font-family:sans-serif;font-weight:700;text-transform:uppercase;padding:3px 10px;border-radius:20px;${published ? 'background:#eafaf1;color:#2e7d4f;' : 'background:#fdf3e0;color:#9a6a12;'}">${published ? '● Live on website' : '✎ Draft — not on website'}</span>
   </div>
   <div style="font-size:12px;font-family:sans-serif;color:var(--text-m);margin:4px 0 10px;">Meeting: ${dateStr}${m.posted_by ? ' · by ' + escapeHtml(m.posted_by) : ''}</div>
   ${attendeesHtml}
-  <div style="font-size:14px;font-family:sans-serif;color:var(--text);line-height:1.6;">${summaryHtml}</div>
+  <div class="mm-preview" style="font-size:14px;font-family:sans-serif;color:var(--text);line-height:1.6;">${summaryHtml}</div>
+  ${!published ? '<div style="font-size:12px;font-family:sans-serif;color:#9a6a12;background:#fdf3e0;border:1px solid #f0dcb4;border-radius:6px;padding:8px 12px;margin-top:12px;">This is a draft for board/President review. Residents can&rsquo;t see it yet. Click <strong>Publish to Website</strong> when approved.</div>' : ''}
   <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
     <button class="btn-vote" style="background:#eef2f7;color:var(--navy);border-color:#cdd8e6;" onclick="editMinutes('${m.id}')">Edit</button>
-    <button class="btn-vote" style="background:#f7f4ea;color:#9a7d24;border-color:#e6dcc0;" onclick="toggleMinutes('${m.id}', ${published ? 'false' : 'true'})">${published ? 'Hide from website' : 'Publish'}</button>
+    ${published
+      ? `<button class="btn-vote" style="background:#f7f4ea;color:#9a7d24;border-color:#e6dcc0;" onclick="toggleMinutes('${m.id}', false)">Unpublish (hide)</button>`
+      : `<button class="btn-vote" style="background:var(--navy);color:var(--cream);border-color:var(--navy);font-weight:700;" onclick="toggleMinutes('${m.id}', true)">✓ Publish to Website</button>`}
     <button class="btn-vote" style="background:#fdf0f0;color:var(--red);border-color:#f5b7b1;" onclick="deleteMinutes('${m.id}')">Delete</button>
   </div>
 </div>`;
     }).join("");
   }
 
-  async function postMinutes() {
+  async function postMinutes(status) {
+    const isDraft = status === "draft";
     const dateEl = document.getElementById("minDate");
     const titleEl = document.getElementById("minTitle");
     const attendeesEl = document.getElementById("minAttendees");
     const summaryEl = document.getElementById("minSummary");
-    const btn = document.getElementById("minPostBtn");
+    const btn = document.getElementById(isDraft ? "minDraftBtn" : "minPostBtn");
     const msg = document.getElementById("minPostMsg");
     const meeting_date = (dateEl.value || "").trim();
     const title = (titleEl.value || "").trim();
     const attendees = (attendeesEl.value || "").trim();
     const summary = (summaryEl.value || "").trim();
     if (!meeting_date || !title || !summary) { msg.textContent = "Please enter a meeting date, title and summary."; msg.style.color = "#c0392b"; return; }
-    btn.disabled = true; const label = btn.textContent; btn.textContent = "Publishing…"; msg.textContent = "";
-    const data = await api({ action: "addMinutes", data: { meeting_date, title, summary, attendees } });
+    btn.disabled = true; const label = btn.textContent; btn.textContent = isDraft ? "Saving…" : "Publishing…"; msg.textContent = "";
+    const data = await api({ action: "addMinutes", data: { meeting_date, title, summary, attendees, status: isDraft ? "draft" : "published" } });
     btn.disabled = false; btn.textContent = label;
     if (data && data.success) {
       dateEl.value = ""; titleEl.value = ""; attendeesEl.value = ""; summaryEl.value = "";
-      msg.textContent = "Published! It is now live on the website."; msg.style.color = "#3a7d44";
+      msg.textContent = isDraft ? "Saved as draft below — review it, then click “Publish to Website.”" : "Published! It is now live on the website.";
+      msg.style.color = "#3a7d44";
       await loadDashboard();
     } else {
-      msg.textContent = (data && data.error) || "Could not publish. Please try again."; msg.style.color = "#c0392b";
+      msg.textContent = (data && data.error) || "Could not save. Please try again."; msg.style.color = "#c0392b";
     }
   }
 
