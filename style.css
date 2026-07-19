@@ -342,6 +342,14 @@ tbody tr { transition: background 0.15s; }
 .doc-info { flex: 1; }
 .doc-info h3 { font-size: 17px; color: var(--navy); margin-bottom: 6px; font-weight: normal; }
 .doc-info p  { font-size: 14px; color: var(--text-m); font-family: sans-serif; line-height: 1.6; }
+
+/* Local Contacts page — prominent phone number, role line, and outbound links */
+.lc-role  { font-size: 14px; font-family: var(--sans); font-weight: 600; color: var(--text-s); margin-bottom: 4px; }
+.lc-phone { display: inline-block; font-family: var(--sans); font-size: 19px; font-weight: 700; color: var(--navy); text-decoration: none; letter-spacing: 0.3px; margin: 2px 0 8px; }
+.lc-phone:hover { text-decoration: underline; }
+.lc-phone .lc-alt { font-size: 14px; font-weight: 600; color: var(--text-m); letter-spacing: 0; }
+.lc-link  { color: var(--navy); font-family: var(--sans); text-decoration: none; font-weight: 600; }
+.lc-link:hover { text-decoration: underline; }
 .doc-steps  { display: flex; align-items: center; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
 .doc-step   { font-size: 12px; font-family: sans-serif; font-weight: 600; color: var(--navy); background: var(--navy-light); padding: 4px 10px; border-radius: var(--radius-sm); }
 .doc-arrow  { font-size: 12px; color: var(--gold-dark); }
