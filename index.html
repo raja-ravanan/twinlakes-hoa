@@ -398,6 +398,10 @@
     .effort-callout .ec-stat strong { color: var(--navy); font-weight: 700; }
     .effort-callout .ec-sub { font-family: sans-serif; font-size: 13px; font-style: italic; color: var(--text-m); margin: 10px 0 0; line-height: 1.6; }
     .minutes-section-label { max-width: 860px; margin: 30px auto 14px; font-size: 20px; color: var(--navy); font-weight: 700; }
+    .minutes-section-sub { max-width: 860px; margin: 0 auto 16px; font-family: sans-serif; font-size: 14px; color: var(--text-m); line-height: 1.6; }
+    .minutes-soon .minutes-month-header { cursor: default; }
+    .minutes-soon .minutes-month-header:hover { background: #fff; }
+    .mm-soon-pill { font-family: sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gold); background: #faf8f2; border: 1px solid #e5e0d8; padding: 3px 11px; border-radius: 20px; }
   </style>
 </head>
 <body>
@@ -928,6 +932,8 @@
         <p><strong>Bringing it to you (March 2026).</strong> All of this led to the community&rsquo;s first-ever HOA annual meeting on March 10, 2026 — the full minutes are below.</p>
       </div>
 
+      <h2 class="minutes-section-label">Community Meetings</h2>
+      <p class="minutes-section-sub">Annual and special meetings open to all residents.</p>
       <div class="minutes-accordion">
         <div class="minutes-month open">
           <button class="minutes-month-header" onclick="toggleMinutesMonth(this)">
@@ -999,10 +1005,27 @@
             </div>
           </div>
         </div>
+
+        <div class="minutes-month minutes-soon">
+          <div class="minutes-month-header">
+            <span class="mm-label">July 2026 &mdash; Special Community Meeting</span>
+            <span class="mm-meta"><span class="mm-soon-pill">Coming soon</span></span>
+          </div>
+          <div class="minutes-month-body" style="display:block;">
+            <div class="minutes-entry">
+              <div class="mm-date">Monday, July 14, 2026</div>
+              <h3>Special Community Meeting</h3>
+              <div class="mm-summary"><p>The official minutes of the July 14, 2026 Special Community Meeting are being finalized and will be posted here soon. Thank you for your patience.</p></div>
+            </div>
+          </div>
+        </div>
+
+        <div id="community-minutes"></div>
       </div>
 
-      <h2 class="minutes-section-label">Additional Meeting Minutes</h2>
-      <div id="dynamic-minutes" class="minutes-accordion">
+      <h2 class="minutes-section-label">Board Meeting Minutes</h2>
+      <p class="minutes-section-sub">Summaries of the Board&rsquo;s regular working meetings, most recent first.</p>
+      <div id="board-minutes" class="minutes-accordion">
         <p style="text-align:center;font-family:sans-serif;color:var(--text-m);">Loading meeting minutes&hellip;</p>
       </div>
     </section>

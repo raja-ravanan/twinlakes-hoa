@@ -544,6 +544,12 @@
     <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:22px;margin-bottom:24px;">
       <div style="font-size:15px;font-weight:800;color:var(--navy);margin-bottom:6px;">Post Meeting Minutes</div>
       <p style="font-size:13px;font-family:sans-serif;color:var(--text-m);margin:0 0 16px;"><strong>Save as Draft</strong> to review it in the portal first (not shown to residents), then click <strong>Publish to Website</strong> once the President approves. Or <strong>Publish now</strong> to post it live immediately. No coding or deploys needed.</p>
+      <label style="display:block;font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;margin-bottom:4px;">Meeting Type</label>
+      <select id="minType" class="search-input" style="width:100%;margin-bottom:14px;">
+        <option value="board">Board Meeting</option>
+        <option value="community">Community Meeting (annual / special)</option>
+      </select>
+      <p style="font-size:12px;font-family:sans-serif;color:var(--text-m);margin:-8px 0 14px;">Board meetings appear under <strong>Board Meeting Minutes</strong> on the website; community meetings (annual &amp; special) appear under <strong>Community Meetings</strong>.</p>
       <label style="display:block;font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;margin-bottom:4px;">Meeting Date</label>
       <input type="date" id="minDate" class="search-input" style="width:100%;margin-bottom:14px;"/>
       <label style="display:block;font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;margin-bottom:4px;">Title</label>
@@ -2079,6 +2085,7 @@
     }
     el.innerHTML = list.map(m => {
       const published = (m.status || "published") === "published";
+      const isCommunity = m.meeting_type === "community";
       const dateStr = m.meeting_date ? new Date(m.meeting_date).toLocaleDateString() : "";
       const summaryHtml = formatMinutesSummary(m.summary || "");
       const attendeesHtml = (m.attendees || "").trim()
@@ -2088,7 +2095,10 @@
 <div style="background:#fff;border:1px solid var(--line);border-left:4px solid ${published ? 'var(--gold)' : '#bbb'};border-radius:10px;padding:18px;margin-bottom:14px;">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
     <div style="font-size:16px;font-weight:800;color:var(--navy);">${escapeHtml(m.title || "(untitled)")}</div>
-    <span style="font-size:11px;font-family:sans-serif;font-weight:700;text-transform:uppercase;padding:3px 10px;border-radius:20px;${published ? 'background:#eafaf1;color:#2e7d4f;' : 'background:#fdf3e0;color:#9a6a12;'}">${published ? '● Live on website' : '✎ Draft — not on website'}</span>
+    <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+      <span style="font-size:11px;font-family:sans-serif;font-weight:700;text-transform:uppercase;padding:3px 10px;border-radius:20px;${isCommunity ? 'background:#eef2f7;color:var(--navy);' : 'background:#f4f1ea;color:#7a6a3a;'}">${isCommunity ? '🏘 Community' : '📋 Board'}</span>
+      <span style="font-size:11px;font-family:sans-serif;font-weight:700;text-transform:uppercase;padding:3px 10px;border-radius:20px;${published ? 'background:#eafaf1;color:#2e7d4f;' : 'background:#fdf3e0;color:#9a6a12;'}">${published ? '● Live on website' : '✎ Draft — not on website'}</span>
+    </div>
   </div>
   <div style="font-size:12px;font-family:sans-serif;color:var(--text-m);margin:4px 0 10px;">Meeting: ${dateStr}${m.posted_by ? ' · by ' + escapeHtml(m.posted_by) : ''}</div>
   ${attendeesHtml}
@@ -2096,6 +2106,7 @@
   ${!published ? '<div style="font-size:12px;font-family:sans-serif;color:#9a6a12;background:#fdf3e0;border:1px solid #f0dcb4;border-radius:6px;padding:8px 12px;margin-top:12px;">This is a draft for board/President review. Residents can&rsquo;t see it yet. Click <strong>Publish to Website</strong> when approved.</div>' : ''}
   <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
     <button class="btn-vote" style="background:#eef2f7;color:var(--navy);border-color:#cdd8e6;" onclick="editMinutes('${m.id}')">Edit</button>
+    <button class="btn-vote" style="background:#f4f1ea;color:#7a6a3a;border-color:#e6dcc0;" onclick="setMinutesType('${m.id}', '${isCommunity ? 'board' : 'community'}')">Move to ${isCommunity ? 'Board' : 'Community'}</button>
     ${published
       ? `<button class="btn-vote" style="background:#f7f4ea;color:#9a7d24;border-color:#e6dcc0;" onclick="toggleMinutes('${m.id}', false)">Unpublish (hide)</button>`
       : `<button class="btn-vote" style="background:var(--navy);color:var(--cream);border-color:var(--navy);font-weight:700;" onclick="toggleMinutes('${m.id}', true)">✓ Publish to Website</button>`}
@@ -2108,27 +2119,37 @@
   async function postMinutes(status) {
     const isDraft = status === "draft";
     const dateEl = document.getElementById("minDate");
+    const typeEl = document.getElementById("minType");
     const titleEl = document.getElementById("minTitle");
     const attendeesEl = document.getElementById("minAttendees");
     const summaryEl = document.getElementById("minSummary");
     const btn = document.getElementById(isDraft ? "minDraftBtn" : "minPostBtn");
     const msg = document.getElementById("minPostMsg");
     const meeting_date = (dateEl.value || "").trim();
+    const meeting_type = (typeEl && typeEl.value === "community") ? "community" : "board";
     const title = (titleEl.value || "").trim();
     const attendees = (attendeesEl.value || "").trim();
     const summary = (summaryEl.value || "").trim();
     if (!meeting_date || !title || !summary) { msg.textContent = "Please enter a meeting date, title and summary."; msg.style.color = "#c0392b"; return; }
     btn.disabled = true; const label = btn.textContent; btn.textContent = isDraft ? "Saving…" : "Publishing…"; msg.textContent = "";
-    const data = await api({ action: "addMinutes", data: { meeting_date, title, summary, attendees, status: isDraft ? "draft" : "published" } });
+    const data = await api({ action: "addMinutes", data: { meeting_date, title, summary, attendees, meeting_type, status: isDraft ? "draft" : "published" } });
     btn.disabled = false; btn.textContent = label;
     if (data && data.success) {
-      dateEl.value = ""; titleEl.value = ""; attendeesEl.value = ""; summaryEl.value = "";
+      dateEl.value = ""; if (typeEl) typeEl.value = "board"; titleEl.value = ""; attendeesEl.value = ""; summaryEl.value = "";
       msg.textContent = isDraft ? "Saved as draft below — review it, then click “Publish to Website.”" : "Published! It is now live on the website.";
       msg.style.color = "#3a7d44";
       await loadDashboard();
     } else {
       msg.textContent = (data && data.error) || "Could not save. Please try again."; msg.style.color = "#c0392b";
     }
+  }
+
+  function setMinutesType(id, type) {
+    const target = type === "community" ? "community" : "board";
+    api({ action: "updateMinutes", data: { itemId: id, meeting_type: target } }).then(d => {
+      if (d && d.success) { showToast(`Moved to ${target === "community" ? "Community" : "Board"} Meetings`, "success"); loadDashboard(); }
+      else showToast("Update failed", "error");
+    });
   }
 
   function editMinutes(id) {

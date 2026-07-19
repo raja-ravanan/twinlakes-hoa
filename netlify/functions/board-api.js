@@ -103,7 +103,7 @@ async function ensureSheetTabs(token) {
       Activity_Log: [["timestamp","board_member","action","item_id","item_type","details"]],
       Resident_Requests: [["id","date_received","request_type","name","email","address","subject","description","sent_to","status","assigned_to","board_notes"]],
       Announcements: [["id","date_posted","title","body","status","posted_by"]],
-      Minutes: [["id","meeting_date","title","summary","status","posted_by","attendees"]],
+      Minutes: [["id","meeting_date","title","summary","status","posted_by","attendees","meeting_type"]],
       Settings: [["key","value"],["financials_published","false"]]
     };
     for (const tab of toAdd) {
@@ -173,7 +173,7 @@ exports.handler = async (event) => {
     const all = await getSheetData(publicToken, "Minutes");
     const published = all
       .filter(m => (m.status || "published") === "published")
-      .map(m => ({ id: m.id, meeting_date: m.meeting_date, title: m.title, summary: m.summary, attendees: m.attendees || "" }))
+      .map(m => ({ id: m.id, meeting_date: m.meeting_date, title: m.title, summary: m.summary, attendees: m.attendees || "", meeting_type: (m.meeting_type === "community" ? "community" : "board") }))
       .sort((x, y) => new Date(y.meeting_date) - new Date(x.meeting_date));
     return {
       statusCode: 200,
@@ -349,13 +349,17 @@ exports.handler = async (event) => {
     const title = (data?.title || "").trim();
     const summary  = (data?.summary || "").trim();
     const attendees = (data?.attendees || "").trim();
+    const meetingType = (data?.meeting_type === "community") ? "community" : "board";
     if (!meetingDate || !title || !summary) return { statusCode: 400, body: JSON.stringify({ error: "Meeting date, title and summary are required" }) };
     // Draft minutes are saved unpublished (visible in the portal for review,
     // not on the website) until the board clicks Publish.
     const status = (data?.status === "draft" || data?.status === "unpublished") ? "unpublished" : "published";
     const id = "MIN-" + Date.now().toString(36).toUpperCase();
-    await sheetsAppend(googleToken, "Minutes!A:G", [[
-      id, meetingDate, title, summary, status, session.name, attendees
+    // Self-heal the header for sheets created before the meeting_type column existed,
+    // so getSheetData (which maps by header name) can read the value back.
+    await sheetsUpdate(googleToken, "Minutes!H1", [["meeting_type"]]);
+    await sheetsAppend(googleToken, "Minutes!A:H", [[
+      id, meetingDate, title, summary, status, session.name, attendees, meetingType
     ]]);
     await logActivity(googleToken, session.username, status === "published" ? "posted_minutes" : "drafted_minutes", id, "minutes", title.slice(0, 100));
     return { statusCode: 200, body: JSON.stringify({ success: true, id, status }) };
@@ -363,7 +367,7 @@ exports.handler = async (event) => {
 
   // ── UPDATE MEETING MINUTES (edit text and/or change published status) ──
   if (action === "updateMinutes") {
-    const { itemId, meeting_date: meetingDate, title, summary, status, attendees } = data || {};
+    const { itemId, meeting_date: meetingDate, title, summary, status, attendees, meeting_type: meetingType } = data || {};
     const items = await getSheetData(googleToken, "Minutes");
     const rowIndex = items.findIndex(i => i.id === itemId);
     if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
@@ -374,6 +378,10 @@ exports.handler = async (event) => {
     if (typeof summary === "string")     updates.push(sheetsUpdate(googleToken, `Minutes!D${row}`, [[summary.trim()]]));
     if (typeof status === "string")      updates.push(sheetsUpdate(googleToken, `Minutes!E${row}`, [[status]]));
     if (typeof attendees === "string")   updates.push(sheetsUpdate(googleToken, `Minutes!G${row}`, [[attendees.trim()]]));
+    if (typeof meetingType === "string") {
+      updates.push(sheetsUpdate(googleToken, "Minutes!H1", [["meeting_type"]]));   // self-heal header
+      updates.push(sheetsUpdate(googleToken, `Minutes!H${row}`, [[meetingType === "community" ? "community" : "board"]]));
+    }
     await Promise.all(updates);
     await logActivity(googleToken, session.username, status ? `minutes_${status}` : "edited_minutes", itemId, "minutes", "");
     return { statusCode: 200, body: JSON.stringify({ success: true }) };
@@ -386,8 +394,8 @@ exports.handler = async (event) => {
     const rowIndex = items.findIndex(i => i.id === itemId);
     if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
     const row = rowIndex + 2;
-    // Clear the row's content (A:G) so it no longer appears on the site or portal
-    await sheetsUpdate(googleToken, `Minutes!A${row}:G${row}`, [["", "", "", "", "deleted", "", ""]]);
+    // Clear the row's content (A:H) so it no longer appears on the site or portal
+    await sheetsUpdate(googleToken, `Minutes!A${row}:H${row}`, [["", "", "", "", "deleted", "", "", ""]]);
     await logActivity(googleToken, session.username, "deleted_minutes", itemId, "minutes", "");
     return { statusCode: 200, body: JSON.stringify({ success: true }) };
   }
