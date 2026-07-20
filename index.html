@@ -385,6 +385,10 @@
     .minutes-entry .mm-summary h4 { font-family: Georgia, serif; font-size: 16px; color: var(--navy); margin: 20px 0 6px; }
     .minutes-entry .mm-summary ul { margin: 6px 0 12px; padding-left: 20px; }
     .minutes-entry .mm-summary li { margin-bottom: 5px; }
+    .minutes-entry .mm-summary .mm-callout { background: var(--navy-light); border-left: 3px solid var(--gold); border-radius: 8px; padding: 14px 18px; margin: 16px 0; }
+    .minutes-entry .mm-summary .mm-callout .mm-callout-label { font-family: sans-serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--navy); margin: 0 0 6px; }
+    .minutes-entry .mm-summary .mm-callout p:last-child { margin-bottom: 0; }
+    .minutes-entry .mm-summary .mm-callout ul:last-child { margin-bottom: 0; }
     /* ── Meeting Minutes: transition intro ── */
     .minutes-intro { max-width: 860px; margin: 0 auto 10px; }
     .minutes-intro > p { font-family: sans-serif; font-size: 15px; color: var(--text-s); line-height: 1.75; margin-bottom: 14px; }
@@ -399,9 +403,6 @@
     .effort-callout .ec-sub { font-family: sans-serif; font-size: 13px; font-style: italic; color: var(--text-m); margin: 10px 0 0; line-height: 1.6; }
     .minutes-section-label { max-width: 860px; margin: 30px auto 14px; font-size: 20px; color: var(--navy); font-weight: 700; }
     .minutes-section-sub { max-width: 860px; margin: 0 auto 16px; font-family: sans-serif; font-size: 14px; color: var(--text-m); line-height: 1.6; }
-    .minutes-soon .minutes-month-header { cursor: default; }
-    .minutes-soon .minutes-month-header:hover { background: #fff; }
-    .mm-soon-pill { font-family: sans-serif; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gold); background: #faf8f2; border: 1px solid #e5e0d8; padding: 3px 11px; border-radius: 20px; }
   </style>
 </head>
 <body>
@@ -1006,16 +1007,88 @@
           </div>
         </div>
 
-        <div class="minutes-month minutes-soon">
-          <div class="minutes-month-header">
+        <div class="minutes-month">
+          <button class="minutes-month-header" onclick="toggleMinutesMonth(this)">
             <span class="mm-label">July 2026 &mdash; Special Community Meeting</span>
-            <span class="mm-meta"><span class="mm-soon-pill">Coming soon</span></span>
-          </div>
-          <div class="minutes-month-body" style="display:block;">
+            <span class="mm-meta">Full summary <span class="mm-chev">&#9660;</span></span>
+          </button>
+          <div class="minutes-month-body">
             <div class="minutes-entry">
               <div class="mm-date">Monday, July 14, 2026</div>
               <h3>Special Community Meeting</h3>
-              <div class="mm-summary"><p>The official minutes of the July 14, 2026 Special Community Meeting are being finalized and will be posted here soon. Thank you for your patience.</p></div>
+              <div class="mm-summary">
+                Thank you to everyone who attended the Special Community Meeting. The Board appreciated the strong homeowner turnout and the thoughtful questions and feedback shared throughout the evening. The purpose of the meeting was to provide updates on several important Association matters, answer homeowner questions, and discuss ongoing initiatives. <em>This is a high-level summary of the topics discussed &mdash; it is intended to keep homeowners informed and is not the official Board meeting minutes or a verbatim transcript.</em>
+
+                <h4>Pond Management</h4>
+                Pond management was the primary topic of the evening. The Board reviewed the history of pond maintenance since the Association transitioned from developer to homeowner control, and explained how vendors were selected over the past year. Earlier this year the Board selected a lower-cost vendor after reviewing multiple proposals and references, balancing budget limits against service expectations. As pond conditions deteriorated and that vendor became increasingly unresponsive, the Board terminated the contract and sought new proposals. After onsite evaluations, the Board selected <strong>Jones Lake Management</strong> for the remainder of the season. Representatives from Jones attended and presented on the differences between the small pond and the two larger lakes, the causes of current conditions, their treatment strategy, and the expected timeline.
+                <ul>
+                  <li>The <strong>small pond</strong> needs significantly more intensive treatment due to its shallow depth and stormwater runoff; treatments will continue roughly <strong>every two weeks</strong>.</li>
+                  <li>The <strong>two larger lakes</strong> remain in generally good condition and currently need only limited maintenance.</li>
+                  <li><strong>Visible improvement is expected over the next 6&ndash;8 weeks</strong>, with continued improvement through consistent maintenance.</li>
+                  <li>Long-term options such as nutrient reduction, aeration, and other capital projects may be considered in future years as funding allows.</li>
+                  <li>The Board will continue working with vendors to reduce nutrient runoff from landscaping around the ponds where practical.</li>
+                </ul>
+
+                <h4>Financial Update</h4>
+                The Treasurer presented an independently prepared financial analysis based on invoices, bank statements, and other supporting information. Several homeowners noted that it differed from the monthly financial reports prepared by Mulloy Properties.
+                <div class="mm-callout">
+                  <div class="mm-callout-label">Board Clarification</div>
+                  <ul>
+                    <li>The independently prepared analysis had not been presented to or reviewed by the Board before the meeting, so the Board was not in a position to comment on the reported differences during the meeting.</li>
+                    <li>The Board conducts its financial oversight using the monthly reports prepared by Mulloy Properties, the Association&rsquo;s professional management company responsible for its financial records.</li>
+                    <li>Board decisions on budgets, expenditures, and reserve funding have been based on those official management reports.</li>
+                  </ul>
+                  <p>The Board confirmed that Mulloy&rsquo;s official reports remain the records used for oversight, and agreed the Treasurer&rsquo;s analysis would be reviewed against them to identify and explain any differences.</p>
+                </div>
+                The Board remains committed to responsible financial oversight, transparency, and providing homeowners with accurate and consistent financial information.
+
+                <h4>HOA Financial Status</h4>
+                The Board gave an overview of the Association&rsquo;s financial position through June, covering operating budgets (budgeted vs. actual), reserve funding, snow removal, insurance costs, irrigation maintenance, and utility expenses. Several categories exceeded original projections because of an unusually severe winter, insurance requirements following the transition from the developer, and infrastructure-related maintenance. The Board continues to closely monitor expenditures and reserve balances.
+                <div class="mm-callout">
+                  <div class="mm-callout-label">Mid-Year Snapshot</div>
+                  <p>Even with a few categories running higher than projected, through mid-year the HOA and Garden Homes are approximately <strong>$13,000 under budget combined</strong> and have built approximately <strong>$5,000 in reserves</strong> across the two reports.</p>
+                </div>
+
+                <h4>HOA Tax ID Structure</h4>
+                Twin Lakes was established as a single legal entity by the developer. Homeowners asked whether Garden Homes and Patriot Homes should operate under separate tax identification numbers. The Board explained the benefits of remaining a single entity &mdash; lower administrative costs, simplified accounting, reserve tax advantages, a single insurance structure, and shared responsibility for common areas and amenities &mdash; and noted that creating separate entities would introduce additional legal, financial, accounting, insurance, and governance complexity.
+
+                <h4>HOA Elections</h4>
+                The Board shared a preliminary roadmap for the upcoming Board election:
+                <ul>
+                  <li><strong>Early Fall:</strong> election notification distributed by Mulloy Properties.</li>
+                  <li><strong>September:</strong> candidate nominations.</li>
+                  <li><strong>October:</strong> in-person election.</li>
+                  <li><strong>January 1, 2027:</strong> new Board terms begin.</li>
+                </ul>
+                Homeowners expressed support for the idea of <strong>staggered Board terms</strong>, and raised suggestions on continuity between Boards and committee participation. These ideas will be reviewed as part of future governance discussions, with additional election details to follow before the nomination period.
+
+                <h4>HOA Website</h4>
+                The Board introduced the newly launched HOA website, <strong>www.TwinLakesLouisville.com</strong>, developed to improve communication and give homeowners convenient access to community information &mdash; governing documents, Board information, the vendor directory, community announcements, meeting information, and online homeowner requests. The website will serve as the central hub for community information going forward, with more content and features being added.
+
+                <h4>Landscaping &amp; Community Maintenance</h4>
+                Residents shared concerns about several aspects of community upkeep, including common-area landscaping and weed control, irrigation and street lighting, and tree replacement and maintenance consistency. The Board acknowledged these concerns and will continue working with Association contractors to review reported issues and improve maintenance where appropriate.
+
+                <h4>Communication</h4>
+                The Board discussed ongoing efforts to improve homeowner communication, including community newsletters, Board meetings, updates distributed through Mulloy Properties, and the HOA website as the central location for community information.
+
+                <h4>Looking Ahead</h4>
+                The Board will continue focusing on these priorities in the months ahead:
+                <ul>
+                  <li>Monitoring pond restoration efforts.</li>
+                  <li>Maintaining responsible financial oversight.</li>
+                  <li>Preparing for the 2027 Board election.</li>
+                  <li>Continuing reserve planning.</li>
+                  <li>Reviewing landscaping and maintenance concerns.</li>
+                  <li>Expanding homeowner resources through the HOA website.</li>
+                  <li>Improving communication with residents.</li>
+                </ul>
+
+                The Board thanked residents for their participation, questions, and feedback, and encouraged everyone to stay engaged. For additional updates, governing documents, meeting information, and homeowner resources, visit <strong>www.TwinLakesLouisville.com</strong>.<br><br>
+                <em>Prepared by the HOA Secretary.</em>
+              </div>
+              <div style="margin-top:18px;">
+                <a class="doc-btn" href="special-meeting-jul-2026-summary.pdf" target="_blank" rel="noopener noreferrer">&#8595;&nbsp; Download Summary (PDF)</a>
+              </div>
             </div>
           </div>
         </div>
