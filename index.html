@@ -64,8 +64,10 @@
       margin-left: 4px;
       transition: transform 0.2s;
     }
-    .announcement-item:hover .ann-chevron { transform: rotate(180deg); }
- 
+    .announcement-item:hover .ann-chevron,
+    .announcement-item.open .ann-chevron { transform: rotate(180deg); }
+    .announcement-item:focus-visible { outline: 2px solid #C9A84C; outline-offset: 2px; border-radius: 4px; }
+
     /* Dropdown */
     .ann-dropdown {
       display: none;
@@ -81,7 +83,8 @@
       z-index: 200;
       padding: 16px;
     }
-    .announcement-item:hover .ann-dropdown { display: block; }
+    .announcement-item:hover .ann-dropdown,
+    .announcement-item.open .ann-dropdown { display: block; }
     .ann-dropdown-title {
       font-size: 11px;
       font-family: sans-serif;
@@ -352,11 +355,12 @@
       .quick-actions-inner { flex-wrap: wrap; }
       .qa-item { flex: 0 0 33.33%; border-bottom: 1px solid var(--cream-border); }
       .announcement-bar-inner { flex-direction: column; align-items: stretch; padding: 6px 1.25rem; }
-      .announcement-item { border-right: none; border-bottom: 1px solid rgba(201,168,76,0.1); padding: 10px 0; margin-right: 0; align-items: flex-start; }
+      .announcement-item { border-right: none; border-bottom: 1px solid rgba(201,168,76,0.1); padding: 10px 0; margin-right: 0; align-items: flex-start; flex-wrap: wrap; }
+      .announcement-item .ann-chevron { margin-left: auto; }
       .announcement-item:last-child { border-bottom: none; }
       .ann-text { white-space: normal; line-height: 1.45; }
       .ann-dot { margin-top: 5px; }
-      .ann-dropdown { position: static; min-width: 0; box-shadow: none; border-top: none; padding: 8px 0 4px 18px; }
+      .ann-dropdown { position: static; min-width: 0; flex-basis: 100%; box-shadow: none; border-top: none; padding: 8px 0 4px 18px; }
     }
     @media (max-width: 480px) {
       .qa-item { flex: 0 0 50%; }
@@ -918,21 +922,6 @@
       <p class="sec-sub">A record of how your homeowner Board took the reins — and the minutes of our first community meeting.</p>
     </section>
     <section style="padding-top:8px;">
-      <div class="minutes-intro">
-        <div class="effort-callout">
-          <p class="ec-stat">Between October 2025 and March 2026, your volunteer Board came together <strong>18 times</strong> and gave <strong>well over 100 hours</strong> of personal time — reviewing every contract, reconciling the finances, walking the property, and preparing answers to your questions — to get the community onto steady footing for its first year.</p>
-          <p class="ec-sub">We mention this not for recognition, but so the care behind each decision is clear.</p>
-        </div>
-
-        <h2 style="font-size:24px;color:var(--navy);margin-bottom:12px;">From Developer to Neighbors: Our First Few Months</h2>
-        <p>When Twin Lakes transitioned from developer control to a homeowner-run association, your newly elected Board didn&rsquo;t wait for January 1 to get to work. Here&rsquo;s what those months of effort produced.</p>
-        <p><strong>Getting organized (Oct–Nov 2025).</strong> The Board elected its officers — Tony Backert (President), Yashu Basavaraju (Vice President), Ramana N (Treasurer), Raja Ravanan (Secretary), with Aimee Green and Mike Schnell — and formed volunteer committees so more neighbors could get involved. The Board also set the 2026 budget, making the deliberate choice to build a modest reserve for the first time in the community&rsquo;s history.</p>
-        <p><strong>Saving money from day one (Nov–Dec 2025).</strong> Facing a steep trash-hauling increase, the Board negotiated a switch to EcoTech — <em>lower</em> than the prior year&rsquo;s cost, with a three-year price lock. It began a full review of every vendor contract and established a process so the Board reviews and approves invoices before they&rsquo;re paid.</p>
-        <p><strong>Building communication (Dec 2025–Jan 2026).</strong> The Board launched the Twin Lakes newsletter (named by resident vote!), set up a private resident Facebook group, and created a shared, secure records system so community documents live in the community&rsquo;s hands. New snow, lighting, and trash-screening guidelines were documented and shared.</p>
-        <p><strong>Doing the homework (Jan–Feb 2026).</strong> The Treasurer began a line-by-line review of the finances; the Board walked the property with the developer to catalog outstanding items; gathered insurance quotes; and reviewed 14+ architectural requests. New vendors were finalized — Two Fish for pond care (with grass carp arriving this spring) and a negotiated TrueGreen option for Patriot homes.</p>
-        <p><strong>Bringing it to you (March 2026).</strong> All of this led to the community&rsquo;s first-ever HOA annual meeting on March 10, 2026 — the full minutes are in the Community Meetings section below.</p>
-      </div>
-
       <h2 class="minutes-section-label">Community Meetings</h2>
       <p class="minutes-section-sub">Annual and special meetings open to all residents.</p>
       <div class="minutes-accordion">
@@ -1098,6 +1087,21 @@
 
       <h2 class="minutes-section-label">Board Meeting Minutes</h2>
       <p class="minutes-section-sub">Summaries of the Board&rsquo;s regular working meetings, most recent first.</p>
+      <div class="minutes-intro">
+        <div class="effort-callout">
+          <p class="ec-stat">Between October 2025 and June 2026, your volunteer Board came together <strong>18 times</strong> — more than <strong>10 of those between October 2025 and March 2026</strong> — and gave <strong>well over 100 hours</strong> of personal time reviewing every contract, reconciling the finances, walking the property, and preparing answers to your questions — to get the community onto steady footing for its first year.</p>
+          <p class="ec-sub">We mention this not for recognition, but so the care behind each decision is clear.</p>
+        </div>
+
+        <h2 style="font-size:24px;color:var(--navy);margin-bottom:12px;">From Developer to Neighbors: Our First Few Months</h2>
+        <p>When Twin Lakes transitioned from developer control to a homeowner-run association, your newly elected Board didn&rsquo;t wait for January 1 to get to work. Here&rsquo;s what those months of effort produced.</p>
+        <p><strong>Getting organized (Oct–Nov 2025).</strong> The Board elected its officers — Tony Backert (President), Yashu Basavaraju (Vice President), Ramana N (Treasurer), Raja Ravanan (Secretary), with Aimee Green and Mike Schnell — and formed volunteer committees so more neighbors could get involved. The Board also set the 2026 budget, making the deliberate choice to build a modest reserve for the first time in the community&rsquo;s history.</p>
+        <p><strong>Saving money from day one (Nov–Dec 2025).</strong> Facing a steep trash-hauling increase, the Board negotiated a switch to EcoTech — <em>lower</em> than the prior year&rsquo;s cost, with a three-year price lock. It began a full review of every vendor contract and established a process so the Board reviews and approves invoices before they&rsquo;re paid.</p>
+        <p><strong>Building communication (Dec 2025–Jan 2026).</strong> The Board launched the Twin Lakes newsletter (named by resident vote!), set up a private resident Facebook group, and created a shared, secure records system so community documents live in the community&rsquo;s hands. New snow, lighting, and trash-screening guidelines were documented and shared.</p>
+        <p><strong>Doing the homework (Jan–Feb 2026).</strong> The Treasurer began a line-by-line review of the finances; the Board walked the property with the developer to catalog outstanding items; gathered insurance quotes; and reviewed 14+ architectural requests. New vendors were finalized — Two Fish for pond care (with grass carp arriving this spring) and a negotiated TrueGreen option for Patriot homes.</p>
+        <p><strong>Bringing it to you (March 2026).</strong> All of this led to the community&rsquo;s first-ever HOA annual meeting on March 10, 2026 — the full minutes are in the Community Meetings section above.</p>
+      </div>
+
       <div id="board-minutes" class="minutes-accordion">
         <p style="text-align:center;font-family:sans-serif;color:var(--text-m);">Loading meeting minutes&hellip;</p>
       </div>

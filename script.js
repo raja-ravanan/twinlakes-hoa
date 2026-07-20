@@ -340,6 +340,16 @@ async function loadAnnouncements() {
   }
 }
 
+// Expand/collapse a banner announcement. Desktop also opens it on hover (CSS);
+// this click/keyboard toggle is what makes it work on touch devices.
+function toggleAnnItem(el) {
+  var open = el.classList.toggle('open');
+  el.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+function annItemKey(e, el) {
+  if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); toggleAnnItem(el); }
+}
+
 // Top announcements banner — shows the 3 most recent board posts.
 // Same data source as the Announcements page, so one portal post updates both.
 async function loadBanner() {
@@ -359,7 +369,7 @@ async function loadBanner() {
     inner.innerHTML = top.map(function(a) {
       var bodyHtml = escapeHtmlText(a.body).replace(/\n/g, '<br>');
       var dateStr = formatAnnouncementDate(a.date_posted);
-      return '<div class="announcement-item">' +
+      return '<div class="announcement-item" role="button" tabindex="0" aria-expanded="false" onclick="toggleAnnItem(this)" onkeydown="annItemKey(event, this)">' +
         '<div class="ann-dot info"></div>' +
         '<span class="ann-text"><strong>' + escapeHtmlText(a.title) + '</strong></span>' +
         '<span class="ann-chevron">&#9660;</span>' +
