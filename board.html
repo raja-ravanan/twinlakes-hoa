@@ -529,10 +529,52 @@
     <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:22px;margin-bottom:24px;">
       <div style="font-size:15px;font-weight:800;color:var(--navy);margin-bottom:6px;">Post a New Announcement</div>
       <p style="font-size:13px;font-family:sans-serif;color:var(--text-m);margin:0 0 16px;">This appears immediately on the public website's <strong>Updates</strong> page. No coding or deploys needed.</p>
-      <label style="display:block;font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;margin-bottom:4px;">Title</label>
+      <label for="annTitle" style="display:block;font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;margin-bottom:4px;">Title</label>
       <input type="text" id="annTitle" class="search-input" style="width:100%;margin-bottom:14px;" placeholder="e.g. Pool Opening — Memorial Day Weekend"/>
-      <label style="display:block;font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;margin-bottom:4px;">Message</label>
+      <label for="annBody" style="display:block;font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;margin-bottom:4px;">Message</label>
       <textarea id="annBody" rows="6" style="width:100%;font-family:sans-serif;font-size:14px;padding:10px 12px;border:1px solid var(--line);border-radius:8px;resize:vertical;margin-bottom:14px;" placeholder="Write the announcement here. Line breaks are preserved."></textarea>
+      <details id="annOrganizeDetails" style="margin-bottom:14px;">
+        <summary style="cursor:pointer;font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;letter-spacing:0.5px;">Organize this announcement (optional)</summary>
+        <div class="ae-grid" style="margin-top:14px;">
+          <div class="ae-field"><label for="annCategory">Category</label>
+            <select id="annCategory">
+              <option value="General">General</option>
+              <option value="Board &amp; Meetings">Board &amp; Meetings</option>
+              <option value="Ponds">Ponds</option>
+              <option value="Landscaping">Landscaping</option>
+              <option value="Irrigation">Irrigation</option>
+              <option value="Traffic">Traffic</option>
+              <option value="Safety">Safety</option>
+              <option value="Community Events">Community Events</option>
+              <option value="Maintenance">Maintenance</option>
+              <option value="Documents">Documents</option>
+            </select>
+          </div>
+          <div class="ae-field"><label for="annPriority">Priority</label>
+            <select id="annPriority">
+              <option value="normal">Normal</option>
+              <option value="high">High</option>
+              <option value="critical">Critical</option>
+            </select>
+          </div>
+          <div class="ae-field"><label for="annEventDate">Event date</label><input type="date" id="annEventDate"/></div>
+          <div class="ae-field"><label for="annWorkStatus">Work status</label>
+            <select id="annWorkStatus">
+              <option value="none">None</option>
+              <option value="upcoming">Upcoming</option>
+              <option value="in-progress">In Progress</option>
+              <option value="completed">Completed</option>
+            </select>
+          </div>
+          <div class="ae-field" style="grid-column:1/-1;"><label for="annSummary">Short summary</label><input type="text" id="annSummary" placeholder="One line for the homepage (optional)"/></div>
+          <div class="ae-field"><label for="annArchiveDate">Archive date</label><input type="date" id="annArchiveDate"/></div>
+          <div class="ae-field"><label for="annRelatedProject">Related project</label><input type="text" id="annRelatedProject" placeholder="Optional — used in a later phase"/></div>
+          <div class="ae-field" style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+            <input type="checkbox" id="annFeatured" style="width:auto;"/>
+            <label for="annFeatured" style="margin:0;text-transform:none;font-weight:600;color:var(--text-s);">Feature on homepage</label>
+          </div>
+        </div>
+      </details>
       <button class="btn-scan" id="annPostBtn" onclick="postAnnouncement()">Publish Announcement</button>
       <span id="annPostMsg" style="font-size:13px;font-family:sans-serif;margin-left:12px;"></span>
     </div>
@@ -1126,6 +1168,66 @@
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
         <button class="btn-logout" style="color:var(--text-m);" onclick="closeArcEdit()">Cancel</button>
         <button class="btn-scan" id="arcEditSave" onclick="saveArcEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Edit Announcement Modal -->
+<div class="modal-overlay" id="annEditModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Edit Announcement — <span id="annEditId"></span></h3>
+      <button class="modal-close" onclick="closeAnnouncementEdit()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="annEditIdHidden"/>
+      <label for="ae-ann-title" style="display:block;font-size:11px;font-family:sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-m);margin-bottom:5px;">Title</label>
+      <input type="text" id="ae-ann-title" style="width:100%;font-family:sans-serif;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:6px;margin-bottom:14px;"/>
+      <label for="ae-ann-body" style="display:block;font-size:11px;font-family:sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-m);margin-bottom:5px;">Message</label>
+      <textarea id="ae-ann-body" rows="5" style="width:100%;font-family:sans-serif;font-size:14px;padding:9px 11px;border:1px solid var(--line);border-radius:6px;resize:vertical;margin-bottom:14px;"></textarea>
+      <div class="ae-grid">
+        <div class="ae-field"><label for="ae-ann-category">Category</label>
+          <select id="ae-ann-category">
+            <option value="General">General</option>
+            <option value="Board &amp; Meetings">Board &amp; Meetings</option>
+            <option value="Ponds">Ponds</option>
+            <option value="Landscaping">Landscaping</option>
+            <option value="Irrigation">Irrigation</option>
+            <option value="Traffic">Traffic</option>
+            <option value="Safety">Safety</option>
+            <option value="Community Events">Community Events</option>
+            <option value="Maintenance">Maintenance</option>
+            <option value="Documents">Documents</option>
+          </select>
+        </div>
+        <div class="ae-field"><label for="ae-ann-priority">Priority</label>
+          <select id="ae-ann-priority">
+            <option value="normal">Normal</option>
+            <option value="high">High</option>
+            <option value="critical">Critical</option>
+          </select>
+        </div>
+        <div class="ae-field"><label for="ae-ann-eventdate">Event date</label><input type="date" id="ae-ann-eventdate"/></div>
+        <div class="ae-field"><label for="ae-ann-workstatus">Work status</label>
+          <select id="ae-ann-workstatus">
+            <option value="none">None</option>
+            <option value="upcoming">Upcoming</option>
+            <option value="in-progress">In Progress</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
+        <div class="ae-field" style="grid-column:1/-1;"><label for="ae-ann-summary">Short summary</label><input type="text" id="ae-ann-summary"/></div>
+        <div class="ae-field"><label for="ae-ann-archivedate">Archive date</label><input type="date" id="ae-ann-archivedate"/></div>
+        <div class="ae-field"><label for="ae-ann-relatedproject">Related project</label><input type="text" id="ae-ann-relatedproject"/></div>
+        <div class="ae-field" style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+          <input type="checkbox" id="ae-ann-featured" style="width:auto;"/>
+          <label for="ae-ann-featured" style="margin:0;text-transform:none;font-weight:600;color:var(--text-s);">Feature on homepage</label>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
+        <button class="btn-logout" style="color:var(--text-m);" onclick="closeAnnouncementEdit()">Cancel</button>
+        <button class="btn-scan" id="annEditSave" onclick="saveAnnouncementEdit()">Save Changes</button>
       </div>
     </div>
   </div>
@@ -2003,17 +2105,31 @@
       el.innerHTML = '<p style="font-size:13px;font-family:sans-serif;color:var(--text-m);">No announcements yet. Post one above and it appears on the website Updates page.</p>';
       return;
     }
+    // Hoisted out of the per-item loop below — same badge markup for every
+    // announcement, no reason to recreate the closure on each iteration.
+    const tagBadge = (label, bg, color) =>
+      `<span style="font-size:11px;font-family:sans-serif;font-weight:700;text-transform:uppercase;padding:3px 10px;border-radius:20px;background:${bg};color:${color};">${escapeHtml(label)}</span>`;
     el.innerHTML = list.map(a => {
       const published = (a.status || "published") === "published";
       const dateStr = a.date_posted ? new Date(a.date_posted).toLocaleDateString() : "";
       const bodyHtml = escapeHtml(a.body || "").replace(/\n/g, "<br>");
+      // Phase 1A: category/priority/featured are always present with safe
+      // defaults (server-normalized), so legacy announcements show "General".
+      const category = a.category || "General";
+      const priority = a.priority || "normal";
+      const featured = a.featured === "yes";
+      const tags = [tagBadge(category, "#eef2f7", "var(--navy)")];
+      if (priority === "critical") tags.push(tagBadge("Critical", "#fdf0f0", "var(--red)"));
+      else if (priority === "high") tags.push(tagBadge("High priority", "#fff7e6", "#9a7d24"));
+      if (featured) tags.push(tagBadge("Featured", "var(--gold-light)", "var(--gold-dark)"));
       return `
 <div style="background:#fff;border:1px solid var(--line);border-left:4px solid ${published ? 'var(--gold)' : '#bbb'};border-radius:10px;padding:18px;margin-bottom:14px;">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
     <div style="font-size:16px;font-weight:800;color:var(--navy);">${escapeHtml(a.title || "(untitled)")}</div>
     <span style="font-size:11px;font-family:sans-serif;font-weight:700;text-transform:uppercase;padding:3px 10px;border-radius:20px;${published ? 'background:#fff7e6;color:#9a7d24;' : 'background:#f0f0f0;color:#888;'}">${published ? 'Live on website' : 'Hidden'}</span>
   </div>
-  <div style="font-size:12px;font-family:sans-serif;color:var(--text-m);margin:4px 0 10px;">${dateStr}${a.posted_by ? ' · by ' + escapeHtml(a.posted_by) : ''}</div>
+  <div style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 0;">${tags.join("")}</div>
+  <div style="font-size:12px;font-family:sans-serif;color:var(--text-m);margin:8px 0 10px;">${dateStr}${a.posted_by ? ' · by ' + escapeHtml(a.posted_by) : ''}</div>
   <div style="font-size:14px;font-family:sans-serif;color:var(--text);line-height:1.6;">${bodyHtml}</div>
   <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
     <button class="btn-vote" style="background:#eef2f7;color:var(--navy);border-color:#cdd8e6;" onclick="editAnnouncement('${a.id}')">Edit</button>
@@ -2033,10 +2149,35 @@
     const body = (bodyEl.value || "").trim();
     if (!title || !body) { msg.textContent = "Please enter a title and a message."; msg.style.color = "#c0392b"; return; }
     btn.disabled = true; const label = btn.textContent; btn.textContent = "Publishing…"; msg.textContent = "";
-    const data = await api({ action: "addAnnouncement", data: { title, body } });
+    // Phase 1A optional fields — all default to "General/normal/none/no" via
+    // the select's first option, so leaving the "Organize" panel untouched
+    // still posts a normal announcement exactly like before.
+    const fval = f => { const el = document.getElementById(f); return el ? (el.value || "").trim() : ""; };
+    const payload = {
+      title, body,
+      category: fval("annCategory"),
+      priority: fval("annPriority"),
+      event_date: fval("annEventDate"),
+      work_status: fval("annWorkStatus"),
+      summary: fval("annSummary"),
+      featured: document.getElementById("annFeatured").checked ? "yes" : "no",
+      archive_date: fval("annArchiveDate"),
+      related_project: fval("annRelatedProject")
+    };
+    const data = await api({ action: "addAnnouncement", data: payload });
     btn.disabled = false; btn.textContent = label;
     if (data && data.success) {
       titleEl.value = ""; bodyEl.value = "";
+      document.getElementById("annCategory").selectedIndex = 0;
+      document.getElementById("annPriority").selectedIndex = 0;
+      document.getElementById("annEventDate").value = "";
+      document.getElementById("annWorkStatus").selectedIndex = 0;
+      document.getElementById("annSummary").value = "";
+      document.getElementById("annFeatured").checked = false;
+      document.getElementById("annArchiveDate").value = "";
+      document.getElementById("annRelatedProject").value = "";
+      const details = document.getElementById("annOrganizeDetails");
+      if (details) details.open = false;
       msg.textContent = "Published! It is now live on the website."; msg.style.color = "#3a7d44";
       await loadDashboard();
     } else {
@@ -2044,17 +2185,52 @@
     }
   }
 
+  // Opens the Edit Announcement modal, pre-filled with this announcement's
+  // current values (blank optional fields stay blank; new ones default only
+  // in the <select>'s first option, never silently overwritten as "set").
   function editAnnouncement(id) {
     const a = (dashData.announcements || []).find(x => x.id === id);
     if (!a) return;
-    const newTitle = prompt("Edit title:", a.title || "");
-    if (newTitle === null) return;
-    const newBody = prompt("Edit message:", a.body || "");
-    if (newBody === null) return;
-    api({ action: "updateAnnouncement", data: { itemId: id, title: newTitle, body: newBody } }).then(d => {
-      if (d && d.success) { showToast("Announcement updated", "success"); loadDashboard(); }
-      else showToast("Update failed", "error");
-    });
+    const set = (f, v) => { const el = document.getElementById(f); if (el) el.value = v || ""; };
+    document.getElementById("annEditId").textContent = a.id;
+    document.getElementById("annEditIdHidden").value = a.id;
+    set("ae-ann-title", a.title);
+    set("ae-ann-body", a.body);
+    set("ae-ann-category", a.category || "General");
+    set("ae-ann-priority", a.priority || "normal");
+    set("ae-ann-eventdate", a.event_date || "");
+    set("ae-ann-workstatus", a.work_status || "none");
+    set("ae-ann-summary", a.summary || "");
+    set("ae-ann-archivedate", a.archive_date || "");
+    set("ae-ann-relatedproject", a.related_project || "");
+    document.getElementById("ae-ann-featured").checked = (a.featured === "yes");
+    document.getElementById("annEditModal").classList.add("show");
+  }
+  function closeAnnouncementEdit() { document.getElementById("annEditModal").classList.remove("show"); }
+
+  async function saveAnnouncementEdit() {
+    const id = document.getElementById("annEditIdHidden").value;
+    if (!id) return;
+    const val = f => (document.getElementById(f).value || "").trim();
+    const title = val("ae-ann-title");
+    const body = val("ae-ann-body");
+    if (!title || !body) { showToast("Title and message are required", "error"); return; }
+    const payload = {
+      itemId: id, title, body,
+      category: val("ae-ann-category"),
+      priority: val("ae-ann-priority"),
+      event_date: val("ae-ann-eventdate"),
+      work_status: val("ae-ann-workstatus"),
+      summary: val("ae-ann-summary"),
+      featured: document.getElementById("ae-ann-featured").checked ? "yes" : "no",
+      archive_date: val("ae-ann-archivedate"),
+      related_project: val("ae-ann-relatedproject")
+    };
+    const btn = document.getElementById("annEditSave"); btn.disabled = true; btn.textContent = "Saving…";
+    const d = await api({ action: "updateAnnouncement", data: payload });
+    btn.disabled = false; btn.textContent = "Save Changes";
+    if (d && d.success) { showToast("Announcement updated", "success"); closeAnnouncementEdit(); await loadDashboard(); }
+    else { showToast((d && d.error) || "Update failed", "error"); }
   }
 
   function toggleAnnouncement(id, publish) {

@@ -59,6 +59,21 @@ const SA_EMAIL = process.env.GOOGLE_SA_EMAIL;
 const SA_KEY   = process.env.GOOGLE_SA_KEY;
 const SCOPES   = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"];
 
+// ── Announcement organization fields (Phase 1A) ─────────────
+// Columns G-N of the Announcements sheet. All optional; unknown/invalid
+// input is safely defaulted rather than trusted or rejected outright, so a
+// stray dropdown value never lands in the sheet unchecked.
+const ANNOUNCEMENT_EXT_HEADERS = ["category","priority","event_date","work_status","summary","featured","archive_date","related_project"];
+const ANN_CATEGORIES = ["General","Board & Meetings","Ponds","Landscaping","Irrigation","Traffic","Safety","Community Events","Maintenance","Documents"];
+const ANN_PRIORITIES = ["normal","high","critical"];
+const ANN_WORK_STATUSES = ["none","upcoming","in-progress","completed"];
+
+function normalizeAnnCategory(v) { const s = String(v || "").trim(); return ANN_CATEGORIES.includes(s) ? s : "General"; }
+function normalizeAnnPriority(v) { const s = String(v || "").trim().toLowerCase(); return ANN_PRIORITIES.includes(s) ? s : "normal"; }
+function normalizeAnnWorkStatus(v) { const s = String(v || "").trim().toLowerCase(); return ANN_WORK_STATUSES.includes(s) ? s : "none"; }
+function normalizeAnnFeatured(v) { return (v === true || v === "yes" || v === "true") ? "yes" : "no"; }
+function normalizeAnnDate(v) { const s = String(v || "").trim(); return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : ""; }
+
 async function sheetsGet(token, range) {
   const r = await httpsReq("GET", "sheets.googleapis.com",
     `/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}`,
@@ -102,7 +117,7 @@ async function ensureSheetTabs(token) {
       Other_Items: [["id","date_received","from","subject","category","ai_summary","status","drive_folder_url","needs_attention"]],
       Activity_Log: [["timestamp","board_member","action","item_id","item_type","details"]],
       Resident_Requests: [["id","date_received","request_type","name","email","address","subject","description","sent_to","status","assigned_to","board_notes"]],
-      Announcements: [["id","date_posted","title","body","status","posted_by"]],
+      Announcements: [["id","date_posted","title","body","status","posted_by","category","priority","event_date","work_status","summary","featured","archive_date","related_project"]],
       Minutes: [["id","meeting_date","title","summary","status","posted_by","attendees","meeting_type"]],
       Settings: [["key","value"],["financials_published","false"]]
     };
@@ -157,7 +172,17 @@ exports.handler = async (event) => {
     const all = await getSheetData(publicToken, "Announcements");
     const published = all
       .filter(a => (a.status || "published") === "published")
-      .map(a => ({ id: a.id, date_posted: a.date_posted, title: a.title, body: a.body }))
+      .map(a => ({
+        id: a.id, date_posted: a.date_posted, title: a.title, body: a.body,
+        category: normalizeAnnCategory(a.category),
+        priority: normalizeAnnPriority(a.priority),
+        event_date: normalizeAnnDate(a.event_date),
+        work_status: normalizeAnnWorkStatus(a.work_status),
+        summary: String(a.summary || "").trim(),
+        featured: normalizeAnnFeatured(a.featured),
+        archive_date: normalizeAnnDate(a.archive_date),
+        related_project: String(a.related_project || "").trim()
+      }))
       .sort((x, y) => new Date(y.date_posted) - new Date(x.date_posted));
     return {
       statusCode: 200,
@@ -229,6 +254,19 @@ exports.handler = async (event) => {
     ]);
     announcements.sort((x, y) => new Date(y.date_posted) - new Date(x.date_posted));
     minutes.sort((x, y) => new Date(y.meeting_date) - new Date(x.meeting_date));
+
+    // Normalize Phase 1A organization fields so the portal always shows safe,
+    // known values even for legacy A-F rows that predate these columns.
+    announcements.forEach(a => {
+      a.category = normalizeAnnCategory(a.category);
+      a.priority = normalizeAnnPriority(a.priority);
+      a.event_date = normalizeAnnDate(a.event_date);
+      a.work_status = normalizeAnnWorkStatus(a.work_status);
+      a.summary = String(a.summary || "").trim();
+      a.featured = normalizeAnnFeatured(a.featured);
+      a.archive_date = normalizeAnnDate(a.archive_date);
+      a.related_project = String(a.related_project || "").trim();
+    });
 
     // Calculate days open
     const now = Date.now();
@@ -307,8 +345,23 @@ exports.handler = async (event) => {
     const text  = (data?.body || "").trim();
     if (!title || !text) return { statusCode: 400, body: JSON.stringify({ error: "Title and body are required" }) };
     const id = "ANN-" + Date.now().toString(36).toUpperCase();
-    await sheetsAppend(googleToken, "Announcements!A:F", [[
-      id, new Date().toISOString(), title, text, "published", session.name
+    // Optional Phase 1A fields — every value is normalized server-side rather
+    // than trusted, so a plain Title+Body post (no fields sent) still lands
+    // with safe defaults, same as an existing pre-Phase-1A announcement.
+    const category      = normalizeAnnCategory(data?.category);
+    const priority       = normalizeAnnPriority(data?.priority);
+    const eventDate      = normalizeAnnDate(data?.event_date);
+    const workStatus     = normalizeAnnWorkStatus(data?.work_status);
+    const summary        = String(data?.summary || "").trim();
+    const featured       = normalizeAnnFeatured(data?.featured);
+    const archiveDate    = normalizeAnnDate(data?.archive_date);
+    const relatedProject = String(data?.related_project || "").trim();
+    // Self-heal the header for sheets created before columns G-N existed,
+    // so getSheetData (which maps by header name) can read the values back.
+    await sheetsUpdate(googleToken, "Announcements!G1:N1", [ANNOUNCEMENT_EXT_HEADERS]);
+    await sheetsAppend(googleToken, "Announcements!A:N", [[
+      id, new Date().toISOString(), title, text, "published", session.name,
+      category, priority, eventDate, workStatus, summary, featured, archiveDate, relatedProject
     ]]);
     await logActivity(googleToken, session.username, "posted_announcement", id, "announcement", title.slice(0, 100));
     return { statusCode: 200, body: JSON.stringify({ success: true, id }) };
@@ -316,7 +369,11 @@ exports.handler = async (event) => {
 
   // ── UPDATE ANNOUNCEMENT (edit text and/or change published status) ──
   if (action === "updateAnnouncement") {
-    const { itemId, title, body: text, status } = data || {};
+    const {
+      itemId, title, body: text, status,
+      category, priority, event_date: eventDate, work_status: workStatus,
+      summary, featured, archive_date: archiveDate, related_project: relatedProject
+    } = data || {};
     const items = await getSheetData(googleToken, "Announcements");
     const rowIndex = items.findIndex(i => i.id === itemId);
     if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
@@ -325,6 +382,24 @@ exports.handler = async (event) => {
     if (typeof title === "string")  updates.push(sheetsUpdate(googleToken, `Announcements!C${row}`, [[title.trim()]]));
     if (typeof text === "string")   updates.push(sheetsUpdate(googleToken, `Announcements!D${row}`, [[text.trim()]]));
     if (typeof status === "string") updates.push(sheetsUpdate(googleToken, `Announcements!E${row}`, [[status]]));
+
+    // Phase 1A fields (G-N) — each is independently optional, only touched
+    // when the caller actually sent it, and normalized rather than trusted.
+    const hasExtField = [category, priority, eventDate, workStatus, summary, featured, archiveDate, relatedProject]
+      .some(v => typeof v === "string" || typeof v === "boolean");
+    if (hasExtField) {
+      // Self-heal the header for sheets created before columns G-N existed.
+      updates.push(sheetsUpdate(googleToken, "Announcements!G1:N1", [ANNOUNCEMENT_EXT_HEADERS]));
+      if (typeof category === "string")       updates.push(sheetsUpdate(googleToken, `Announcements!G${row}`, [[normalizeAnnCategory(category)]]));
+      if (typeof priority === "string")       updates.push(sheetsUpdate(googleToken, `Announcements!H${row}`, [[normalizeAnnPriority(priority)]]));
+      if (typeof eventDate === "string")      updates.push(sheetsUpdate(googleToken, `Announcements!I${row}`, [[normalizeAnnDate(eventDate)]]));
+      if (typeof workStatus === "string")     updates.push(sheetsUpdate(googleToken, `Announcements!J${row}`, [[normalizeAnnWorkStatus(workStatus)]]));
+      if (typeof summary === "string")        updates.push(sheetsUpdate(googleToken, `Announcements!K${row}`, [[summary.trim()]]));
+      if (typeof featured !== "undefined")    updates.push(sheetsUpdate(googleToken, `Announcements!L${row}`, [[normalizeAnnFeatured(featured)]]));
+      if (typeof archiveDate === "string")    updates.push(sheetsUpdate(googleToken, `Announcements!M${row}`, [[normalizeAnnDate(archiveDate)]]));
+      if (typeof relatedProject === "string") updates.push(sheetsUpdate(googleToken, `Announcements!N${row}`, [[relatedProject.trim()]]));
+    }
+
     await Promise.all(updates);
     await logActivity(googleToken, session.username, status ? `announcement_${status}` : "edited_announcement", itemId, "announcement", "");
     return { statusCode: 200, body: JSON.stringify({ success: true }) };
@@ -337,8 +412,8 @@ exports.handler = async (event) => {
     const rowIndex = items.findIndex(i => i.id === itemId);
     if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
     const row = rowIndex + 2;
-    // Clear the row's content (A:F) so it no longer appears on the site or portal
-    await sheetsUpdate(googleToken, `Announcements!A${row}:F${row}`, [["", "", "", "", "deleted", ""]]);
+    // Clear the row's content (A:N) so it no longer appears on the site or portal
+    await sheetsUpdate(googleToken, `Announcements!A${row}:N${row}`, [["", "", "", "", "deleted", "", "", "", "", "", "", "", "", ""]]);
     await logActivity(googleToken, session.username, "deleted_announcement", itemId, "announcement", "");
     return { statusCode: 200, body: JSON.stringify({ success: true }) };
   }
