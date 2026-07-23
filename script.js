@@ -314,6 +314,30 @@ function formatAnnouncementDate(iso) {
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
+// Announcement body formatter: escapes everything, then renders Markdown-style
+// links [text](target). http(s) targets open in a new tab; anything else is
+// treated as an on-site page name and navigates via go() (see the a[data-nav]
+// handler below). Newlines become <br>. Same output for the page + the banner.
+function formatAnnouncementBody(raw) {
+  var s = escapeHtmlText(raw);
+  s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function (m, text, url) {
+    if (/^https?:\/\//i.test(url)) {
+      return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + text + '</a>';
+    }
+    var page = url.replace(/^#/, '').replace(/[^a-z0-9_-]/gi, '');
+    return '<a href="#" data-nav="' + page + '">' + text + '</a>';
+  });
+  return s.replace(/\n/g, '<br>');
+}
+
+// One delegated handler for in-body links that point to an on-site page.
+document.addEventListener('click', function (e) {
+  var a = e.target.closest ? e.target.closest('a[data-nav]') : null;
+  if (!a) return;
+  e.preventDefault();
+  if (typeof go === 'function') go(a.getAttribute('data-nav'));
+});
+
 async function loadAnnouncements() {
   var container = document.getElementById('dynamic-announcements');
   if (!container) return;
@@ -327,7 +351,7 @@ async function loadAnnouncements() {
     var list = (data && data.announcements) || [];
     if (!list.length) { container.innerHTML = ''; return; }
     container.innerHTML = list.map(function(a) {
-      var bodyHtml = escapeHtmlText(a.body).replace(/\n/g, '<br>');
+      var bodyHtml = formatAnnouncementBody(a.body);
       var dateStr = formatAnnouncementDate(a.date_posted);
       return '<div class="notice-card notice-gold" style="grid-column:1/-1;">' +
         '<div class="notice-badge">Announcement' + (dateStr ? ' &middot; ' + dateStr : '') + '</div>' +
@@ -367,7 +391,7 @@ async function loadBanner() {
     if (!list.length) { bar.style.display = 'none'; return; }
     var top = list.slice(0, 3);
     inner.innerHTML = top.map(function(a) {
-      var bodyHtml = escapeHtmlText(a.body).replace(/\n/g, '<br>');
+      var bodyHtml = formatAnnouncementBody(a.body);
       var dateStr = formatAnnouncementDate(a.date_posted);
       return '<div class="announcement-item" role="button" tabindex="0" aria-expanded="false" onclick="toggleAnnItem(this)" onkeydown="annItemKey(event, this)">' +
         '<div class="ann-dot info"></div>' +

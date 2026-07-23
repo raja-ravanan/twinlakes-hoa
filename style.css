@@ -236,6 +236,7 @@ section { padding: 60px 2.5rem; max-width: 1100px; margin: 0 auto; }
 
 .notice-card h3 { font-size: 19px; color: var(--navy); font-weight: normal; margin-bottom: var(--sp-3); line-height: 1.35; }
 .notice-card p  { font-size: 15px; color: var(--text-s); font-family: var(--sans); line-height: 1.7; }
+.notice-card a  { color: var(--navy); font-weight: 700; text-decoration: underline; }
 
 .notice-detail { margin-top: var(--sp-4); padding-top: var(--sp-3); border-top: 1px solid var(--cream-border); }
 .notice-detail-row { display: flex; gap: var(--sp-3); margin-bottom: 10px; font-family: var(--sans); font-size: 14px; line-height: 1.55; }
