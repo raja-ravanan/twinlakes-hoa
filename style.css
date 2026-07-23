@@ -226,9 +226,12 @@ section { padding: 60px 2.5rem; max-width: 1100px; margin: 0 auto; }
 .notices-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 56px; }
 /* These two grids only ever hold full-width banner cards (grid-column:1/-1,
    no normal-placed sibling to anchor auto-fit's column count) — at narrow
-   single-column widths that combination makes auto-fit mis-size the track
-   wider than the container. Force one explicit column instead. */
-#dynamic-announcements, #older-announcements { grid-template-columns: 1fr; }
+   widths that combination makes auto-fit mis-size the track wider than the
+   container. A bare `1fr` isn't enough to fix it: grid tracks still carry
+   an implicit content-based min-width, so a long announcement body can
+   still blow the track out past the container. minmax(0, 1fr) zeroes that
+   floor so the column is always exactly the container's width. */
+#dynamic-announcements, #older-announcements { grid-template-columns: minmax(0, 1fr); }
 
 .notice-card { background: var(--white); border-radius: var(--radius-lg); padding: var(--sp-6) 28px; border: 1px solid var(--cream-border); border-top: 3px solid var(--navy); box-shadow: var(--shadow-sm); transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s; }
 .notice-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
