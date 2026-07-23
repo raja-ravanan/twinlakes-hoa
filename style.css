@@ -29,6 +29,7 @@
   --green-light:  #e8f5e8;
   --red-dark:     #6b1a1a;
   --red-light:    #fdf0f0;
+  --red-border:   #e8b4b0;
 
   /* Typography */
   --serif:        Georgia, 'Times New Roman', serif;
@@ -243,6 +244,33 @@ section { padding: 60px 2.5rem; max-width: 1100px; margin: 0 auto; }
 .notice-detail-row:last-child { margin-bottom: 0; }
 .nd-label { font-weight: 700; color: var(--navy); min-width: 130px; flex-shrink: 0; font-size: 14px; letter-spacing: 0.3px; padding-top: 0; }
 
+/* ── ANNOUNCEMENT ORGANIZATION (category/priority/status badges, filters, archive) ── */
+.ann-badge-row { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin: -4px 0 var(--sp-3); }
+.ann-empty { font-family: var(--sans); font-size: 15px; color: var(--text-m); text-align: center; padding: var(--sp-5) 0; }
+
+.ann-filter-bar { display: flex; flex-wrap: wrap; gap: var(--sp-2); margin-bottom: var(--sp-5); }
+.ann-chip { font-family: var(--sans); font-size: 13.5px; font-weight: 600; color: var(--navy); background: var(--white); border: 1px solid var(--cream-border); border-radius: 999px; padding: 10px 18px; min-height: 44px; cursor: pointer; transition: background .15s, border-color .15s, color .15s; }
+.ann-chip:hover { border-color: var(--gold-border); background: var(--navy-light); }
+.ann-chip.active { background: var(--navy); border-color: var(--navy); color: var(--cream); }
+
+.critical-alert { background: var(--red-light); border: 1px solid var(--red-border); border-left: 4px solid var(--red-dark); border-radius: var(--radius-lg); padding: var(--sp-5) var(--sp-6); box-shadow: var(--shadow-sm); }
+.critical-alert .ca-badge { display: inline-block; font-size: 11px; font-family: var(--sans); font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--red-dark); background: var(--white); padding: 5px 12px; border-radius: 999px; margin-bottom: var(--sp-3); }
+.critical-alert h3 { font-size: 20px; color: var(--red-dark); font-weight: normal; margin-bottom: var(--sp-2); line-height: 1.35; }
+.critical-alert p { font-size: 15px; color: var(--text-s); font-family: var(--sans); line-height: 1.7; margin-bottom: var(--sp-2); }
+.critical-alert .ca-meta { font-size: 13px; font-family: var(--sans); color: var(--text-m); }
+
+.upcoming-work-list { display: flex; flex-direction: column; gap: var(--sp-4); }
+.upcoming-item { display: flex; gap: var(--sp-5); align-items: flex-start; background: var(--white); border: 1px solid var(--cream-border); border-left: 3px solid var(--gold); border-radius: var(--radius); padding: var(--sp-4) var(--sp-5); box-shadow: var(--shadow-sm); }
+.upcoming-date { flex-shrink: 0; width: 76px; text-align: center; }
+.upcoming-date .ud-month { font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--gold-dark); }
+.upcoming-date .ud-day { font-family: var(--serif); font-size: 30px; color: var(--navy); line-height: 1.2; }
+.upcoming-body { min-width: 0; }
+.upcoming-body h4 { font-size: 17px; color: var(--navy); font-weight: normal; margin-bottom: 6px; line-height: 1.35; }
+.upcoming-body p { font-size: 14px; color: var(--text-s); font-family: var(--sans); line-height: 1.6; margin-top: 6px; }
+
+.older-updates-section { margin-top: var(--sp-2); }
+.older-updates-section .sec-label { margin-bottom: var(--sp-3); }
+
 /* ── DOS & DONTS ── */
 .dos-donts { display: grid; grid-template-columns: 1fr 1fr; gap: var(--sp-4); margin-top: var(--sp-4); }
 .dos-header, .donts-header { display: flex; align-items: center; gap: var(--sp-2); font-size: 12px; font-family: var(--sans); font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; padding: 9px 14px; border-radius: var(--radius); margin-bottom: var(--sp-3); }
@@ -272,6 +300,7 @@ tbody tr { transition: background 0.15s; }
 .badge-gold  { background: var(--gold-light); color: var(--gold-dark); }
 .badge-muted { background: var(--cream-dark); color: var(--text-m); }
 .badge-green { background: var(--green-light); color: var(--green-mid); }
+.badge-red   { background: var(--red-light); color: var(--red-dark); }
 .table-note { font-size: 14px; color: var(--text-m); font-family: sans-serif; margin-top: 18px; }
 .table-note a { color: var(--navy); }
 
@@ -358,6 +387,7 @@ tbody tr { transition: background 0.15s; }
 .doc-btn:hover { background: var(--navy-mid); box-shadow: var(--shadow-md); }
 .doc-btn-gold { background: var(--gold); color: var(--navy-dark); }
 .doc-btn-gold:hover { background: var(--gold-border); }
+button.doc-btn { border: none; cursor: pointer; }
 .arc-note { display: flex; align-items: flex-start; gap: 12px; margin-top: 16px; background: var(--navy-light); border-radius: var(--radius-sm); padding: 16px 20px; border: 1px solid var(--navy-soft); border-left: 3px solid var(--navy); }
 .arc-note p { font-size: 14px; font-family: sans-serif; color: var(--text-s); line-height: 1.6; }
 .arc-note strong { color: var(--navy); }
@@ -505,6 +535,9 @@ footer { background: linear-gradient(180deg, var(--navy-dark), var(--navy-deep))
   .doc-btn      { align-self: flex-start; }
   .notices-grid { grid-template-columns: 1fr; }
   .mowing-num   { font-size: 40px; }
+  .upcoming-item { flex-direction: column; gap: var(--sp-3); }
+  .upcoming-date { width: auto; text-align: left; display: flex; align-items: baseline; gap: 6px; }
+  .critical-alert { padding: var(--sp-4) var(--sp-5); }
 }
 /* ============================================
    CHAT WIDGET â€” Twin Lakes Theme

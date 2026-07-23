@@ -513,7 +513,29 @@
         </button>
       </div>
     </div>
- 
+
+    <!-- CRITICAL ALERT (board-posted; shown only when a published, non-archived, priority=critical announcement exists) -->
+    <section id="critical-alert-section" style="display:none;">
+      <div id="critical-alert" class="critical-alert"></div>
+    </section>
+
+    <!-- UPCOMING WORK (board-posted; hidden when there is nothing upcoming) -->
+    <section id="upcoming-work-section" style="display:none;">
+      <div class="sec-label">What&rsquo;s Coming</div>
+      <h2 class="sec-title">Upcoming Work</h2>
+      <div id="upcoming-work-list" class="upcoming-work-list"></div>
+    </section>
+
+    <!-- LATEST UPDATES (board-posted; five newest published announcements) -->
+    <section id="latest-updates-section" style="display:none;">
+      <div class="sec-label">What&rsquo;s New</div>
+      <h2 class="sec-title">Latest Updates</h2>
+      <div id="latest-updates-grid" class="notices-grid" style="margin-bottom:var(--sp-5);"></div>
+      <div style="text-align:center;">
+        <button class="doc-btn" onclick="go('updates')">View All Updates</button>
+      </div>
+    </section>
+
     <!-- GOLD STRIP -->
     <div class="gold-strip">
       <div class="gold-strip-inner">
@@ -695,8 +717,18 @@
           <a onclick="return uJump('u-lawn')">Lawn Care Calendar</a>
         </aside>
         <div class="updates-main">
+        <!-- Category filter chips (client-side; filters the board-posted announcements below) -->
+        <div id="ann-filter-bar" class="ann-filter-bar" role="group" aria-label="Filter announcements by category"></div>
         <!-- Board-posted announcements (managed from the Board Portal) load here -->
         <div id="dynamic-announcements" class="notices-grid" style="margin-bottom:0;"></div>
+
+        <!-- Older Updates (archived announcements; hidden until one exists) -->
+        <div id="older-updates-section" class="older-updates-section" style="display:none;">
+          <div class="sec-label">Archive</div>
+          <h2 style="font-size:22px;font-weight:normal;color:var(--navy);margin-bottom:16px;">Older Updates</h2>
+          <div id="older-announcements" class="notices-grid"></div>
+        </div>
+
         <div class="notices-grid">
           <div class="notice-card notice-gold" id="u-committee" style="grid-column:1/-1;">
             <div class="notice-badge">Get Involved &middot; New Committee</div>
