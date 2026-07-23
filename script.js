@@ -314,29 +314,288 @@ function formatAnnouncementDate(iso) {
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
+// Announcement body formatter: escapes everything, then renders Markdown-style
+// links [text](target). http(s) targets open in a new tab; anything else is
+// treated as an on-site page name and navigates via go() (see the a[data-nav]
+// handler below). Newlines become <br>. Same output for the page + the banner.
+function formatAnnouncementBody(raw) {
+  var s = escapeHtmlText(raw);
+  s = s.replace(/\[([^\]]+)\]\(([^)\s]+)\)/g, function (m, text, url) {
+    if (/^https?:\/\//i.test(url)) {
+      return '<a href="' + url + '" target="_blank" rel="noopener noreferrer">' + text + '</a>';
+    }
+    var page = url.replace(/^#/, '').replace(/[^a-z0-9_-]/gi, '');
+    return '<a href="#" data-nav="' + page + '">' + text + '</a>';
+  });
+  return s.replace(/\n/g, '<br>');
+}
+
+// One delegated handler for in-body links that point to an on-site page.
+document.addEventListener('click', function (e) {
+  var a = e.target.closest ? e.target.closest('a[data-nav]') : null;
+  if (!a) return;
+  e.preventDefault();
+  if (typeof go === 'function') go(a.getAttribute('data-nav'));
+});
+
+/* ── Announcement organization (Phase 1B): category groups, archive
+   handling, and one shared card renderer for the Updates page, the
+   homepage discovery sections, and Upcoming Work. ── */
+
+// Real category values (docs/announcement-schema.md) grouped into the
+// resident-facing filter chips shown on the Updates page.
+var ANN_CATEGORY_GROUPS = {
+  'General': 'general', 'Documents': 'general',
+  'Ponds': 'pond-landscaping', 'Landscaping': 'pond-landscaping', 'Irrigation': 'pond-landscaping',
+  'Board & Meetings': 'board-meetings',
+  'Traffic': 'traffic-safety', 'Safety': 'traffic-safety',
+  'Community Events': 'community-events',
+  'Maintenance': 'maintenance-services'
+};
+var ANN_FILTER_CHIPS = [
+  { key: 'all', label: 'All' },
+  { key: 'general', label: 'General' },
+  { key: 'pond-landscaping', label: 'Pond & Landscaping' },
+  { key: 'board-meetings', label: 'Board & Meetings' },
+  { key: 'traffic-safety', label: 'Traffic & Safety' },
+  { key: 'community-events', label: 'Community Events' },
+  { key: 'maintenance-services', label: 'Maintenance & Services' }
+];
+function categoryGroupKey(cat) { return ANN_CATEGORY_GROUPS[cat] || 'general'; }
+
+var MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+var WORK_STATUS_LABELS = { upcoming: 'Upcoming', 'in-progress': 'In Progress', completed: 'Completed' };
+var WORK_STATUS_BADGE_CLASS = { upcoming: 'badge-blue', 'in-progress': 'badge-gold', completed: 'badge-green' };
+function workStatusBadge(status) {
+  if (!status || !WORK_STATUS_LABELS[status]) return '';
+  return '<span class="badge ' + WORK_STATUS_BADGE_CLASS[status] + '">' + WORK_STATUS_LABELS[status] + '</span>';
+}
+function priorityBadge(priority) {
+  if (priority === 'critical') return '<span class="badge badge-red">Critical</span>';
+  if (priority === 'high') return '<span class="badge badge-gold">High Priority</span>';
+  return '';
+}
+
+function todayISODate() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+// Plain YYYY-MM-DD string check — deliberately not `new Date(...)` parsing,
+// so comparisons stay a local calendar-date string compare with no UTC shift.
+function isValidCalendarDateString(s) {
+  return /^\d{4}-\d{2}-\d{2}$/.test(String(s || '').trim());
+}
+// An announcement archives once its archive_date is BEFORE today (today
+// itself still counts as active for the whole day). It then drops out of
+// the homepage sections and Latest Updates, but stays visible under Older
+// Updates on the Updates page. Blank or invalid archive_date never archives.
+function isAnnouncementArchived(a) {
+  var d = String(a.archive_date || '').trim();
+  if (!isValidCalendarDateString(d)) return false;
+  return d < todayISODate();
+}
+
+// Plain-text fallback when the board hasn't set a summary: strips the
+// markdown-lite link syntax down to its visible text, then truncates on a
+// word boundary.
+function announcementExcerpt(body, maxLen) {
+  maxLen = maxLen || 140;
+  var plain = String(body || '').replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').replace(/\s+/g, ' ').trim();
+  if (plain.length <= maxLen) return plain;
+  return plain.slice(0, maxLen).replace(/\s+\S*$/, '') + '…';
+}
+
+// Single source of truth for announcement card markup.
+//   'standard' — Updates page (full body, event-date row)
+//   'compact'  — Upcoming Work row (event date + title + summary)
+//   'homepage' — Latest Updates card (summary instead of full body)
+// All user-entered fields are escaped before insertion.
+function renderAnnouncementCard(a, variant) {
+  var category = escapeHtmlText(a.category || 'General');
+  var groupKey = categoryGroupKey(a.category || 'General');
+  var dateStr = formatAnnouncementDate(a.date_posted);
+  var eventStr = a.event_date ? formatAnnouncementDate(a.event_date) : '';
+  var summaryText = escapeHtmlText((a.summary || '').trim() || announcementExcerpt(a.body));
+  var badges = priorityBadge(a.priority) + workStatusBadge(a.work_status);
+  var badgeRow = badges ? '<div class="ann-badge-row">' + badges + '</div>' : '';
+  var eventRow = eventStr
+    ? '<div class="notice-detail"><div class="notice-detail-row"><span class="nd-label">Event Date</span><span>' + escapeHtmlText(eventStr) + '</span></div></div>'
+    : '';
+
+  if (variant === 'compact') {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(a.event_date || '');
+    var dateBlock = m
+      ? '<div class="upcoming-date"><div class="ud-month">' + MONTH_ABBR[(+m[2]) - 1] + '</div><div class="ud-day">' + (+m[3]) + '</div></div>'
+      : '<div class="upcoming-date"><div class="ud-month">Date</div><div class="ud-day">TBD</div></div>';
+    return '<div class="upcoming-item">' + dateBlock +
+      '<div class="upcoming-body">' +
+        '<div class="notice-badge">' + category + '</div>' +
+        badgeRow +
+        '<h4>' + escapeHtmlText(a.title) + '</h4>' +
+        (summaryText ? '<p>' + summaryText + '</p>' : '') +
+      '</div>' +
+    '</div>';
+  }
+
+  if (variant === 'homepage') {
+    return '<div class="notice-card notice-gold" data-ann-group="' + groupKey + '">' +
+      '<div class="notice-badge">' + category + (dateStr ? ' &middot; ' + escapeHtmlText(dateStr) : '') + '</div>' +
+      badgeRow +
+      '<h3>' + escapeHtmlText(a.title) + '</h3>' +
+      (summaryText ? '<p>' + summaryText + '</p>' : '') +
+      eventRow +
+    '</div>';
+  }
+
+  // 'standard' — Updates page
+  var bodyHtml = formatAnnouncementBody(a.body);
+  return '<div class="notice-card notice-gold" style="grid-column:1/-1;" data-ann-group="' + groupKey + '">' +
+    '<div class="notice-badge">' + category + (dateStr ? ' &middot; ' + escapeHtmlText(dateStr) : '') + '</div>' +
+    badgeRow +
+    '<h3>' + escapeHtmlText(a.title) + '</h3>' +
+    '<p>' + bodyHtml + '</p>' +
+    eventRow +
+  '</div>';
+}
+
+function renderCriticalAlert(a) {
+  var summaryText = escapeHtmlText((a.summary || '').trim() || announcementExcerpt(a.body, 180));
+  var dateStr = formatAnnouncementDate(a.date_posted);
+  var eventStr = a.event_date ? formatAnnouncementDate(a.event_date) : '';
+  var metaParts = [];
+  if (dateStr) metaParts.push('Posted ' + escapeHtmlText(dateStr));
+  if (eventStr) metaParts.push('Event ' + escapeHtmlText(eventStr));
+  return '<div class="ca-badge">Critical Alert</div>' +
+    '<h3>' + escapeHtmlText(a.title) + '</h3>' +
+    (summaryText ? '<p>' + summaryText + '</p>' : '') +
+    (metaParts.length ? '<div class="ca-meta">' + metaParts.join(' &middot; ') + '</div>' : '');
+}
+
+// Single fetch of getPublicAnnouncements shared by the Updates page and the
+// homepage discovery sections (the banner keeps its own separate fetch).
+var _annCache = null;
+async function fetchPublicAnnouncements() {
+  if (_annCache) return _annCache;
+  var res = await fetch('/.netlify/functions/board-api', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'getPublicAnnouncements' })
+  });
+  var data = await res.json();
+  _annCache = (data && data.announcements) || [];
+  return _annCache;
+}
+
+var _annActiveFilter = 'all';
+
+function buildAnnouncementFilterBar() {
+  var bar = document.getElementById('ann-filter-bar');
+  if (!bar) return;
+  bar.innerHTML = ANN_FILTER_CHIPS.map(function(c) {
+    return '<button type="button" class="ann-chip' + (c.key === 'all' ? ' active' : '') + '" data-key="' + c.key + '" ' +
+      'aria-pressed="' + (c.key === 'all' ? 'true' : 'false') + '" onclick="applyAnnouncementFilter(\'' + c.key + '\')">' + c.label + '</button>';
+  }).join('');
+}
+
+// Client-side filter: toggles visibility of already-rendered cards, no
+// refetch and no page reload.
+function applyAnnouncementFilter(groupKey) {
+  _annActiveFilter = groupKey;
+  var cards = document.querySelectorAll('#dynamic-announcements [data-ann-group]');
+  var visible = 0;
+  cards.forEach(function(card) {
+    var show = groupKey === 'all' || card.getAttribute('data-ann-group') === groupKey;
+    card.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  var empty = document.getElementById('dynamic-announcements-empty');
+  if (empty) empty.style.display = visible ? 'none' : '';
+  document.querySelectorAll('.ann-chip').forEach(function(chip) {
+    var active = chip.getAttribute('data-key') === groupKey;
+    chip.classList.toggle('active', active);
+    chip.setAttribute('aria-pressed', active ? 'true' : 'false');
+  });
+}
+
 async function loadAnnouncements() {
   var container = document.getElementById('dynamic-announcements');
   if (!container) return;
+  var olderSection = document.getElementById('older-updates-section');
+  var olderContainer = document.getElementById('older-announcements');
+  buildAnnouncementFilterBar();
   try {
-    var res = await fetch('/.netlify/functions/board-api', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'getPublicAnnouncements' })
-    });
-    var data = await res.json();
-    var list = (data && data.announcements) || [];
-    if (!list.length) { container.innerHTML = ''; return; }
-    container.innerHTML = list.map(function(a) {
-      var bodyHtml = escapeHtmlText(a.body).replace(/\n/g, '<br>');
-      var dateStr = formatAnnouncementDate(a.date_posted);
-      return '<div class="notice-card notice-gold" style="grid-column:1/-1;">' +
-        '<div class="notice-badge">Announcement' + (dateStr ? ' &middot; ' + dateStr : '') + '</div>' +
-        '<h3>' + escapeHtmlText(a.title) + '</h3>' +
-        '<p>' + bodyHtml + '</p>' +
-      '</div>';
-    }).join('');
+    var list = await fetchPublicAnnouncements();
+    var current = list.filter(function(a) { return !isAnnouncementArchived(a); });
+    var older = list.filter(isAnnouncementArchived);
+
+    container.innerHTML = current.length
+      ? current.map(function(a) { return renderAnnouncementCard(a, 'standard'); }).join('') +
+        '<p id="dynamic-announcements-empty" class="ann-empty" style="display:none;grid-column:1/-1;">No announcements in this category right now.</p>'
+      : '';
+
+    if (olderSection && olderContainer) {
+      if (older.length) {
+        olderContainer.innerHTML = older.map(function(a) { return renderAnnouncementCard(a, 'standard'); }).join('');
+        olderSection.style.display = '';
+      } else {
+        olderContainer.innerHTML = '';
+        olderSection.style.display = 'none';
+      }
+    }
+    applyAnnouncementFilter(_annActiveFilter);
   } catch (e) {
     container.innerHTML = '';
+  }
+}
+
+// Homepage discovery sections: Critical Alert, Upcoming Work, Latest
+// Updates. Each hides itself completely when it has nothing to show.
+async function loadHomepageDiscovery() {
+  var caSection = document.getElementById('critical-alert-section');
+  var caBox = document.getElementById('critical-alert');
+  var upSection = document.getElementById('upcoming-work-section');
+  var upList = document.getElementById('upcoming-work-list');
+  var luSection = document.getElementById('latest-updates-section');
+  var luGrid = document.getElementById('latest-updates-grid');
+  if (!caSection && !upSection && !luSection) return;
+  try {
+    var list = await fetchPublicAnnouncements();
+    var active = list.filter(function(a) { return !isAnnouncementArchived(a); });
+
+    // Critical Alert — most recent published, non-archived, priority=critical.
+    var critical = active.filter(function(a) { return a.priority === 'critical'; })[0];
+    if (caSection && caBox) {
+      if (critical) { caBox.innerHTML = renderCriticalAlert(critical); caSection.style.display = ''; }
+      else { caBox.innerHTML = ''; caSection.style.display = 'none'; }
+    }
+
+    // Upcoming Work — work_status=upcoming OR a future event_date; soonest
+    // first. Completed items are excluded even if they carry a future date.
+    var today = todayISODate();
+    var upcoming = active.filter(function(a) {
+      if (a.work_status === 'completed') return false;
+      var hasFutureEvent = isValidCalendarDateString(a.event_date) && a.event_date >= today;
+      return a.work_status === 'upcoming' || hasFutureEvent;
+    }).sort(function(x, y) {
+      var xd = isValidCalendarDateString(x.event_date) ? x.event_date : '9999-99-99';
+      var yd = isValidCalendarDateString(y.event_date) ? y.event_date : '9999-99-99';
+      return xd < yd ? -1 : xd > yd ? 1 : 0;
+    });
+    if (upSection && upList) {
+      if (upcoming.length) { upList.innerHTML = upcoming.map(function(a) { return renderAnnouncementCard(a, 'compact'); }).join(''); upSection.style.display = ''; }
+      else { upList.innerHTML = ''; upSection.style.display = 'none'; }
+    }
+
+    // Latest Updates — 5 newest published (API already sorts newest-first).
+    var latest = active.slice(0, 5);
+    if (luSection && luGrid) {
+      if (latest.length) { luGrid.innerHTML = latest.map(function(a) { return renderAnnouncementCard(a, 'homepage'); }).join(''); luSection.style.display = ''; }
+      else { luGrid.innerHTML = ''; luSection.style.display = 'none'; }
+    }
+  } catch (e) {
+    if (caSection) caSection.style.display = 'none';
+    if (upSection) upSection.style.display = 'none';
+    if (luSection) luSection.style.display = 'none';
   }
 }
 
@@ -367,7 +626,7 @@ async function loadBanner() {
     if (!list.length) { bar.style.display = 'none'; return; }
     var top = list.slice(0, 3);
     inner.innerHTML = top.map(function(a) {
-      var bodyHtml = escapeHtmlText(a.body).replace(/\n/g, '<br>');
+      var bodyHtml = formatAnnouncementBody(a.body);
       var dateStr = formatAnnouncementDate(a.date_posted);
       return '<div class="announcement-item" role="button" tabindex="0" aria-expanded="false" onclick="toggleAnnItem(this)" onkeydown="annItemKey(event, this)">' +
         '<div class="ann-dot info"></div>' +
@@ -491,6 +750,7 @@ async function loadFinancialsFlag() {
 
 document.addEventListener('DOMContentLoaded', loadBanner);
 document.addEventListener('DOMContentLoaded', loadAnnouncements);
+document.addEventListener('DOMContentLoaded', loadHomepageDiscovery);
 document.addEventListener('DOMContentLoaded', loadMinutes);
 document.addEventListener('DOMContentLoaded', loadFinancialsFlag);
 
