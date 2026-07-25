@@ -4,7 +4,9 @@
   "description": "",
   "main": "script.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "test:resident-auth": "node scripts/test-resident-auth.js",
+    "test:resident-audit-e2e": "node scripts/test-resident-audit-e2e.js"
   },
   "repository": {
     "type": "git",

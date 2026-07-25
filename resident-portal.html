@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Resident Portal — Twin Lakes HOA</title>
+  <style>
+    :root {
+      --navy:#1B4B7A; --navy-dark:#0F2D4A; --gold:#C9A84C; --gold-deep:#B8973E;
+      --cream:#FAF7F2; --cream-note:#FBF8F0; --gold-border:#dfc07a; --text-m:#5a6a7a;
+      --white:#fff; --line:#ddd;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Georgia, serif; background: var(--cream); min-height:100vh; color:#2c3e50; }
+
+    header { background:linear-gradient(135deg,var(--navy),var(--navy-dark)); color:var(--cream); padding:20px 24px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+    .brand { display:flex; align-items:center; gap:12px; }
+    .logo { width:40px; height:40px; border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:15px; font-style:italic; color:var(--gold); flex-shrink:0; }
+    .brand-text h1 { font-size:19px; font-weight:normal; }
+    .brand-text p { font-size:12px; font-family:sans-serif; color:var(--gold); letter-spacing:1px; text-transform:uppercase; }
+    #logout-btn { background:transparent; border:1px solid var(--gold); color:var(--cream); padding:9px 18px; border-radius:6px; font-family:sans-serif; font-size:13px; font-weight:700; letter-spacing:0.5px; cursor:pointer; }
+    #logout-btn:hover:not(:disabled) { background:var(--gold); color:var(--navy-dark); }
+    #logout-btn:disabled { opacity:0.6; cursor:not-allowed; }
+
+    main { max-width:960px; margin:0 auto; padding:40px 24px 64px; }
+    .intro h2 { font-size:28px; color:var(--navy); font-weight:normal; margin-bottom:8px; }
+    .intro p { font-size:15px; font-family:sans-serif; color:var(--text-m); margin-bottom:32px; }
+
+    .card-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:18px; }
+    .card { background:var(--white); border-radius:14px; padding:24px 20px; box-shadow:0 6px 20px rgba(15,45,74,0.08); border-top:3px solid var(--gold); }
+    .card h3 { font-size:17px; color:var(--navy); font-weight:normal; margin-bottom:10px; }
+    .soon-pill { display:inline-block; font-family:sans-serif; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#8a7326; background:var(--cream-note); border:1px solid var(--gold-border); border-radius:20px; padding:4px 12px; }
+
+    .back-link { margin-top:40px; font-size:13px; font-family:sans-serif; }
+    .back-link a { color:var(--navy); text-decoration:none; }
+    a:focus-visible, button:focus-visible { outline:3px solid var(--gold); outline-offset:2px; border-radius:4px; }
+
+    #loading-state { max-width:960px; margin:80px auto; text-align:center; font-family:sans-serif; color:var(--text-m); }
+    #portal-content { display:none; }
+  </style>
+</head>
+<body>
+  <div id="loading-state" role="status" aria-live="polite">Verifying access…</div>
+
+  <div id="portal-content">
+    <header>
+      <div class="brand">
+        <div class="logo">TL</div>
+        <div class="brand-text">
+          <h1>Resident Portal</h1>
+          <p>Twin Lakes at Floyds Fork HOA</p>
+        </div>
+      </div>
+      <button id="logout-btn" type="button">Log Out</button>
+    </header>
+
+    <main>
+      <div class="intro">
+        <h2>Resident Portal</h2>
+        <p>Private information and resources for Twin Lakes homeowners.</p>
+      </div>
+
+      <div class="card-grid">
+        <div class="card"><h3>Financials</h3><span class="soon-pill">Coming soon</span></div>
+        <div class="card"><h3>Resident Directory</h3><span class="soon-pill">Coming soon</span></div>
+        <div class="card"><h3>Resident Documents</h3><span class="soon-pill">Coming soon</span></div>
+        <div class="card"><h3>Meeting Information</h3><span class="soon-pill">Coming soon</span></div>
+        <div class="card"><h3>Committees</h3><span class="soon-pill">Coming soon</span></div>
+      </div>
+
+      <p class="back-link"><a href="/">← Back to Twin Lakes website</a></p>
+    </main>
+  </div>
+
+  <!--
+    Architecture note (Phase 2A):
+    - This page is a public static shell — session state is verified at
+      runtime via GET /.netlify/functions/resident-session, never assumed
+      from the fact that this file loaded.
+    - Future financials, directory records, and private documents must be
+      retrieved through their own authenticated Netlify Functions; every
+      protected endpoint independently re-verifies the signed
+      tl_resident_session cookie. This page's redirect-on-failure is a UX
+      convenience, not a security control.
+    - Files placed in the publicly deployed directory are publicly
+      accessible even when nothing links to them — private documents must
+      never be committed into this deployed folder.
+  -->
+  <script>
+    var loadingEl = document.getElementById("loading-state");
+    var contentEl = document.getElementById("portal-content");
+    var logoutBtn = document.getElementById("logout-btn");
+
+    async function verifySession() {
+      try {
+        var res = await fetch("/.netlify/functions/resident-session", { method: "GET" });
+        var data = await res.json();
+        if (data && data.authenticated) {
+          loadingEl.style.display = "none";
+          contentEl.style.display = "block";
+        } else {
+          window.location.href = "/resident-login.html";
+        }
+      } catch (err) {
+        window.location.href = "/resident-login.html";
+      }
+    }
+
+    logoutBtn.addEventListener("click", async function () {
+      logoutBtn.disabled = true;
+      logoutBtn.textContent = "Logging out…";
+      try {
+        await fetch("/.netlify/functions/resident-logout", { method: "POST" });
+      } catch (err) {}
+      window.location.href = "/resident-login.html";
+    });
+
+    verifySession();
+  </script>
+</body>
+</html>
