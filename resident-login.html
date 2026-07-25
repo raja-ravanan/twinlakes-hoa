@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Resident Portal — Twin Lakes HOA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --navy:#1B4B7A; --navy-dark:#0F2D4A; --gold:#C9A84C; --gold-deep:#B8973E;
+      --cream:#FAF7F2; --cream-note:#FBF8F0; --gold-border:#dfc07a; --text-m:#5a6a7a;
+      --white:#fff; --line:#ddd; --red-light:#fdf0f0; --red-border:#f5c6c6; --red-dark:#6b1a1a;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Georgia, serif; background: var(--navy-dark); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+    .card { background:var(--white); border-radius:16px; padding:48px 40px; max-width:440px; width:100%; box-shadow:0 24px 64px rgba(0,0,0,0.3); border-top:4px solid var(--gold); text-align:center; }
+    .logo { width:64px; height:64px; background:linear-gradient(135deg,var(--navy),var(--navy-dark)); border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:22px; font-style:italic; color:var(--gold); font-family:Georgia,serif; }
+    .eyebrow { font-size:11px; font-family:sans-serif; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+    h1 { font-size:26px; color:var(--navy); font-weight:normal; margin-bottom:6px; }
+    .subtitle { font-size:14px; color:var(--text-m); font-style:italic; margin-bottom:32px; }
+    .notice { background:var(--cream-note); border:1px solid var(--gold-border); border-left:3px solid var(--gold); border-radius:4px; padding:12px 16px; margin-bottom:24px; font-size:13px; font-family:sans-serif; color:#5a4a1a; text-align:left; line-height:1.6; }
+    .form-group { margin-bottom:18px; text-align:left; }
+    label { display:block; font-size:11px; font-family:sans-serif; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#2c3e50; margin-bottom:7px; }
+    input { width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:6px; font-size:15px; font-family:sans-serif; outline:none; transition:border-color 0.2s; }
+    input:focus { border-color:var(--gold); }
+    button { width:100%; background:linear-gradient(135deg,var(--navy),var(--navy-dark)); color:var(--cream); border:none; padding:16px; border-radius:8px; font-size:15px; font-family:sans-serif; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; margin-top:8px; }
+    button:hover:not(:disabled) { background:linear-gradient(135deg,var(--gold),var(--gold-deep)); color:var(--navy); }
+    button:disabled { opacity:0.65; cursor:not-allowed; }
+    .error { background:var(--red-light); border:1px solid var(--red-border); border-radius:6px; padding:12px; font-size:13px; font-family:sans-serif; color:var(--red-dark); margin-top:16px; display:none; }
+    .back-link { margin-top:20px; font-size:13px; font-family:sans-serif; color:#999; }
+    .back-link a { color:var(--navy); text-decoration:none; }
+    a:focus-visible, button:focus-visible, input:focus-visible { outline:3px solid var(--gold); outline-offset:2px; border-radius:4px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">TL</div>
+    <div class="eyebrow">Residents Only</div>
+    <h1>Resident Portal</h1>
+    <p class="subtitle">Twin Lakes at Floyds Fork HOA</p>
+    <div class="notice">🔒 This portal is intended exclusively for Twin Lakes residents. Please do not share the community access password outside the neighborhood.</div>
+    <form id="login-form" novalidate>
+      <div class="form-group">
+        <label for="houseNumber">House Number</label>
+        <input type="text" id="houseNumber" name="houseNumber" maxlength="10" autocomplete="off" required/>
+      </div>
+      <div class="form-group">
+        <label for="lastName">Last Name</label>
+        <input type="text" id="lastName" name="lastName" maxlength="60" autocomplete="family-name" required/>
+      </div>
+      <div class="form-group">
+        <label for="password">Community Access Password</label>
+        <input type="password" id="password" name="password" maxlength="200" autocomplete="current-password" required/>
+      </div>
+      <button type="submit" id="submit-btn">Access Resident Portal</button>
+      <div class="error" id="error" role="alert" aria-live="polite"></div>
+    </form>
+    <p class="back-link"><a href="/">← Back to Twin Lakes website</a></p>
+  </div>
+  <script>
+    var DEFAULT_ERROR = "We could not verify your resident access information. Please review your entries and try again.";
+    var form = document.getElementById("login-form");
+    var submitBtn = document.getElementById("submit-btn");
+    var errEl = document.getElementById("error");
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      errEl.style.display = "none";
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Verifying…";
+      form.setAttribute("aria-busy", "true");
+
+      var houseNumber = document.getElementById("houseNumber").value;
+      var lastName = document.getElementById("lastName").value;
+      var password = document.getElementById("password").value;
+
+      try {
+        var res = await fetch("/.netlify/functions/resident-login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ houseNumber: houseNumber, lastName: lastName, password: password })
+        });
+
+        if (res.ok) {
+          window.location.href = "/resident-portal.html";
+          return;
+        }
+
+        var message = DEFAULT_ERROR;
+        try {
+          var data = await res.json();
+          if (data && data.error) message = data.error;
+        } catch (parseErr) {}
+        errEl.textContent = message;
+        errEl.style.display = "block";
+      } catch (networkErr) {
+        errEl.textContent = "Connection error. Please try again.";
+        errEl.style.display = "block";
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Access Resident Portal";
+        form.removeAttribute("aria-busy");
+      }
+    });
+  </script>
+</body>
+</html>
