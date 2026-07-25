@@ -31,12 +31,46 @@
     .card h3 { font-size:17px; color:var(--navy); font-weight:normal; margin-bottom:10px; }
     .soon-pill { display:inline-block; font-family:sans-serif; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#8a7326; background:var(--cream-note); border:1px solid var(--gold-border); border-radius:20px; padding:4px 12px; }
 
+    button.card { cursor:pointer; text-align:left; width:100%; font:inherit; border:none; border-top:3px solid var(--gold); transition:box-shadow 0.2s, transform 0.2s; }
+    button.card:hover { box-shadow:0 10px 28px rgba(15,45,74,0.16); transform:translateY(-2px); }
+    .live-pill { display:inline-block; font-family:sans-serif; font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#2e7d4f; background:#e6f4ea; border:1px solid #bfe3cc; border-radius:20px; padding:4px 12px; }
+
     .back-link { margin-top:40px; font-size:13px; font-family:sans-serif; }
     .back-link a { color:var(--navy); text-decoration:none; }
     a:focus-visible, button:focus-visible { outline:3px solid var(--gold); outline-offset:2px; border-radius:4px; }
 
     #loading-state { max-width:960px; margin:80px auto; text-align:center; font-family:sans-serif; color:var(--text-m); }
     #portal-content { display:none; }
+
+    #financials-view { display:none; }
+    .fin-back { display:inline-flex; align-items:center; gap:6px; margin-bottom:20px; font-family:sans-serif; font-size:13px; font-weight:700; color:var(--navy); background:none; border:none; padding:0; cursor:pointer; }
+    .fin-title { font-size:22px; color:var(--navy); font-weight:normal; margin-bottom:4px; }
+    .fin-sub { font-size:13px; font-family:sans-serif; color:var(--text-m); margin-bottom:24px; }
+    .fin-assoc { background:var(--white); border-radius:14px; padding:20px 22px; margin-bottom:22px; box-shadow:0 6px 20px rgba(15,45,74,0.08); border-top:3px solid var(--gold); }
+    .fin-atop { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; border-bottom:1px solid var(--line); padding-bottom:14px; margin-bottom:6px; }
+    .fin-aname { font-size:16px; font-weight:700; color:var(--navy); font-family:sans-serif; }
+    .fin-tag { display:inline-block; font-size:10px; font-weight:700; padding:2px 9px; border-radius:20px; font-family:sans-serif; margin-right:8px; }
+    .fin-tag.m { background:#e7eef7; color:#1B4B7A; }
+    .fin-tag.g { background:#e6f4ea; color:#2e7d4f; }
+    .fin-astat { display:flex; gap:20px; font-family:sans-serif; flex-wrap:wrap; }
+    .fin-astat div { text-align:right; }
+    .fin-astat .k { font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--text-m); }
+    .fin-astat .v { font-size:16px; font-weight:800; color:var(--navy); font-variant-numeric:tabular-nums; }
+    .fin-astat .v.rem { color:#2e7d4f; }
+    .fin-row { display:grid; grid-template-columns:34px 1.6fr 2fr auto; align-items:center; gap:12px; padding:9px 0; border-bottom:1px solid var(--line); font-family:sans-serif; }
+    .fin-row:last-child { border-bottom:none; }
+    .fin-ic { width:34px; height:34px; border-radius:9px; background:var(--cream-note); display:flex; align-items:center; justify-content:center; font-size:17px; }
+    .fin-nm { font-size:13.5px; color:#2c3e50; font-weight:600; }
+    .fin-bar-wrap { display:flex; flex-direction:column; gap:4px; }
+    .fin-bar { background:#eef0ee; border-radius:5px; height:9px; overflow:hidden; }
+    .fin-fill { height:100%; border-radius:5px; background:linear-gradient(90deg,var(--navy),#3a6ea5); }
+    .fin-fill.over { background:linear-gradient(90deg,#c0492e,#e07a5f); }
+    .fin-nums { font-size:11px; color:var(--text-m); font-variant-numeric:tabular-nums; }
+    .fin-rem { text-align:right; font-variant-numeric:tabular-nums; font-weight:700; font-size:13px; color:#2e7d4f; min-width:78px; }
+    .fin-rem.over { color:#c0492e; }
+    .fin-note { font-size:12px; color:#999; font-style:italic; font-family:sans-serif; margin-top:8px; line-height:1.5; }
+    .fin-error { font-family:sans-serif; color:#6b1a1a; background:#fdf0f0; border:1px solid #f5c6c6; border-radius:8px; padding:16px; }
+    @media(max-width:640px){ .fin-row{grid-template-columns:30px 1fr auto;} .fin-bar-wrap{grid-column:1/-1;order:3;} }
   </style>
 </head>
 <body>
@@ -55,20 +89,29 @@
     </header>
 
     <main>
-      <div class="intro">
-        <h2>Resident Portal</h2>
-        <p>Private information and resources for Twin Lakes homeowners.</p>
+      <div id="home-view">
+        <div class="intro">
+          <h2>Resident Portal</h2>
+          <p>Private information and resources for Twin Lakes homeowners.</p>
+        </div>
+
+        <div class="card-grid">
+          <button class="card" type="button" id="financials-card"><h3>Financials</h3><span class="live-pill">Budget vs Actual</span></button>
+          <div class="card"><h3>Resident Directory</h3><span class="soon-pill">Coming soon</span></div>
+          <div class="card"><h3>Resident Documents</h3><span class="soon-pill">Coming soon</span></div>
+          <div class="card"><h3>Meeting Information</h3><span class="soon-pill">Coming soon</span></div>
+          <div class="card"><h3>Committees</h3><span class="soon-pill">Coming soon</span></div>
+        </div>
+
+        <p class="back-link"><a href="/">← Back to Twin Lakes website</a></p>
       </div>
 
-      <div class="card-grid">
-        <div class="card"><h3>Financials</h3><span class="soon-pill">Coming soon</span></div>
-        <div class="card"><h3>Resident Directory</h3><span class="soon-pill">Coming soon</span></div>
-        <div class="card"><h3>Resident Documents</h3><span class="soon-pill">Coming soon</span></div>
-        <div class="card"><h3>Meeting Information</h3><span class="soon-pill">Coming soon</span></div>
-        <div class="card"><h3>Committees</h3><span class="soon-pill">Coming soon</span></div>
+      <div id="financials-view">
+        <button class="fin-back" type="button" id="financials-back">← Back to Portal</button>
+        <div class="fin-title">Financials — Budget vs Actual</div>
+        <p class="fin-sub" id="financials-subtitle">Loading…</p>
+        <div id="financials-body"></div>
       </div>
-
-      <p class="back-link"><a href="/">← Back to Twin Lakes website</a></p>
     </main>
   </div>
 
@@ -77,11 +120,11 @@
     - This page is a public static shell — session state is verified at
       runtime via GET /.netlify/functions/resident-session, never assumed
       from the fact that this file loaded.
-    - Future financials, directory records, and private documents must be
-      retrieved through their own authenticated Netlify Functions; every
-      protected endpoint independently re-verifies the signed
-      tl_resident_session cookie. This page's redirect-on-failure is a UX
-      convenience, not a security control.
+    - Financials (resident-financials.js) is retrieved through its own
+      authenticated Netlify Function, independently re-verifying the signed
+      tl_resident_session cookie on every request. Future directory records
+      and private documents must follow the same pattern. This page's
+      redirect-on-failure is a UX convenience, not a security control.
     - Files placed in the publicly deployed directory are publicly
       accessible even when nothing links to them — private documents must
       never be committed into this deployed folder.
@@ -90,6 +133,78 @@
     var loadingEl = document.getElementById("loading-state");
     var contentEl = document.getElementById("portal-content");
     var logoutBtn = document.getElementById("logout-btn");
+    var homeView = document.getElementById("home-view");
+    var financialsView = document.getElementById("financials-view");
+    var financialsCard = document.getElementById("financials-card");
+    var financialsBack = document.getElementById("financials-back");
+    var financialsSubtitle = document.getElementById("financials-subtitle");
+    var financialsBody = document.getElementById("financials-body");
+    var financialsLoaded = false;
+
+    function money(n) { return "$" + Math.round(n).toLocaleString(); }
+
+    function renderAssociation(a) {
+      var rem = a.budget - a.spent;
+      var pct = a.budget ? Math.round((a.spent / a.budget) * 100) : 0;
+      var html = '<div class="fin-assoc"><div class="fin-atop">' +
+        '<div class="fin-aname"><span class="fin-tag ' + a.tag + '">' + a.name + '</span></div>' +
+        '<div class="fin-astat">' +
+        '<div><div class="k">Budget</div><div class="v">' + money(a.budget) + '</div></div>' +
+        '<div><div class="k">Spent (YTD)</div><div class="v">' + money(a.spent) + '</div></div>' +
+        '<div><div class="k">Remaining</div><div class="v rem">' + money(rem) + '</div></div>' +
+        '<div><div class="k">% Used</div><div class="v">' + pct + '%</div></div>' +
+        '</div></div>';
+      a.cats.forEach(function (cat) {
+        var icon = cat[0], name = cat[1], budgeted = cat[2], spent = cat[3];
+        var catRem = budgeted - spent;
+        var over = spent > budgeted;
+        var width = Math.min(100, budgeted ? Math.round((spent / budgeted) * 100) : 0);
+        var catPct = budgeted ? Math.round((spent / budgeted) * 100) : 0;
+        html += '<div class="fin-row">' +
+          '<div class="fin-ic">' + icon + '</div>' +
+          '<div class="fin-nm">' + name + '</div>' +
+          '<div class="fin-bar-wrap">' +
+          '<div class="fin-bar"><div class="fin-fill ' + (over ? "over" : "") + '" style="width:' + (over ? 100 : width) + '%"></div></div>' +
+          '<div class="fin-nums">' + money(spent) + " of " + money(budgeted) + " · " + catPct + '%</div>' +
+          '</div>' +
+          '<div class="fin-rem ' + (over ? "over" : "") + '">' + (over ? "−" + money(-catRem) : money(catRem)) + '</div>' +
+          '</div>';
+      });
+      return html;
+    }
+
+    async function loadFinancials() {
+      if (financialsLoaded) return;
+      try {
+        var res = await fetch("/.netlify/functions/resident-financials", { method: "GET" });
+        var data = await res.json();
+        if (!res.ok) {
+          financialsSubtitle.textContent = "";
+          financialsBody.innerHTML = '<p class="fin-error">Financials could not be loaded right now. Please try again shortly.</p>';
+          return;
+        }
+        financialsSubtitle.textContent = "Where the money goes and what's left, by category · through " + data.asOf + ".";
+        financialsBody.innerHTML = renderAssociation(data.master) + renderAssociation(data.garden) +
+          '<p class="fin-note">Figures are year-to-date actuals reconciled to invoice detail. Remaining = annual budget − spent. Categories over budget are shown in red.</p>';
+        financialsLoaded = true;
+      } catch (err) {
+        financialsSubtitle.textContent = "";
+        financialsBody.innerHTML = '<p class="fin-error">Financials could not be loaded right now. Please try again shortly.</p>';
+      }
+    }
+
+    financialsCard.addEventListener("click", function () {
+      homeView.style.display = "none";
+      financialsView.style.display = "block";
+      window.scrollTo(0, 0);
+      loadFinancials();
+    });
+
+    financialsBack.addEventListener("click", function () {
+      financialsView.style.display = "none";
+      homeView.style.display = "block";
+      window.scrollTo(0, 0);
+    });
 
     async function verifySession() {
       try {
