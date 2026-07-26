@@ -3,6 +3,10 @@
 Version 1: shared-password gated access for residents. No individual accounts, no real
 private data yet — see [Scope exclusions](#scope-exclusions).
 
+For residents who can't log in, see
+[Resident Portal Access Requests](resident-access-requests.md) — the public "Request access"
+flow, Board review, and reply-with-password design (Phase 2B).
+
 ## Architecture overview
 
 ```

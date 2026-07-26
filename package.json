@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:resident-auth": "node scripts/test-resident-auth.js",
-    "test:resident-audit-e2e": "node scripts/test-resident-audit-e2e.js"
+    "test:resident-audit-e2e": "node scripts/test-resident-audit-e2e.js",
+    "test:access-requests": "node scripts/test-access-requests.js"
   },
   "repository": {
     "type": "git",
