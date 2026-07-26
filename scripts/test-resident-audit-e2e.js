@@ -26,15 +26,19 @@ const assert = require("assert");
 const crypto = require("crypto");
 const https = require("https");
 
-const FAKE_DIRECTORY = JSON.stringify([
-  { houseNumber: "123", lastName: "Smith" },
-  { houseNumber: "125", lastName: "O'Brien" },
-]);
+// Fake "TL Directory"-shaped source rows: [Name, Street No], matching the
+// two real formats confirmed in the actual sheet — one comma "Last, First"
+// row and one no-comma "First Last" row, per house 123 and 125 respectively.
+const FAKE_DIRECTORY_SOURCE_ROWS = [
+  ["Smith, John", "123"],
+  ["Jane O'Brien", "125"],
+];
 const FAKE_PASSWORD = "test-community-password-42";
 const FAKE_SESSION_SECRET = "test-session-secret-do-not-use-in-prod";
 const FAKE_SESSION_VERSION = "1";
 const FAKE_IP_SALT = "test-ip-salt-do-not-use-in-prod";
-const FAKE_SHEET_ID = "fake-sheet-id-for-e2e-test";
+const FAKE_AUDIT_SHEET_ID = "fake-audit-sheet-id-for-e2e-test";
+const FAKE_RESIDENT_SHEET_ID = "fake-resident-sheet-id-for-e2e-test";
 const FAKE_SA_EMAIL = "fake-service-account@fake-project.iam.gserviceaccount.com";
 
 // A real, syntactically valid (but throwaway) RSA private key so the real
@@ -47,11 +51,11 @@ const { privateKey: FAKE_SA_KEY } = crypto.generateKeyPairSync("rsa", {
 });
 
 process.env.RESIDENT_PORTAL_PASSWORD = FAKE_PASSWORD;
-process.env.RESIDENT_DIRECTORY_DATA = FAKE_DIRECTORY;
 process.env.RESIDENT_SESSION_SECRET = FAKE_SESSION_SECRET;
 process.env.RESIDENT_SESSION_VERSION = FAKE_SESSION_VERSION;
 process.env.RESIDENT_AUDIT_IP_SALT = FAKE_IP_SALT;
-process.env.GOOGLE_SHEET_ID = FAKE_SHEET_ID;
+process.env.GOOGLE_SHEET_ID = FAKE_AUDIT_SHEET_ID;
+process.env.RESIDENT_SHEET_ID = FAKE_RESIDENT_SHEET_ID;
 process.env.GOOGLE_SA_EMAIL = FAKE_SA_EMAIL;
 process.env.GOOGLE_SA_KEY = FAKE_SA_KEY;
 
@@ -73,7 +77,10 @@ async function step(name, fn) {
 // oauth2 token exchange, spreadsheet metadata, values.get, values.update
 // (PUT), values.append (POST ...:append), and :batchUpdate (addSheet).
 function createFakeSheetsState() {
-  return { tabs: new Set(), headers: new Map(), rows: new Map(), requestsSent: [], outage: false };
+  return {
+    tabs: new Set(), headers: new Map(), rows: new Map(), requestsSent: [], outage: false,
+    directoryRows: FAKE_DIRECTORY_SOURCE_ROWS.slice(), // fresh copy per test
+  };
 }
 
 function installFakeHttps(state) {
@@ -86,7 +93,13 @@ function installFakeHttps(state) {
         const bodyStr = chunks.join("");
         state.requestsSent.push({ hostname: options.hostname, path: options.path, method: options.method, body: bodyStr });
 
-        if (state.outage) {
+        // Outages are scoped per-sheet: audit and directory now have
+        // different failure semantics (audit fails OPEN, directory fails
+        // CLOSED — see lib/resident-audit.js vs lib/resident-directory.js),
+        // so tests need to be able to take one down without the other.
+        const isAuditRequest = options.hostname === "sheets.googleapis.com" && options.path.includes(`/v4/spreadsheets/${FAKE_AUDIT_SHEET_ID}`);
+        const isDirectoryRequest = options.hostname === "sheets.googleapis.com" && options.path.includes(`/v4/spreadsheets/${FAKE_RESIDENT_SHEET_ID}`);
+        if ((state.auditOutage && isAuditRequest) || (state.directoryOutage && isDirectoryRequest)) {
           // Simulate a network-level failure (e.g. Sheets unreachable) —
           // real https.request would emit 'error' on the request object.
           setImmediate(() => req._errorHandler && req._errorHandler(new Error("simulated_network_outage")));
@@ -98,6 +111,15 @@ function installFakeHttps(state) {
         try {
           if (options.hostname === "oauth2.googleapis.com" && options.path === "/token") {
             respBody = JSON.stringify({ access_token: "fake-access-token" });
+          } else if (options.hostname === "sheets.googleapis.com" && options.path.includes(`/v4/spreadsheets/${FAKE_RESIDENT_SHEET_ID}/`)) {
+            // Resident directory reads are GET-only, single fixed sheet — a
+            // much narrower surface than the audit sheet's create/validate/
+            // append flow, so it's handled separately here.
+            if (options.method === "GET" && options.path.includes("/values/")) {
+              respBody = JSON.stringify({ values: state.directoryRows || [] });
+            } else {
+              status = 404;
+            }
           } else if (options.hostname === "sheets.googleapis.com") {
             const path = options.path;
             if (options.method === "GET" && /^\/v4\/spreadsheets\/[^/]+$/.test(path)) {
@@ -319,26 +341,48 @@ const AUDIT_TAB = "Resident Portal Audit";
     }
   });
 
-  await step("Sheets outage: login and logout still behave normally; nothing is exposed to the resident", async () => {
+  await step("audit-sheet outage: login and logout still behave normally (fail-open); nothing is exposed to the resident", async () => {
     const state = createFakeSheetsState();
-    state.outage = true;
+    state.auditOutage = true; // directory sheet stays reachable
     const restore = installFakeHttps(state);
     try {
       const { loginHandler, logoutHandler } = freshHandlers();
 
       const successRes = await loginHandler(loginEvent({ houseNumber: "123", lastName: "Smith", password: FAKE_PASSWORD }));
-      assert.strictEqual(successRes.statusCode, 200, "valid login still succeeds during an outage");
+      assert.strictEqual(successRes.statusCode, 200, "valid login still succeeds during an audit outage");
       assert.ok(getHeader(successRes, "Set-Cookie"));
       assert.deepStrictEqual(Object.keys(JSON.parse(successRes.body)), ["ok"], "no audit-failure detail leaks into the response");
 
       const failRes = await loginHandler(loginEvent({ houseNumber: "123", lastName: "Smith", password: "wrong" }));
-      assert.strictEqual(failRes.statusCode, 401, "invalid login still fails normally during an outage");
+      assert.strictEqual(failRes.statusCode, 401, "invalid login still fails normally during an audit outage");
 
       const logoutRes = await logoutHandler({ httpMethod: "POST", headers: {} });
-      assert.strictEqual(logoutRes.statusCode, 200, "logout still succeeds during an outage");
-      assert.ok(getHeader(logoutRes, "Set-Cookie").includes("Max-Age=0"), "cookie still cleared during an outage");
+      assert.strictEqual(logoutRes.statusCode, 200, "logout still succeeds during an audit outage");
+      assert.ok(getHeader(logoutRes, "Set-Cookie").includes("Max-Age=0"), "cookie still cleared during an audit outage");
 
-      assert.strictEqual((state.rows.get(AUDIT_TAB) || []).length, 0, "no rows could be written during the simulated outage");
+      assert.strictEqual((state.rows.get(AUDIT_TAB) || []).length, 0, "no rows could be written during the simulated audit outage");
+    } finally {
+      restore();
+    }
+  });
+
+  await step("directory-sheet outage: login fails CLOSED (never silently admits anyone); logout is unaffected", async () => {
+    const state = createFakeSheetsState();
+    state.directoryOutage = true; // audit sheet stays reachable
+    const restore = installFakeHttps(state);
+    try {
+      const { loginHandler, logoutHandler } = freshHandlers();
+
+      const res = await loginHandler(loginEvent({ houseNumber: "123", lastName: "Smith", password: FAKE_PASSWORD }));
+      assert.strictEqual(res.statusCode, 500, "a directory outage must fail closed, unlike an audit outage");
+      const rows = state.rows.get(AUDIT_TAB) || [];
+      assert.strictEqual(rows.length, 1, "the failed attempt is still audited (audit sheet is unaffected)");
+      assert.strictEqual(rows[0][6], "CONFIGURATION_ERROR");
+
+      // Logout doesn't depend on the directory at all — must be unaffected.
+      const logoutRes = await logoutHandler({ httpMethod: "POST", headers: {} });
+      assert.strictEqual(logoutRes.statusCode, 200, "logout does not depend on the resident directory");
+      assert.ok(getHeader(logoutRes, "Set-Cookie").includes("Max-Age=0"));
     } finally {
       restore();
     }

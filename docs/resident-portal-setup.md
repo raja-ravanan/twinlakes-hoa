@@ -29,9 +29,11 @@ resident-portal.html ──GET──▶ resident-session.js ◀────┘ (
 
 1. Resident submits House Number + Last Name + Community Access Password (POST JSON to
    `/.netlify/functions/resident-login`).
-2. The function normalizes/validates input, loads config from environment variables, checks
-   the (house number, last name) pair against `RESIDENT_DIRECTORY_DATA` and the password
-   against `RESIDENT_PORTAL_PASSWORD` (constant-time comparison).
+2. The function normalizes/validates input, loads the password/session config from
+   environment variables, fetches the resident eligibility list **live from the "TL
+   Directory" Google Sheet** (`RESIDENT_SHEET_ID`, `lib/resident-directory.js` — not an
+   environment variable, see below), and checks the (house number, last name) pair against
+   it plus the password against `RESIDENT_PORTAL_PASSWORD` (constant-time comparison).
 3. Any failure — bad resident, bad password, missing config — returns the **same** generic
    401 message. A 300–700ms random delay is added on failure only.
 4. On success, a signed session cookie is set and the page redirects to
@@ -52,42 +54,65 @@ resident-portal.html ──GET──▶ resident-session.js ◀────┘ (
 | Variable | Purpose |
 |---|---|
 | `RESIDENT_PORTAL_PASSWORD` | The one shared community access password. |
-| `RESIDENT_DIRECTORY_DATA` | JSON array of `{ "houseNumber": "...", "lastName": "..." }` eligibility records. |
 | `RESIDENT_SESSION_SECRET` | HMAC signing key for session cookies. Generate with `openssl rand -hex 32`. |
 | `RESIDENT_SESSION_VERSION` | Any string/number. Bump it to invalidate all existing sessions. |
 | `RESIDENT_AUDIT_IP_SALT` | Secret salt for the audit log's IP correlation hash. Generate with `openssl rand -hex 32`. Distinct from `RESIDENT_SESSION_SECRET`. |
 | `RESIDENT_AUDIT_SHEET_NAME` | Optional. Worksheet tab name for the audit trail. Defaults to `Resident Portal Audit` if unset. |
+| `RESIDENT_SHEET_ID` | The "TL Directory" Google Sheet ID the resident eligibility list is read from live. |
+| `RESIDENT_DIRECTORY_SHEET_NAME` | Optional. Tab name within that sheet. Defaults to `Sheet1` if unset. |
 
-Audit logging also **reuses** the site's existing `GOOGLE_SHEET_ID` / `GOOGLE_SA_EMAIL` /
-`GOOGLE_SA_KEY` (already configured for the Board Portal's Sheets integration) — nothing new
-to set up there.
+Both audit logging and the resident directory **reuse** the site's existing `GOOGLE_SA_EMAIL`
+/ `GOOGLE_SA_KEY` (already configured for the Board Portal's Sheets integration) — nothing new
+to set up there. Audit logging also reuses `GOOGLE_SHEET_ID`; the directory uses the separate
+`RESIDENT_SHEET_ID` (a different spreadsheet).
 
-Fake example for `RESIDENT_DIRECTORY_DATA` (do not commit real data — see
-[What must never be committed](#what-must-never-be-committed)):
+**There is no `RESIDENT_DIRECTORY_DATA` environment variable.** An earlier version of this
+phase stored the resident list as one large JSON environment variable, but the real
+~140-household list runs ~7KB — over Netlify's per-value environment variable size limit
+(empirically confirmed: values above ~5KB silently fail to persist via `netlify env:set` even
+though the CLI reports success, with no error surfaced). The directory is now read live from
+Google Sheets instead (`lib/resident-directory.js`), which has no such ceiling and lets the
+board add/remove residents by editing the Sheet directly, with no redeploy required.
 
-```json
-[
-  { "houseNumber": "123", "lastName": "Smith" },
-  { "houseNumber": "125", "lastName": "O'Brien" }
-]
-```
-
-If any of the four variables is missing, or `RESIDENT_DIRECTORY_DATA` fails to parse as a
-JSON array of `{houseNumber, lastName}` strings, `resident-login` fails closed with a `500`
-and `resident-session` reports `authenticated:false` — neither ever crashes or leaks which
-variable is missing.
+If `RESIDENT_PORTAL_PASSWORD`/`RESIDENT_SESSION_SECRET`/`RESIDENT_SESSION_VERSION` is missing,
+or the directory fetch fails for any reason (missing `RESIDENT_SHEET_ID`, credentials, network
+error, timeout), `resident-login` fails closed with a `500` and `resident-session` reports
+`authenticated:false` — neither ever crashes or leaks which variable/step failed. Unlike audit
+logging (which fails *open* — see below), a directory fetch failure fails *closed*: it's part
+of the authentication decision, not a side-channel log, so a Sheets outage must never silently
+let someone through.
 
 ## Netlify setup steps
 
-1. Site settings → Environment variables → add the four variables above.
-2. Deploy (or trigger a redeploy) so the functions pick up the new values — Netlify
+1. Site settings → Environment variables → add the variables above.
+2. Share the "TL Directory" Google Sheet with the service account email (`GOOGLE_SA_EMAIL`) if
+   it isn't already shared, with at least read access.
+3. Deploy (or trigger a redeploy) so the functions pick up the new values — Netlify
    Functions read `process.env` at cold start.
-3. Share the password with residents through the board-approved channel.
+4. Share the password with residents through the board-approved channel.
 
 ## How to add or remove a resident
 
-Edit the `RESIDENT_DIRECTORY_DATA` JSON array in Netlify's environment-variable UI (add or
-remove an entry), save, and redeploy. There is no admin UI for this in Phase 2A.
+Edit the "TL Directory" Google Sheet directly (columns: `Name`, `Street No`, plus other
+columns the portal never reads — see [Field parsing](#field-parsing-from-the-source-sheet)
+below). Changes take effect on the **next login attempt** — no redeploy needed, since the
+directory is fetched live, not cached.
+
+### Field parsing from the source sheet
+
+Only two columns are read: `Name` and `Street No`. Everything else (email, phone, lot number,
+committee flags, etc.) is ignored entirely — never fetched into more columns than `A2:B1000`.
+The `Name` field is parsed into one or more last names using two recognized shapes (both
+present in the real sheet):
+- `"Last, First"` or `"Last, First & First2 [Last2]"` (comma-separated)
+- `"First Last"` or `"First Last & First2 [Last2]"` (space-separated, no comma)
+
+A household where co-owners have different surnames produces **two** directory entries for
+that house number, so either resident can log in with their own last name. Rows that don't
+confidently match either shape (a bare single word, an unfamiliar token layout, 3+ "&"-joined
+names) are **excluded rather than guessed** — see `parseLastNames()` in
+`netlify/functions/lib/resident-directory.js` for the exact rules. If a resident can't log in,
+check whether their sheet row's `Name` field matches one of the two recognized shapes.
 
 ## How to rotate the shared password
 
@@ -155,9 +180,9 @@ Failure categories: `INVALID_RESIDENT`, `INVALID_PASSWORD`, `INVALID_INPUT`,
 > **A failed login record shows the information that was submitted. It does not prove that
 > the resident whose name was entered made the attempt.**
 
-Only `LOGIN_SUCCESS` rows represent a verified resident (matched against
-`RESIDENT_DIRECTORY_DATA` *and* the correct password). A `LOGIN_FAILURE` row's House
-Number/Last Name are whatever was typed into the form — anyone can type any name. Treat
+Only `LOGIN_SUCCESS` rows represent a verified resident (matched against the live "TL
+Directory" Sheet *and* the correct password). A `LOGIN_FAILURE` row's House Number/Last Name
+are whatever was typed into the form — anyone can type any name. Treat
 repeated failures against the same name as a signal to investigate, not as proof of who was
 at the keyboard.
 
@@ -308,8 +333,9 @@ The "Resident Directory" card is a placeholder only. When it's actually built:
 
 | Symptom | Likely cause |
 |---|---|
-| Every login fails, including correct credentials | An env var is missing or `RESIDENT_DIRECTORY_DATA` isn't valid JSON — check function logs for `500` responses (details are never included in the response body). |
+| Every login fails, including correct credentials | An env var is missing, or the directory fetch is failing (missing/wrong `RESIDENT_SHEET_ID`, service account not shared on the Sheet, network timeout) — check function logs for `500` responses (details are never included in the response body). |
 | Portal always redirects to login even after a successful login | `RESIDENT_SESSION_SECRET` or `RESIDENT_SESSION_VERSION` differs between what signed the cookie and what's verifying it (e.g. redeploy changed the version) — log in again. |
+| One specific resident can't log in but others can | Their sheet row's `Name` field likely doesn't match either recognized parsing shape — see [Field parsing from the source sheet](#field-parsing-from-the-source-sheet). |
 | Login works locally but not in production | `Secure` cookies require HTTPS — this only works on the deployed Netlify URL / custom domain, not plain `http://`. |
 
 ## What must never be committed

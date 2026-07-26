@@ -50,27 +50,19 @@ function constantTimeEqual(a, b) {
   return crypto.timingSafeEqual(bufA, bufB);
 }
 
-// ── Resident directory config ────────────────────────────────
+// ── Auth config (password + session signing) ──────────────────
+// The resident directory itself is NOT loaded here — it's fetched live
+// from the "TL Directory" Google Sheet (see lib/resident-directory.js).
+// The full ~140-household list runs ~7KB, which exceeds Netlify's
+// per-value environment variable size limit (~5KB); a live Sheet read has
+// no such ceiling and lets the board add/remove residents without a
+// redeploy.
 function loadConfig() {
   const password = process.env.RESIDENT_PORTAL_PASSWORD;
-  const directoryRaw = process.env.RESIDENT_DIRECTORY_DATA;
   const secret = process.env.RESIDENT_SESSION_SECRET;
   const version = process.env.RESIDENT_SESSION_VERSION;
-  if (!password || !directoryRaw || !secret || !version) return null;
-
-  let directory;
-  try {
-    directory = JSON.parse(directoryRaw);
-  } catch {
-    return null;
-  }
-  if (!Array.isArray(directory)) return null;
-  for (const entry of directory) {
-    if (!entry || typeof entry.houseNumber !== "string" || typeof entry.lastName !== "string") {
-      return null;
-    }
-  }
-  return { password, directory, secret, version };
+  if (!password || !secret || !version) return null;
+  return { password, secret, version };
 }
 
 function findResident(directory, normalizedHouseNumber, normalizedLastName) {

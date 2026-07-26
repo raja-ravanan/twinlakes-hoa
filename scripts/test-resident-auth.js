@@ -1,23 +1,26 @@
 "use strict";
 // Focused validation script for the resident-portal auth + audit layer
-// (Phase 2A + audit-logging follow-up). No test framework — just Node's
-// built-in `assert`, run with:
+// (Phase 2A + audit-logging + live-directory follow-ups). No test
+// framework — just Node's built-in `assert`, run with:
 //   node scripts/test-resident-auth.js
 // Uses fake secrets/data only. Google Sheets is never actually called: the
-// audit-integration tests mock lib/resident-audit's appendAuditEvent, and
-// the "audit unavailable" tests rely on GOOGLE_SHEET_ID/SA_EMAIL/SA_KEY
-// being unset in this plain `node` process (no .env is loaded), which
-// naturally exercises the real fail-open path with zero network calls.
+// audit-integration and directory-integration tests mock
+// lib/resident-audit's appendAuditEvent and lib/resident-directory's
+// fetchResidentDirectory respectively, and the "unavailable" tests rely on
+// GOOGLE_SHEET_ID/SA_EMAIL/SA_KEY being unset in this plain `node` process
+// (no .env is loaded), which naturally exercises the real fail-closed/
+// fail-open paths with zero network calls.
 
 const assert = require("assert");
 const crypto = require("crypto");
 const lib = require("../netlify/functions/lib/resident-auth");
 const auditLib = require("../netlify/functions/lib/resident-audit");
+const directoryLib = require("../netlify/functions/lib/resident-directory");
 
-const FAKE_DIRECTORY = JSON.stringify([
+const FAKE_DIRECTORY = [
   { houseNumber: "123", lastName: "Smith" },
   { houseNumber: "125", lastName: "O'Brien" },
-]);
+];
 const FAKE_PASSWORD = "test-community-password-42";
 const FAKE_SECRET = "test-session-secret-do-not-use-in-prod";
 const FAKE_VERSION = "1";
@@ -39,7 +42,6 @@ function withEnv(vars, fn) {
 function validEnv() {
   return {
     RESIDENT_PORTAL_PASSWORD: FAKE_PASSWORD,
-    RESIDENT_DIRECTORY_DATA: FAKE_DIRECTORY,
     RESIDENT_SESSION_SECRET: FAKE_SECRET,
     RESIDENT_SESSION_VERSION: FAKE_VERSION,
   };
@@ -103,21 +105,14 @@ test("constantTimeEqual: rejects mismatched strings of different length", () => 
 });
 
 // ── loadConfig / findResident (fail-closed config) ─────────────
+// Note: the resident directory is no longer part of loadConfig() — it's
+// fetched live from Google Sheets (lib/resident-directory.js, tested in
+// its own section below) because the full list doesn't fit in a Netlify
+// environment variable (~7KB vs an empirically-confirmed ~5KB ceiling).
 console.log("Config loading");
 test("loadConfig: returns null when a variable is missing", () => {
-  withEnv({ RESIDENT_PORTAL_PASSWORD: undefined, RESIDENT_DIRECTORY_DATA: FAKE_DIRECTORY,
-            RESIDENT_SESSION_SECRET: FAKE_SECRET, RESIDENT_SESSION_VERSION: FAKE_VERSION }, () => {
+  withEnv({ RESIDENT_PORTAL_PASSWORD: undefined, RESIDENT_SESSION_SECRET: FAKE_SECRET, RESIDENT_SESSION_VERSION: FAKE_VERSION }, () => {
     delete process.env.RESIDENT_PORTAL_PASSWORD;
-    assert.strictEqual(lib.loadConfig(), null);
-  });
-});
-test("loadConfig: returns null on invalid JSON directory", () => {
-  withEnv({ ...validEnv(), RESIDENT_DIRECTORY_DATA: "{not valid json" }, () => {
-    assert.strictEqual(lib.loadConfig(), null);
-  });
-});
-test("loadConfig: returns null when directory isn't an array of {houseNumber,lastName}", () => {
-  withEnv({ ...validEnv(), RESIDENT_DIRECTORY_DATA: JSON.stringify([{ houseNumber: "123" }]) }, () => {
     assert.strictEqual(lib.loadConfig(), null);
   });
 });
@@ -125,11 +120,11 @@ test("loadConfig: succeeds with valid env", () => {
   withEnv(validEnv(), () => {
     const config = lib.loadConfig();
     assert.ok(config);
-    assert.strictEqual(config.directory.length, 2);
+    assert.strictEqual(config.password, FAKE_PASSWORD);
   });
 });
 test("findResident: matches normalized house+lastName pair", () => {
-  const directory = JSON.parse(FAKE_DIRECTORY);
+  const directory = FAKE_DIRECTORY;
   assert.strictEqual(lib.findResident(directory, "123", "smith"), true);
   assert.strictEqual(lib.findResident(directory, "123", "obrien"), false);
   assert.strictEqual(lib.findResident(directory, "999", "smith"), false);
@@ -198,6 +193,51 @@ test("buildSessionCookie: sets HttpOnly/Secure/SameSite=Lax", () => {
 });
 test("buildClearCookie: expires immediately", () => {
   assert.ok(lib.buildClearCookie().includes("Max-Age=0"));
+});
+
+// ── Resident directory parsing (lib/resident-directory.js) ────────
+// These cover the two Name-field shapes actually found in the source
+// "TL Directory" sheet (confirmed by direct inspection: ~83% comma-
+// separated "Last, First", ~17% space-separated "First Last", both
+// optionally with a second "& First2 [Last2]" co-owner).
+console.log("Resident directory parsing");
+test("validHouseNumber: accepts digits, rejects blank/oversized/markup", () => {
+  assert.strictEqual(directoryLib.validHouseNumber("  16004  "), "16004");
+  assert.strictEqual(directoryLib.validHouseNumber(""), null);
+  assert.strictEqual(directoryLib.validHouseNumber("1".repeat(11)), null);
+  assert.strictEqual(directoryLib.validHouseNumber("<script>"), null);
+});
+test("parseLastNames: 'Last, First' (comma format)", () => {
+  assert.deepStrictEqual(directoryLib.parseLastNames("Smith, John"), ["Smith"]);
+});
+test("parseLastNames: 'Last, First & First2' (comma, shared surname)", () => {
+  assert.deepStrictEqual(directoryLib.parseLastNames("Smith, John & Jane"), ["Smith"]);
+});
+test("parseLastNames: 'Last, First & First2 Last2' (comma, different surnames)", () => {
+  const result = directoryLib.parseLastNames("Smith, John & Jane Doe");
+  assert.strictEqual(result.length, 2);
+  assert.ok(result.includes("Smith") && result.includes("Doe"));
+});
+test("parseLastNames: 'First Last' (no comma)", () => {
+  assert.deepStrictEqual(directoryLib.parseLastNames("Raja Ravanan"), ["Ravanan"]);
+});
+test("parseLastNames: 'First Last & First2 Last2' (no comma, different surnames)", () => {
+  const result = directoryLib.parseLastNames("Raja Ravanan & Priya Kumar");
+  assert.strictEqual(result.length, 2);
+  assert.ok(result.includes("Ravanan") && result.includes("Kumar"));
+});
+test("parseLastNames: 'First Last & First2' (no comma, shared surname)", () => {
+  assert.deepStrictEqual(directoryLib.parseLastNames("Raja Ravanan & Priya"), ["Ravanan"]);
+});
+test("parseLastNames: preserves apostrophes and hyphens in surnames", () => {
+  assert.deepStrictEqual(directoryLib.parseLastNames("O'Brien, Michael"), ["O'Brien"]);
+  assert.deepStrictEqual(directoryLib.parseLastNames("Smith-Jones, Michael"), ["Smith-Jones"]);
+});
+test("parseLastNames: returns null (unclear) rather than guessing — blank, bare word, unfamiliar shape", () => {
+  assert.strictEqual(directoryLib.parseLastNames(""), null);
+  assert.strictEqual(directoryLib.parseLastNames("SingleWord"), null, "a bare single token is ambiguous — first name only? entity name? don't guess");
+  assert.strictEqual(directoryLib.parseLastNames("First Middle Last Extra"), null, "unfamiliar 4-token shape with no comma/& — don't guess");
+  assert.strictEqual(directoryLib.parseLastNames("A, B & C & D"), null, "3+ '&'-joined owners in an unfamiliar shape — don't guess");
 });
 
 // ── Resident audit — pure functions (no network) ────────────────
@@ -313,6 +353,11 @@ test("buildAuditRow: never includes a password or session-token field", () => {
 console.log("resident-login / resident-logout / resident-session handlers");
 
 function freshHandlers() {
+  // Deliberately NOT clearing lib/resident-directory's or lib/resident-audit's
+  // own require.cache entries here — mockAudit()/realAudit() mutate methods
+  // on the already-cached module objects (directoryLib/auditLib), and a
+  // fresh re-require would return a *different* object, silently detaching
+  // the mock (the same pitfall this file's audit-mocking hit before).
   delete require.cache[require.resolve("../netlify/functions/resident-login")];
   delete require.cache[require.resolve("../netlify/functions/resident-logout")];
   delete require.cache[require.resolve("../netlify/functions/resident-session")];
@@ -323,23 +368,30 @@ function freshHandlers() {
   };
 }
 
-// Mock the shared audit module's appendAuditEvent so handler tests can
-// assert exactly-once-per-attempt writes and inspect row content without
-// any network call. Handlers destructure appendAuditEvent at require time,
-// so the cache must be cleared and the handler re-required after swapping
-// the mock in (mirrors the file's existing require.cache-clearing style).
+// Mock the shared audit module's appendAuditEvent AND the shared directory
+// module's fetchResidentDirectory so handler tests can assert
+// exactly-once-per-attempt writes, inspect row content, and control
+// resident-match outcomes without any network call. Handlers destructure
+// both at require time, so the cache must be cleared and the handler
+// re-required after swapping the mocks in (mirrors the file's existing
+// require.cache-clearing style).
 let auditCalls = [];
 const realAppendAuditEvent = auditLib.appendAuditEvent;
-function mockAudit() {
+const realFetchResidentDirectory = directoryLib.fetchResidentDirectory;
+function mockAudit(directoryOverride) {
   auditCalls = [];
   auditLib.appendAuditEvent = async (evt) => {
     auditCalls.push(evt);
     return { ok: true, eventId: "mock-event-id" };
   };
+  directoryLib.fetchResidentDirectory = directoryOverride
+    ? async () => { throw directoryOverride === "throw" ? new Error("mock_directory_unavailable") : directoryOverride; }
+    : async () => FAKE_DIRECTORY;
   return freshHandlers();
 }
 function realAudit() {
   auditLib.appendAuditEvent = realAppendAuditEvent;
+  directoryLib.fetchResidentDirectory = realFetchResidentDirectory;
   return freshHandlers();
 }
 
@@ -441,8 +493,7 @@ async function step(name, fn) {
   }));
 
   await step("missing env vars: one LOGIN_FAILURE / CONFIGURATION_ERROR, fails closed", () => withAsyncEnv(
-    { RESIDENT_PORTAL_PASSWORD: undefined, RESIDENT_DIRECTORY_DATA: FAKE_DIRECTORY,
-      RESIDENT_SESSION_SECRET: FAKE_SECRET, RESIDENT_SESSION_VERSION: FAKE_VERSION }, async () => {
+    { RESIDENT_PORTAL_PASSWORD: undefined, RESIDENT_SESSION_SECRET: FAKE_SECRET, RESIDENT_SESSION_VERSION: FAKE_VERSION }, async () => {
     delete process.env.RESIDENT_PORTAL_PASSWORD;
     const { loginHandler } = mockAudit();
     const res = await loginHandler(loginEvent({ houseNumber: "123", lastName: "Smith", password: FAKE_PASSWORD }));
@@ -451,11 +502,10 @@ async function step(name, fn) {
     assert.strictEqual(auditCalls[0].failureCategory, "CONFIGURATION_ERROR");
   }));
 
-  await step("invalid directory config: one LOGIN_FAILURE / CONFIGURATION_ERROR, fails closed", () => withAsyncEnv(
-    { ...validEnv(), RESIDENT_DIRECTORY_DATA: "{not valid json" }, async () => {
-    const { loginHandler } = mockAudit();
+  await step("directory fetch fails (e.g. Sheets unavailable): one LOGIN_FAILURE / CONFIGURATION_ERROR, fails closed — never lets anyone through", () => withAsyncEnv(validEnv(), async () => {
+    const { loginHandler } = mockAudit("throw");
     const res = await loginHandler(loginEvent({ houseNumber: "123", lastName: "Smith", password: FAKE_PASSWORD }));
-    assert.strictEqual(res.statusCode, 500, "invalid directory config should fail closed");
+    assert.strictEqual(res.statusCode, 500, "directory fetch failure should fail closed, not silently admit the resident");
     assert.strictEqual(auditCalls.length, 1);
     assert.strictEqual(auditCalls[0].failureCategory, "CONFIGURATION_ERROR");
   }));
@@ -509,13 +559,23 @@ async function step(name, fn) {
   // `node` (no .env parsing here), so clearing them explicitly and using the
   // REAL (unmocked) appendAuditEvent exercises the actual fail-open code
   // path with zero network calls — a true proxy for "Google Sheets is
-  // unreachable," without needing a mocked HTTPS layer.
+  // unreachable," without needing a mocked HTTPS layer. The directory fetch
+  // stays MOCKED here so this test isolates audit-outage behavior only —
+  // directory-outage is tested separately below.
   await step("audit storage unavailable never changes the login/logout outcome", () => withAsyncEnv(
     { ...validEnv(), GOOGLE_SHEET_ID: undefined, GOOGLE_SA_EMAIL: undefined, GOOGLE_SA_KEY: undefined,
       RESIDENT_AUDIT_IP_SALT: undefined }, async () => {
     delete process.env.GOOGLE_SHEET_ID; delete process.env.GOOGLE_SA_EMAIL; delete process.env.GOOGLE_SA_KEY;
     delete process.env.RESIDENT_AUDIT_IP_SALT;
-    const { loginHandler, logoutHandler } = realAudit();
+    // Order matters: both module-property mutations must land BEFORE
+    // freshHandlers() re-requires resident-login.js, since it destructures
+    // these functions into its own local bindings at require time — setting
+    // them after (like an earlier version of this test did) would silently
+    // leave the handler using whatever was bound at the last freshHandlers()
+    // call, defeating the mock/real swap without any test failure to show it.
+    auditLib.appendAuditEvent = realAppendAuditEvent; // audit real/unmocked...
+    directoryLib.fetchResidentDirectory = async () => FAKE_DIRECTORY; // ...directory stays mocked
+    const { loginHandler, logoutHandler } = freshHandlers();
 
     const result = await auditLib.appendAuditEvent({ eventType: "LOGIN_SUCCESS" });
     assert.strictEqual(result.ok, false, "append fails when Sheets config is unavailable");
@@ -533,7 +593,24 @@ async function step(name, fn) {
     assert.ok(getHeader(logoutRes, "Set-Cookie").includes("Max-Age=0"), "cookie is still cleared during an audit outage");
   }));
 
-  realAudit(); // restore real (unmocked) audit function + fresh handlers for anything after this point
+  // Mirror test for the directory side: real (unmocked) fetchResidentDirectory
+  // with RESIDENT_SHEET_ID/GOOGLE_SA_EMAIL/GOOGLE_SA_KEY unset — this must
+  // fail CLOSED (500), unlike the audit case above which fails open, because
+  // the directory is part of the auth decision, not a side-channel log.
+  await step("directory storage unavailable fails closed (never silently admits a login)", () => withAsyncEnv(
+    { ...validEnv(), RESIDENT_SHEET_ID: undefined, GOOGLE_SA_EMAIL: undefined, GOOGLE_SA_KEY: undefined }, async () => {
+    delete process.env.RESIDENT_SHEET_ID; delete process.env.GOOGLE_SA_EMAIL; delete process.env.GOOGLE_SA_KEY;
+    auditCalls = [];
+    auditLib.appendAuditEvent = async (evt) => { auditCalls.push(evt); return { ok: true, eventId: "mock-event-id" }; };
+    directoryLib.fetchResidentDirectory = realFetchResidentDirectory; // directory real/unmocked, audit stays mocked
+    const { loginHandler } = freshHandlers(); // both mutations applied BEFORE the handler re-requires/destructures them
+
+    const res = await loginHandler(loginEvent({ houseNumber: "123", lastName: "Smith", password: FAKE_PASSWORD }));
+    assert.strictEqual(res.statusCode, 500, "directory outage must fail closed, not admit the login");
+    assert.strictEqual(auditCalls[0].failureCategory, "CONFIGURATION_ERROR");
+  }));
+
+  realAudit(); // restore real (unmocked) audit + directory functions for anything after this point
 
   console.log(`\n${passed} test groups passed.`);
   if (process.exitCode) {

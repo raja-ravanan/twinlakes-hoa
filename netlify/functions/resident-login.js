@@ -13,6 +13,7 @@ const {
   delay,
   randomFailureDelayMs,
 } = require("./lib/resident-auth");
+const { fetchResidentDirectory } = require("./lib/resident-directory");
 const {
   appendAuditEvent,
   trustedClientIp,
@@ -86,7 +87,26 @@ exports.handler = async (event) => {
     return jsonResponse(500, { error: "Resident portal is temporarily unavailable. Please try again later." });
   }
 
-  const residentOk = findResident(config.directory, houseNumber, lastName);
+  // The directory is read live from the "TL Directory" Google Sheet on
+  // every attempt (not cached, not an env var — see lib/resident-directory.js
+  // for why). This is part of the auth data path, so a fetch failure fails
+  // closed, same as a missing password/secret above — never silently let
+  // anyone through because eligibility couldn't be checked.
+  let directory;
+  try {
+    directory = await fetchResidentDirectory();
+  } catch {
+    await appendAuditEvent({
+      ...baseAudit,
+      eventType: "LOGIN_FAILURE",
+      failureCategory: "CONFIGURATION_ERROR",
+      houseNumber,
+      lastName,
+    });
+    return jsonResponse(500, { error: "Resident portal is temporarily unavailable. Please try again later." });
+  }
+
+  const residentOk = findResident(directory, houseNumber, lastName);
   const passwordOk = constantTimeEqual(password, config.password);
 
   if (!residentOk || !passwordOk) {
