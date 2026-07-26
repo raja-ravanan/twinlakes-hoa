@@ -263,9 +263,10 @@
     .modal-body { padding:24px; }
     .email-field { margin-bottom:16px; }
     .email-field label { display:block; font-size:11px; font-family:sans-serif; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:var(--text-m); margin-bottom:6px; }
-    .email-field input, .email-field textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:6px; font-size:13px; font-family:sans-serif; outline:none; }
-    .email-field input:focus, .email-field textarea:focus { border-color:var(--gold); }
+    .email-field input, .email-field textarea, .email-field select { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:6px; font-size:13px; font-family:sans-serif; outline:none; }
+    .email-field input:focus, .email-field textarea:focus, .email-field select:focus { border-color:var(--gold); }
     .email-field textarea { min-height:200px; resize:vertical; }
+    .email-field .readonly-value { padding:10px 12px; background:#F8F7F4; border:1px solid var(--line); border-radius:6px; font-size:13px; font-family:sans-serif; color:var(--text-d); }
     .modal-footer { padding:16px 24px; border-top:1px solid var(--line-soft); display:flex; gap:10px; justify-content:flex-end; background:#FAFAFA; border-radius:0 0 12px 12px; }
     .btn-send { background:var(--navy); color:var(--cream); border:none; padding:12px 28px; border-radius:6px; font-size:14px; font-family:sans-serif; font-weight:700; cursor:pointer; }
     .btn-cancel { background:none; border:1px solid var(--line); padding:12px 20px; border-radius:6px; font-size:14px; font-family:sans-serif; cursor:pointer; color:var(--text-m); }
@@ -412,6 +413,7 @@
       <button class="tab" data-admin="true" onclick="switchTab('violations')">⚠️ Violations <span class="tab-badge" id="vioBadge">0</span></button>
       <button class="tab" data-admin="true" onclick="switchTab('other')">📂 Other Items <span class="tab-badge" id="othBadge">0</span></button>
       <button class="tab" data-admin="true" onclick="switchTab('requests')">📨 Resident Requests <span class="tab-badge" id="reqBadge">0</span></button>
+      <button class="tab" onclick="switchTab('accessrequests')">🔑 Portal Access Requests <span class="tab-badge" id="accReqBadge">0</span></button>
       <div class="nav-sec">Community</div>
       <button class="tab" onclick="switchTab('announcements')">📣 Announcements <span class="tab-badge" id="annBadge">0</span></button>
       <button class="tab" onclick="switchTab('minutes')">📝 Post Public Minutes <span class="tab-badge" id="minBadge">0</span></button>
@@ -523,6 +525,42 @@
       </select>
     </div>
     <div id="reqList"><div class="loading"><div class="spinner"></div>Loading resident requests...</div></div>
+  </div>
+
+  <div id="tab-accessrequests" style="display:none">
+    <!-- Counters -->
+    <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px;">
+      <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 18px;min-width:110px;">
+        <div style="font-size:24px;font-weight:800;color:var(--navy);" id="accReqStatNew">0</div>
+        <div style="font-size:11px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;">New</div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 18px;min-width:110px;">
+        <div style="font-size:24px;font-weight:800;color:var(--gold-dark);" id="accReqStatReview">0</div>
+        <div style="font-size:11px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;">Under Review</div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 18px;min-width:110px;">
+        <div style="font-size:24px;font-weight:800;color:#3a7d44;" id="accReqStatApproved">0</div>
+        <div style="font-size:11px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;">Approved</div>
+      </div>
+      <div style="background:#fff;border:1px solid var(--line);border-radius:10px;padding:12px 18px;min-width:110px;">
+        <div style="font-size:24px;font-weight:800;color:var(--text-d);" id="accReqStatTotal">0</div>
+        <div style="font-size:11px;font-family:sans-serif;font-weight:700;color:var(--text-m);text-transform:uppercase;">Total</div>
+      </div>
+    </div>
+    <p style="font-size:13px;font-family:sans-serif;color:var(--text-m);margin:0 0 16px;">Residents who can't log in to the Resident Portal submit a request here. Verify the resident, then use <strong>Reply to Resident</strong> to send an approved, more-information, or unable-to-verify response. Sending the current Community Access Password happens only when you click Send on the Approved template — it is never shown in this portal beforehand.</p>
+    <!-- Filters -->
+    <div class="filter-bar" style="display:flex;">
+      <input type="text" class="search-input" id="accReqSearch" placeholder="Search by name, address, email, or ID..." oninput="renderAccessRequests()"/>
+      <select class="filter-select" id="accReqStatusFilter" onchange="renderAccessRequests()">
+        <option value="all">All Statuses</option>
+        <option value="New">New</option>
+        <option value="Under Review">Under Review</option>
+        <option value="Approved">Approved</option>
+        <option value="Rejected">Rejected</option>
+        <option value="Closed">Closed</option>
+      </select>
+    </div>
+    <div id="accReqList"><div class="loading"><div class="spinner"></div>Loading access requests...</div></div>
   </div>
 
   <div id="tab-announcements" style="display:none">
@@ -1142,6 +1180,34 @@
   </div>
 </div>
 
+<!-- Reply to Resident Modal (Portal Access Requests) -->
+<div class="modal-overlay" id="accessResponseModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Reply to Resident — <span id="accRespId"></span></h3>
+      <button class="modal-close" onclick="closeAccessResponseModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="email-field"><label>To</label><div class="readonly-value" id="accRespTo"></div></div>
+      <div class="email-field">
+        <label for="accRespTemplate">Template</label>
+        <select id="accRespTemplate" onchange="loadAccessResponsePreview()">
+          <option value="approved">Access Approved</option>
+          <option value="more_info">More Information Needed</option>
+          <option value="unable_to_verify">Unable to Verify</option>
+        </select>
+      </div>
+      <div class="email-field"><label>Subject</label><input type="text" id="accRespSubject"/></div>
+      <div class="email-field"><label>Message</label><textarea id="accRespBody"></textarea></div>
+      <p style="font-size:12px;font-family:sans-serif;color:var(--text-m);margin-top:-6px;">The Community Access Password is never shown here — on the Approved template it appears as a placeholder and is inserted only on the server at the moment you click Send.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeAccessResponseModal()">Cancel</button>
+      <button class="btn-send" id="accRespSendBtn" onclick="sendAccessResponse()">Send Reply</button>
+    </div>
+  </div>
+</div>
+
 <!-- Edit ARC Modal (admin only) -->
 <div class="modal-overlay" id="arcEditModal">
   <div class="modal">
@@ -1244,6 +1310,9 @@
   let residentsLoaded = false;
   let currentEmailItemId = null;
   let selectedVotes = {};
+  let accessRequestsData = [];
+  let accessRequestsLoaded = false;
+  let currentAccessRequestId = null;
 
   // ── Init ──────────────────────────────────────────────
   window.addEventListener("DOMContentLoaded", () => {
@@ -1646,8 +1715,9 @@
 
   // ── Tabs ──────────────────────────────────────────────
   function switchTab(tab) {
-    const tabs = ["arc","concerns","violations","other","requests","announcements","minutes","residents","map","resources","meetingrecords","specialmtg","financials","budget","activity"];
+    const tabs = ["arc","concerns","violations","other","requests","accessrequests","announcements","minutes","residents","map","resources","meetingrecords","specialmtg","financials","budget","activity"];
     if (tab === "residents" && !residentsLoaded) loadResidents();
+    if (tab === "accessrequests" && !accessRequestsLoaded) loadAccessRequests();
     if (tab === "map") loadMap();
     if (tab === "financials") loadFinancialsToggle();
     if (tab === "budget") renderBudget();
@@ -2094,6 +2164,182 @@
         <div class="comment-text">${escapeHtml(n.text)}</div>
       </div>`).join("");
     showToast("Note added", "success");
+  }
+
+  // ── Resident Portal Access Requests ───────────────────
+  const ACC_REQ_TEMPLATE_LABELS = { approved: "Access Approved", more_info: "More Information Needed", unable_to_verify: "Unable to Verify" };
+
+  async function loadAccessRequests() {
+    const data = await api({ action: "getAccessRequests" });
+    if (!data) return;
+    accessRequestsData = data.requests || [];
+    accessRequestsLoaded = true;
+    renderAccessRequests();
+    updateAccessRequestStats();
+  }
+
+  function updateAccessRequestStats() {
+    const reqs = accessRequestsData;
+    const newCount = reqs.filter(r => !r["Status"] || r["Status"] === "New").length;
+    document.getElementById("accReqStatNew").textContent = newCount;
+    document.getElementById("accReqStatReview").textContent = reqs.filter(r => r["Status"] === "Under Review").length;
+    document.getElementById("accReqStatApproved").textContent = reqs.filter(r => r["Status"] === "Approved").length;
+    document.getElementById("accReqStatTotal").textContent = reqs.length;
+    document.getElementById("accReqBadge").textContent = newCount;
+  }
+
+  function renderAccessRequests() {
+    const reqs = accessRequestsData.slice().reverse(); // newest first
+    const q = (document.getElementById("accReqSearch")?.value || "").toLowerCase();
+    const sf = document.getElementById("accReqStatusFilter")?.value || "all";
+
+    const filtered = reqs.filter(r => {
+      const status = r["Status"] || "New";
+      if (sf !== "all" && status !== sf) return false;
+      if (q) {
+        const hay = `${r["Request ID"]} ${r["First Name"]} ${r["Last Name"]} ${r["Home Address"]} ${r["Email Address"]}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    document.getElementById("accReqList").innerHTML = filtered.length
+      ? filtered.map(renderAccessRequestCard).join("")
+      : '<div class="empty-state"><div class="empty-title">No portal access requests found</div></div>';
+  }
+
+  function renderAccessRequestCard(r) {
+    const id = r["Request ID"];
+    const status = r["Status"] || "New";
+    let notes = [];
+    try { notes = JSON.parse(r["Internal Board Notes"] || "[]"); } catch {}
+    const notesHtml = notes.map(n => `
+      <div class="comment-item">
+        <span class="comment-author">${escapeHtml(n.author)}</span>
+        <span class="comment-time">${new Date(n.timestamp).toLocaleString()}</span>
+        <div class="comment-text">${escapeHtml(n.text)}</div>
+      </div>`).join("");
+    const statusClass = status === "Approved" ? "Approved" : status === "Rejected" ? "Denied" : "Open";
+    const deliveryNote = r["Response Sent At UTC"]
+      ? `<div style="margin-top:8px;font-size:12px;font-family:sans-serif;color:var(--text-m);">Last reply: <strong>${escapeHtml(r["Response Type"] || "")}</strong> sent ${new Date(r["Response Sent At UTC"]).toLocaleString()} · ${escapeHtml(r["Delivery Status"] || "")}</div>`
+      : "";
+
+    return `
+<div class="vio-card" id="accreq-${id}">
+  <div class="vio-header" onclick="toggleCard('accreq-body-${id}')">
+    <div class="arc-meta">
+      <div class="arc-id-row">
+        <span class="arc-id">${escapeHtml(id)}</span>
+      </div>
+      <div class="arc-name">${escapeHtml((r["First Name"] || "") + " " + (r["Last Name"] || ""))}</div>
+      <div class="arc-address">📍 ${escapeHtml(r["Home Address"] || "Not provided")}</div>
+      <div class="arc-date">${r["Submitted At UTC"] ? new Date(r["Submitted At UTC"]).toLocaleDateString() : ""} · ${escapeHtml(r["Email Address"] || "")}</div>
+    </div>
+    <div class="arc-status-col">
+      <span class="status-badge status-${statusClass}">${escapeHtml(status)}</span>
+    </div>
+  </div>
+  <div class="vio-body" id="accreq-body-${id}">
+    <div class="ai-summary-box">
+      <div class="ai-label">✉️ Resident's Comments</div>
+      <div class="ai-summary-text">${escapeHtml(r["Resident Comments"] || "(none provided)")}</div>
+      ${deliveryNote}
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+      <label style="font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);">STATUS:</label>
+      <select class="status-select" onchange="updateAccessRequestStatus('${id}',this.value)">
+        <option ${status==='New'?'selected':''}>New</option>
+        <option ${status==='Under Review'?'selected':''}>Under Review</option>
+        <option ${status==='Approved'?'selected':''}>Approved</option>
+        <option ${status==='Rejected'?'selected':''}>Rejected</option>
+        <option ${status==='Closed'?'selected':''}>Closed</option>
+      </select>
+      <button class="attachment-btn" onclick="openAccessResponseModal('${id}')">✉️ Reply to Resident</button>
+    </div>
+    <div class="comments-section">
+      <div class="attachments-title">Internal Board Notes</div>
+      <div id="accreqnotes-${id}">${notesHtml || '<p style="font-size:13px;font-family:sans-serif;color:var(--text-m);font-style:italic;">No notes yet.</p>'}</div>
+      <div class="add-comment">
+        <input type="text" id="accReqNoteInput-${id}" placeholder="Add an internal note..." onkeydown="if(event.key==='Enter')addAccessRequestNote('${id}')"/>
+        <button class="btn-comment" onclick="addAccessRequestNote('${id}')">Add</button>
+      </div>
+    </div>
+  </div>
+</div>`;
+  }
+
+  async function updateAccessRequestStatus(id, status) {
+    const data = await api({ action: "updateAccessRequestStatus", data: { itemId: id, status } });
+    if (!data) return;
+    const rq = accessRequestsData.find(r => r["Request ID"] === id);
+    if (rq) rq["Status"] = status;
+    updateAccessRequestStats();
+    showToast(`Status updated to ${status}`, "success");
+  }
+
+  async function addAccessRequestNote(id) {
+    const input = document.getElementById("accReqNoteInput-" + id);
+    const note = (input?.value || "").trim();
+    if (!note) return;
+    const data = await api({ action: "addAccessRequestNote", data: { itemId: id, note } });
+    if (!data) return;
+    const rq = accessRequestsData.find(r => r["Request ID"] === id);
+    if (rq) rq["Internal Board Notes"] = JSON.stringify(data.notes || []);
+    if (input) input.value = "";
+    const notesDiv = document.getElementById("accreqnotes-" + id);
+    if (notesDiv) notesDiv.innerHTML = (data.notes || []).map(n => `
+      <div class="comment-item">
+        <span class="comment-author">${escapeHtml(n.author)}</span>
+        <span class="comment-time">${new Date(n.timestamp).toLocaleString()}</span>
+        <div class="comment-text">${escapeHtml(n.text)}</div>
+      </div>`).join("");
+    showToast("Note added", "success");
+  }
+
+  // ── Reply to Resident modal ───────────────────────────
+  async function openAccessResponseModal(id) {
+    currentAccessRequestId = id;
+    const rq = accessRequestsData.find(r => r["Request ID"] === id);
+    document.getElementById("accRespId").textContent = id;
+    document.getElementById("accRespTo").textContent = (rq && rq["Email Address"]) || "";
+    document.getElementById("accRespTemplate").value = "approved";
+    document.getElementById("accessResponseModal").classList.add("show");
+    await loadAccessResponsePreview();
+  }
+
+  async function loadAccessResponsePreview() {
+    const templateType = document.getElementById("accRespTemplate").value;
+    const data = await api({ action: "getAccessRequestPreview", data: { itemId: currentAccessRequestId, templateType } });
+    if (!data) return;
+    document.getElementById("accRespSubject").value = data.subject;
+    document.getElementById("accRespBody").value = data.body;
+  }
+
+  function closeAccessResponseModal() {
+    document.getElementById("accessResponseModal").classList.remove("show");
+    currentAccessRequestId = null;
+  }
+
+  async function sendAccessResponse() {
+    const templateType = document.getElementById("accRespTemplate").value;
+    const subject = document.getElementById("accRespSubject").value;
+    const body = document.getElementById("accRespBody").value;
+    const sendBtn = document.getElementById("accRespSendBtn");
+    sendBtn.disabled = true;
+    sendBtn.textContent = "Sending…";
+    try {
+      const data = await api({ action: "sendAccessResponse", data: { itemId: currentAccessRequestId, templateType, subject, body } });
+      if (data && data.success) {
+        showToast(`Reply sent (${ACC_REQ_TEMPLATE_LABELS[templateType] || templateType})`, "success");
+        closeAccessResponseModal();
+        await loadAccessRequests();
+      } else {
+        showToast((data && data.error) || "Email could not be sent. Please try again.", "error");
+      }
+    } finally {
+      sendBtn.disabled = false;
+      sendBtn.textContent = "Send Reply";
+    }
   }
 
   // ── Announcements ─────────────────────────────────────

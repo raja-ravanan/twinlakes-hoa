@@ -1,4 +1,5 @@
 const https = require("https");
+const accessRequestsLib = require("./lib/access-requests");
 
 // ── Google Auth ───────────────────────────────────────────
 function getGoogleToken(serviceEmail, privateKey, scopes) {
@@ -135,7 +136,10 @@ async function logActivity(token, member, action, itemId, itemType, details) {
 
 async function getSheetData(token, tab) {
   try {
-    const res = await sheetsGet(token, `${tab}!A:AV`);
+    // Quoted defensively so tab names containing spaces (e.g. "Resident
+    // Portal Access Requests") are valid A1 notation; a no-op for the
+    // existing plain underscored tab names.
+    const res = await sheetsGet(token, `'${tab}'!A:AV`);
     const rows = res.values || [];
     if (rows.length < 2) return [];
     const headers = rows[0];
@@ -497,6 +501,156 @@ exports.handler = async (event) => {
     notes.push({ author: session.name, username: session.username, text: note, timestamp: new Date().toISOString() });
     await sheetsUpdate(googleToken, `Resident_Requests!L${rowIndex + 2}`, [[JSON.stringify(notes)]]);
     await logActivity(googleToken, session.username, "added_note", itemId, "request", note.slice(0, 100));
+    return { statusCode: 200, body: JSON.stringify({ success: true, notes }) };
+  }
+
+  // ── RESIDENT PORTAL ACCESS REQUESTS (Board review of public submissions) ──
+  // Internal Board Notes are only ever read here, behind the same AUTH CHECK
+  // as every other board-only action above — there is no public endpoint
+  // that returns this tab's data. See lib/access-requests.js for the
+  // worksheet schema, safe-creation/header-validation, and password
+  // placeholder handling.
+
+  if (action === "getAccessRequests") {
+    await accessRequestsLib.ensureAccessRequestsTab(googleToken);
+    const items = await getSheetData(googleToken, accessRequestsLib.TAB_NAME);
+    return { statusCode: 200, body: JSON.stringify({ requests: items.filter(r => r["Request ID"]) }) };
+  }
+
+  // Returns a subject/body preview for the board to review and edit before
+  // sending. For the "approved" template the body contains only the literal
+  // PASSWORD_PLACEHOLDER text — the real RESIDENT_PORTAL_PASSWORD is never
+  // read, computed, or returned here.
+  if (action === "getAccessRequestPreview") {
+    const { itemId, templateType } = data || {};
+    if (!accessRequestsLib.isValidTemplateType(templateType)) {
+      return { statusCode: 400, body: JSON.stringify({ error: "Invalid template type" }) };
+    }
+    await accessRequestsLib.ensureAccessRequestsTab(googleToken);
+    const items = await getSheetData(googleToken, accessRequestsLib.TAB_NAME);
+    const item = items.find(r => r["Request ID"] === itemId);
+    if (!item) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+    const tmpl = accessRequestsLib.buildTemplate(templateType, { firstName: item["First Name"] });
+    return {
+      statusCode: 200,
+      body: JSON.stringify({ to: item["Email Address"], subject: tmpl.subject, body: tmpl.body, templateType }),
+    };
+  }
+
+  // Sends the board-edited reply. Only when templateType === "approved" is
+  // the real password substituted for the placeholder, and only in the
+  // outgoing email — never in the Sheets update, the activity log, or the
+  // JSON returned to the browser. A send failure leaves the request NOT
+  // marked as delivered (Delivery Status = "Failed", Response Sent At left
+  // untouched) so the board knows to retry.
+  if (action === "sendAccessResponse") {
+    const { itemId, templateType, subject, body: emailBody } = data || {};
+    if (!accessRequestsLib.isValidTemplateType(templateType)) {
+      return { statusCode: 400, body: JSON.stringify({ error: "Invalid template type" }) };
+    }
+    const cleanSubject = (subject || "").trim();
+    const cleanBody = (emailBody || "").trim();
+    if (!cleanSubject || !cleanBody) {
+      return { statusCode: 400, body: JSON.stringify({ error: "Subject and message are required" }) };
+    }
+    await accessRequestsLib.ensureAccessRequestsTab(googleToken);
+    const items = await getSheetData(googleToken, accessRequestsLib.TAB_NAME);
+    const rowIndex = items.findIndex(r => r["Request ID"] === itemId);
+    if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+    const to = items[rowIndex]["Email Address"];
+    if (!to) return { statusCode: 400, body: JSON.stringify({ error: "Request has no email on file" }) };
+    const row = rowIndex + 2;
+
+    // Duplicate-send guard — see lib/access-requests.js's isDuplicateSend
+    // for why this is a time-window check on the row's own last-send state
+    // rather than a hard lock. Never triggers after a FAILED send, so a
+    // retry is always immediately available.
+    if (accessRequestsLib.isDuplicateSend(items[rowIndex]["Delivery Status"], items[rowIndex]["Response Sent At UTC"], Date.now())) {
+      return { statusCode: 409, body: JSON.stringify({ success: false, error: "A response was already sent moments ago. Please wait before sending again." }) };
+    }
+
+    const outgoingBody = templateType === "approved"
+      ? accessRequestsLib.insertPassword(cleanBody, process.env.RESIDENT_PORTAL_PASSWORD || "")
+      : cleanBody;
+
+    let delivered = false;
+    try {
+      const gmailToken = await refreshGmailToken();
+      const raw = buildEmail(to, cleanSubject, outgoingBody);
+      const sendRes = await httpsReq("POST", "gmail.googleapis.com", "/gmail/v1/users/me/messages/send",
+        { Authorization: `Bearer ${gmailToken}`, "Content-Type": "application/json" }, { raw });
+      if (sendRes.status >= 400) throw new Error(`gmail_send_failed_${sendRes.status}`);
+      delivered = true;
+    } catch (sendErr) {
+      console.error(JSON.stringify({ accessResponseSendFailed: true, itemId }));
+    }
+
+    const now = new Date().toISOString();
+    const TAB = accessRequestsLib.TAB_NAME;
+    const updates = [
+      sheetsUpdate(googleToken, `'${TAB}'!J${row}`, [[now]]),
+      sheetsUpdate(googleToken, `'${TAB}'!K${row}`, [[session.name]]),
+      sheetsUpdate(googleToken, `'${TAB}'!O${row}`, [[delivered ? accessRequestsLib.DELIVERY_SENT : accessRequestsLib.DELIVERY_FAILED]]),
+    ];
+    if (delivered) {
+      updates.push(sheetsUpdate(googleToken, `'${TAB}'!L${row}`, [[now]]));
+      updates.push(sheetsUpdate(googleToken, `'${TAB}'!M${row}`, [[accessRequestsLib.TEMPLATE_LABELS[templateType]]]));
+      updates.push(sheetsUpdate(googleToken, `'${TAB}'!N${row}`, [[cleanSubject]]));
+    }
+    await Promise.all(updates);
+    await logActivity(googleToken, session.username, delivered ? "sent_access_response" : "access_response_send_failed",
+      itemId, "access_request", accessRequestsLib.TEMPLATE_LABELS[templateType]);
+
+    if (!delivered) {
+      return { statusCode: 502, body: JSON.stringify({ success: false, error: "Email could not be sent. The request was not marked as delivered." }) };
+    }
+    return { statusCode: 200, body: JSON.stringify({ success: true, deliveryStatus: accessRequestsLib.DELIVERY_SENT }) };
+  }
+
+  // ── UPDATE ACCESS REQUEST STATUS ──
+  if (action === "updateAccessRequestStatus") {
+    const { itemId, status } = data || {};
+    if (!accessRequestsLib.isValidStatus(status)) {
+      return { statusCode: 400, body: JSON.stringify({ error: "Invalid status" }) };
+    }
+    await accessRequestsLib.ensureAccessRequestsTab(googleToken);
+    const items = await getSheetData(googleToken, accessRequestsLib.TAB_NAME);
+    const rowIndex = items.findIndex(r => r["Request ID"] === itemId);
+    if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+    const row = rowIndex + 2;
+    const now = new Date().toISOString();
+    const TAB = accessRequestsLib.TAB_NAME;
+    await Promise.all([
+      sheetsUpdate(googleToken, `'${TAB}'!H${row}`, [[status]]),
+      sheetsUpdate(googleToken, `'${TAB}'!J${row}`, [[now]]),
+      sheetsUpdate(googleToken, `'${TAB}'!K${row}`, [[session.name]]),
+    ]);
+    await logActivity(googleToken, session.username, `access_request_status_${status.replace(/ /g, "_")}`, itemId, "access_request", "");
+    return { statusCode: 200, body: JSON.stringify({ success: true }) };
+  }
+
+  // ── ADD INTERNAL NOTE TO ACCESS REQUEST ──
+  if (action === "addAccessRequestNote") {
+    const { itemId, note } = data || {};
+    const cleanNote = (note || "").trim();
+    if (!cleanNote) return { statusCode: 400, body: JSON.stringify({ error: "Note text is required" }) };
+    if (cleanNote.length > accessRequestsLib.MAX_NOTE_LEN) return { statusCode: 400, body: JSON.stringify({ error: "Note is too long" }) };
+    await accessRequestsLib.ensureAccessRequestsTab(googleToken);
+    const items = await getSheetData(googleToken, accessRequestsLib.TAB_NAME);
+    const rowIndex = items.findIndex(r => r["Request ID"] === itemId);
+    if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+    const row = rowIndex + 2;
+    let notes = [];
+    try { notes = JSON.parse(items[rowIndex]["Internal Board Notes"] || "[]"); } catch {}
+    notes.push({ author: session.name, username: session.username, text: cleanNote, timestamp: new Date().toISOString() });
+    const now = new Date().toISOString();
+    const TAB = accessRequestsLib.TAB_NAME;
+    await Promise.all([
+      sheetsUpdate(googleToken, `'${TAB}'!I${row}`, [[JSON.stringify(notes)]]),
+      sheetsUpdate(googleToken, `'${TAB}'!J${row}`, [[now]]),
+      sheetsUpdate(googleToken, `'${TAB}'!K${row}`, [[session.name]]),
+    ]);
+    await logActivity(googleToken, session.username, "added_access_request_note", itemId, "access_request", cleanNote.slice(0, 100));
     return { statusCode: 200, body: JSON.stringify({ success: true, notes }) };
   }
 

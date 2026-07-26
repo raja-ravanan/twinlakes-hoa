@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Request Portal Access — Twin Lakes HOA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --navy:#1B4B7A; --navy-dark:#0F2D4A; --gold:#C9A84C; --gold-deep:#B8973E;
+      --cream:#FAF7F2; --cream-note:#FBF8F0; --gold-border:#dfc07a; --text-m:#5a6a7a;
+      --white:#fff; --line:#ddd; --red-light:#fdf0f0; --red-border:#f5c6c6; --red-dark:#6b1a1a;
+      --green-light:#eafaf1; --green-border:#bfe8cf; --green-dark:#1e5631;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Georgia, serif; background: var(--navy-dark); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+    .card { background:var(--white); border-radius:16px; padding:48px 40px; max-width:480px; width:100%; box-shadow:0 24px 64px rgba(0,0,0,0.3); border-top:4px solid var(--gold); text-align:center; }
+    .logo { width:64px; height:64px; background:linear-gradient(135deg,var(--navy),var(--navy-dark)); border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:22px; font-style:italic; color:var(--gold); font-family:Georgia,serif; }
+    .eyebrow { font-size:11px; font-family:sans-serif; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+    h1 { font-size:24px; color:var(--navy); font-weight:normal; margin-bottom:6px; }
+    .subtitle { font-size:14px; color:var(--text-m); font-style:italic; margin-bottom:32px; }
+    .notice { background:var(--cream-note); border:1px solid var(--gold-border); border-left:3px solid var(--gold); border-radius:4px; padding:12px 16px; margin-bottom:24px; font-size:13px; font-family:sans-serif; color:#5a4a1a; text-align:left; line-height:1.6; }
+    .form-group { margin-bottom:18px; text-align:left; }
+    label { display:block; font-size:11px; font-family:sans-serif; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#2c3e50; margin-bottom:7px; }
+    input, textarea { width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:6px; font-size:15px; font-family:sans-serif; outline:none; transition:border-color 0.2s; resize:vertical; }
+    input:focus, textarea:focus { border-color:var(--gold); }
+    .name-row { display:flex; gap:12px; }
+    .name-row .form-group { flex:1; }
+    .optional-tag { font-weight:400; text-transform:none; letter-spacing:0; color:var(--text-m); }
+    /* Honeypot field: hidden from sighted users and, via aria-hidden + tabindex,
+       from screen readers and keyboard navigation. Real residents never see or
+       fill this; a scripted bot that fills every input on the page will. */
+    .hp-field { position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+    button { width:100%; background:linear-gradient(135deg,var(--navy),var(--navy-dark)); color:var(--cream); border:none; padding:16px; border-radius:8px; font-size:15px; font-family:sans-serif; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; margin-top:8px; }
+    button:hover:not(:disabled) { background:linear-gradient(135deg,var(--gold),var(--gold-deep)); color:var(--navy); }
+    button:disabled { opacity:0.65; cursor:not-allowed; }
+    .error { background:var(--red-light); border:1px solid var(--red-border); border-radius:6px; padding:12px; font-size:13px; font-family:sans-serif; color:var(--red-dark); margin-top:16px; display:none; }
+    .success { background:var(--green-light); border:1px solid var(--green-border); border-radius:6px; padding:16px; font-size:14px; font-family:sans-serif; color:var(--green-dark); margin-top:16px; line-height:1.6; display:none; }
+    .back-link { margin-top:20px; font-size:13px; font-family:sans-serif; color:#999; }
+    .back-link a { color:var(--navy); text-decoration:none; }
+    a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visible { outline:3px solid var(--gold); outline-offset:2px; border-radius:4px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">TL</div>
+    <div class="eyebrow">Residents Only</div>
+    <h1>Request Portal Access</h1>
+    <p class="subtitle">Twin Lakes at Floyds Fork HOA</p>
+    <div class="notice">🔒 Having trouble accessing the Resident Portal? Tell us a bit about yourself and the Board will review your request and respond by email.</div>
+    <form id="access-form" novalidate>
+      <div class="name-row">
+        <div class="form-group">
+          <label for="firstName">First Name</label>
+          <input type="text" id="firstName" name="firstName" maxlength="80" autocomplete="given-name" required/>
+        </div>
+        <div class="form-group">
+          <label for="lastName">Last Name</label>
+          <input type="text" id="lastName" name="lastName" maxlength="80" autocomplete="family-name" required/>
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="homeAddress">Home Address</label>
+        <input type="text" id="homeAddress" name="homeAddress" maxlength="200" autocomplete="street-address" required/>
+      </div>
+      <div class="form-group">
+        <label for="email">Email Address</label>
+        <input type="email" id="email" name="email" maxlength="200" autocomplete="email" required/>
+      </div>
+      <div class="form-group">
+        <label for="comments">Comments <span class="optional-tag">(optional)</span></label>
+        <textarea id="comments" name="comments" rows="3" maxlength="1000"></textarea>
+      </div>
+      <div class="form-group hp-field" aria-hidden="true">
+        <label for="website">Website</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off"/>
+      </div>
+      <button type="submit" id="submit-btn">Submit Request</button>
+      <div class="error" id="error" role="alert" aria-live="polite"></div>
+    </form>
+    <div class="success" id="success" role="status" aria-live="polite"></div>
+    <p class="back-link"><a href="/resident-login.html">← Back to Resident Login</a></p>
+  </div>
+  <script>
+    var DEFAULT_ERROR = "We could not submit your request right now. Please try again later.";
+    var form = document.getElementById("access-form");
+    var submitBtn = document.getElementById("submit-btn");
+    var errEl = document.getElementById("error");
+    var successEl = document.getElementById("success");
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      errEl.style.display = "none";
+      successEl.style.display = "none";
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Submitting…";
+      form.setAttribute("aria-busy", "true");
+
+      var payload = {
+        firstName: document.getElementById("firstName").value,
+        lastName: document.getElementById("lastName").value,
+        homeAddress: document.getElementById("homeAddress").value,
+        email: document.getElementById("email").value,
+        comments: document.getElementById("comments").value,
+        website: document.getElementById("website").value
+      };
+
+      try {
+        var res = await fetch("/.netlify/functions/resident-access-request", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        var body = {};
+        try { body = await res.json(); } catch (parseErr) {}
+
+        if (res.ok) {
+          form.style.display = "none";
+          successEl.textContent = (body && body.message) || "Thank you. Your request has been received and the Board will review it and respond by email.";
+          successEl.style.display = "block";
+          return;
+        }
+
+        errEl.textContent = (body && body.error) || DEFAULT_ERROR;
+        errEl.style.display = "block";
+      } catch (networkErr) {
+        errEl.textContent = "Connection error. Please try again.";
+        errEl.style.display = "block";
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Submit Request";
+        form.removeAttribute("aria-busy");
+      }
+    });
+  </script>
+</body>
+</html>
