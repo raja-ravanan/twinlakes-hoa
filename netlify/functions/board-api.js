@@ -53,6 +53,7 @@ const BOARD_MEMBERS = {
   raja:   { name: "Raja Ravanan",       role: "Secretary",       password: "silverfox23", isAdmin: true  },
   aimee:  { name: "Aimee Green",        role: "Member at Large", password: "goldenpine55", isAdmin: false },
   mike:   { name: "Mike Schnell",       role: "Member at Large", password: "riverstone31", isAdmin: false },
+  jodi:   { name: "Jodi Budenaers",     role: "Member at Large", password: "hazelbrook49", isAdmin: false },
 };
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
