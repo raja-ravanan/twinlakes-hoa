@@ -1,5 +1,9 @@
 const https = require("https");
 const accessRequestsLib = require("./lib/access-requests");
+const auth = require("./lib/board-auth");
+const members = require("./lib/board-members");
+const sheetsWrite = require("./lib/sheets-write");
+const { delay, randomFailureDelayMs, constantTimeEqual } = require("./lib/timing");
 
 // ── Google Auth ───────────────────────────────────────────
 function getGoogleToken(serviceEmail, privateKey, scopes) {
@@ -45,16 +49,27 @@ function httpsReq(method, hostname, path, headers, body) {
   });
 }
 
-// ── Board Members ─────────────────────────────────────────
-const BOARD_MEMBERS = {
-  tony:   { name: "Tony Backert",       role: "President",       password: "mapletiger42", isAdmin: false },
-  yashu:  { name: "Yashu M Basavaraju", role: "Vice President",  password: "oceanbreeze17", isAdmin: false },
-  ramana: { name: "Ramana N",           role: "Treasurer",       password: "coppermoon88", isAdmin: false },
-  raja:   { name: "Raja Ravanan",       role: "Secretary",       password: "silverfox23", isAdmin: true  },
-  aimee:  { name: "Aimee Green",        role: "Member at Large", password: "goldenpine55", isAdmin: false },
-  mike:   { name: "Mike Schnell",       role: "Member at Large", password: "riverstone31", isAdmin: false },
-  jodi:   { name: "Jodi Budenaers",     role: "Member at Large", password: "hazelbrook49", isAdmin: false },
+// ── Board credentials ─────────────────────────────────────
+// Passwords only. Identity, display title and access level now live in
+// lib/board-members.js, which scan-inbox.js imports — keeping the secret
+// half here is what stops credentials entering the scanner's module graph.
+// Moving these to environment variables is the first Phase B security item.
+//
+// Ramana N resigned: his password is removed, so he can no longer log in and
+// any session naming him fails the active-member check in lib/board-auth.js.
+// His historical votes, notes, timestamps and spreadsheet columns are
+// untouched — see lib/board-members.js.
+const BOARD_PASSWORDS = {
+  tony:   "mapletiger42",
+  yashu:  "oceanbreeze17",
+  raja:   "silverfox23",
+  aimee:  "goldenpine55",
+  mike:   "riverstone31",
+  jodi:   "hazelbrook49",
 };
+// Compared against when the username is unknown, so a bad username and a bad
+// password cost the same work and reveal the same thing: nothing.
+const DUMMY_PASSWORD = "$not-a-real-password$";
 
 const SHEET_ID = process.env.GOOGLE_SHEET_ID;
 const SA_EMAIL = process.env.GOOGLE_SA_EMAIL;
@@ -83,18 +98,18 @@ async function sheetsGet(token, range) {
   return JSON.parse(r.body);
 }
 
+// Writes go through lib/sheets-write.js, which throws SheetsWriteError on a
+// non-2xx status, an unparseable body, a Google `error` object, or update
+// metadata showing nothing was actually written. The handler turns that into
+// a 502 so the portal can never report success for a write that did not
+// happen. Reads are intentionally left on the original lenient path — this
+// change is scoped to write reliability.
 async function sheetsUpdate(token, range, values) {
-  const r = await httpsReq("PUT", "sheets.googleapis.com",
-    `/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=RAW`,
-    { Authorization: `Bearer ${token}` }, { range, majorDimension: "ROWS", values });
-  return JSON.parse(r.body);
+  return sheetsWrite.valuesUpdate(token, SHEET_ID, range, values);
 }
 
 async function sheetsAppend(token, range, values) {
-  const r = await httpsReq("POST", "sheets.googleapis.com",
-    `/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,
-    { Authorization: `Bearer ${token}` }, { values });
-  return JSON.parse(r.body);
+  return sheetsWrite.valuesAppend(token, SHEET_ID, range, values);
 }
 
 async function ensureSheetTabs(token) {
@@ -129,10 +144,18 @@ async function ensureSheetTabs(token) {
   }
 }
 
+// Audit logging is deliberately NON-FATAL. The member's action has already
+// been persisted by the time this runs; failing the request because the audit
+// row could not be appended would turn a successful change into a reported
+// failure and invite a duplicate retry.
 async function logActivity(token, member, action, itemId, itemType, details) {
-  await sheetsAppend(token, "Activity_Log!A:F", [[
-    new Date().toISOString(), member, action, itemId, itemType, details
-  ]]);
+  try {
+    await sheetsAppend(token, "Activity_Log!A:F", [[
+      new Date().toISOString(), member, action, itemId, itemType, details
+    ]]);
+  } catch (e) {
+    console.error(JSON.stringify({ activityLogFailed: true, action, itemId, detail: String(e.message || e).slice(0, 200) }));
+  }
 }
 
 async function getSheetData(token, tab) {
@@ -152,22 +175,66 @@ async function getSheetData(token, tab) {
   } catch(e) { return []; }
 }
 
-exports.handler = async (event) => {
+// One generic failure for every unsuccessful login: unknown username, wrong
+// password, inactive member, and unconfigured server all look identical from
+// outside, so the response never reveals whether an account exists.
+const LOGIN_FAILED = { statusCode: 401, body: JSON.stringify({ error: "Invalid username or password." }) };
+
+async function handleRequest(event) {
+  // The portal, the public website and these functions are same-origin, so no
+  // CORS headers are needed anywhere and none are sent. Removing the wildcard
+  // also means a cross-origin request carrying the required custom header
+  // cannot clear preflight.
   if (event.httpMethod === "OPTIONS") {
-    return { statusCode: 200, headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "Content-Type" } };
+    return { statusCode: 204, body: "" };
   }
 
-  const body = JSON.parse(event.body || "{}");
+  let body;
+  try { body = JSON.parse(event.body || "{}"); }
+  catch { return { statusCode: 400, body: JSON.stringify({ error: "Bad request" }) }; }
   const { action, username, password, data } = body;
+
+  // ── AUTHENTICATE ──
+  // Resolved before authorization so the permission table can key off a
+  // verified identity. A signed session naming a member who has resigned
+  // resolves to null here, not to a valid session.
+  const session = auth.getSessionContext(event);
+
+  // ── AUTHORIZE (default deny) ──
+  // Unknown or undeclared actions are refused here and never reach a handler.
+  const denied = auth.authorize(event, action, session);
+  if (denied) return denied;
 
   // ── LOGIN ──
   if (action === "login") {
-    const member = BOARD_MEMBERS[username];
-    if (!member || member.password !== password) {
-      return { statusCode: 401, body: JSON.stringify({ error: "Invalid credentials" }) };
+    const config = auth.loadConfig();
+    if (!config) {
+      // Fail closed: without BOARD_SESSION_SECRET/VERSION no session can be
+      // signed, so no session is issued and no cookie is set.
+      console.error(JSON.stringify({ boardAuthUnconfigured: true }));
+      await delay(randomFailureDelayMs());
+      return LOGIN_FAILED;
     }
-    const token = Buffer.from(JSON.stringify({ username, name: member.name, role: member.role, isAdmin: member.isAdmin, exp: Date.now() + 8 * 60 * 60 * 1000 })).toString("base64");
-    return { statusCode: 200, body: JSON.stringify({ token, name: member.name, role: member.role, isAdmin: member.isAdmin }) };
+    const key = typeof username === "string" ? username.trim().toLowerCase() : "";
+    const member = members.getActiveMember(key);
+    const expected = Object.prototype.hasOwnProperty.call(BOARD_PASSWORDS, key)
+      ? BOARD_PASSWORDS[key]
+      : DUMMY_PASSWORD;
+    // Always compare, even for an unknown or inactive user, so the work done
+    // does not depend on whether the account exists.
+    const passwordOk = constantTimeEqual(expected, typeof password === "string" ? password : "");
+    if (!member || !passwordOk) {
+      await delay(randomFailureDelayMs());
+      return LOGIN_FAILED;   // no Set-Cookie on failure
+    }
+    const token = auth.signSession(config.secret, config.version, member.key);
+    return {
+      statusCode: 200,
+      headers: { "Set-Cookie": auth.buildSessionCookie(token), "Cache-Control": "no-store" },
+      // Response body carries no token, no access level and no privilege
+      // claim — the portal calls board-session for its display data.
+      body: JSON.stringify({ ok: true })
+    };
   }
 
   // ── PUBLIC: GET PUBLISHED ANNOUNCEMENTS (no auth — read by the public website) ──
@@ -191,7 +258,6 @@ exports.handler = async (event) => {
       .sort((x, y) => new Date(y.date_posted) - new Date(x.date_posted));
     return {
       statusCode: 200,
-      headers: { "Access-Control-Allow-Origin": "*" },
       body: JSON.stringify({ announcements: published })
     };
   }
@@ -207,7 +273,6 @@ exports.handler = async (event) => {
       .sort((x, y) => new Date(y.meeting_date) - new Date(x.meeting_date));
     return {
       statusCode: 200,
-      headers: { "Access-Control-Allow-Origin": "*" },
       body: JSON.stringify({ minutes: published })
     };
   }
@@ -221,7 +286,6 @@ exports.handler = async (event) => {
     rows.slice(1).forEach(r => { if (r[0]) map[r[0]] = r[1]; });
     return {
       statusCode: 200,
-      headers: { "Access-Control-Allow-Origin": "*" },
       body: JSON.stringify({
         financials_published: (map.financials_published === "true"),
         ai_suggestions: (map.ai_suggestions === "true"),
@@ -232,16 +296,9 @@ exports.handler = async (event) => {
     };
   }
 
-  // ── AUTH CHECK ──
-  const authHeader = event.headers?.authorization || "";
-  const sessionToken = authHeader.replace("Bearer ", "");
-  let session;
-  try {
-    session = JSON.parse(Buffer.from(sessionToken, "base64").toString());
-    if (session.exp < Date.now()) throw new Error("Expired");
-  } catch {
-    return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };
-  }
+  // Authentication and authorization already happened at the top of the
+  // handler. The legacy `Authorization: Bearer <base64(JSON)>` token is no
+  // longer read anywhere — an unsigned token cannot produce a session.
 
   const googleToken = await getGoogleToken(SA_EMAIL, SA_KEY, SCOPES);
   await ensureSheetTabs(googleToken);
@@ -288,9 +345,16 @@ exports.handler = async (event) => {
 
     await logActivity(googleToken, session.username, "viewed_dashboard", "-", "dashboard", "");
 
+    // Operational queues go to every active board member. The activity log is
+    // technical diagnostics and is withheld from the payload for non-admins —
+    // not merely hidden in the UI.
+    const canSeeDiagnostics = members.accessAtLeast(session.access, "admin");
     return {
       statusCode: 200,
-      body: JSON.stringify({ arcs: arcs.filter(a => a.id), violations, others, requests, announcements, minutes, activity: activityRows })
+      body: JSON.stringify({
+        arcs: arcs.filter(a => a.id), violations, others, requests, announcements, minutes,
+        activity: canSeeDiagnostics ? activityRows : []
+      })
     };
   }
 
@@ -303,32 +367,45 @@ exports.handler = async (event) => {
       { Authorization: `Bearer ${googleToken}` });
     const rows = (JSON.parse(r.body).values) || [];
     // Columns: A Name, B Street No, C Street Name, D Email, E Phone1, F Ph1Type, G Phone2, H Ph2Type, I Series
+    // Field scoping by access level. An ordinary member gets what they need
+    // to do board work — who lives where, and how to reach them. The
+    // administrative judgement fields (frequent-offender flag, committee,
+    // lot) and the secondary phone are officer/admin only, and the export
+    // affordance is gated on the same flag in the portal UI.
+    const expanded = members.accessAtLeast(session.access, "officer");
     const residents = rows.slice(1)
       .filter(row => (row[0] || "").trim())
       .map(row => {
         const streetNo = (row[1] || "").trim();
         const streetName = (row[2] || "").trim();
-        return {
+        const base = {
           name: (row[0] || "").trim(),
           streetNo, streetName,
           address: `${streetNo} ${streetName}`.trim(),
           email: (row[3] || "").trim(),
           phone1: (row[4] || "").trim(),
-          phone2: (row[6] || "").trim(),
           series: (row[8] || "").trim(),
+          zone: (row[12] || "").trim()
+        };
+        if (!expanded) return base;
+        return {
+          ...base,
+          phone2: (row[6] || "").trim(),
           lot: (row[9] || "").trim(),
           committee: (row[10] || "").trim(),
-          offender: (row[11] || "").trim(),
-          zone: (row[12] || "").trim()
+          offender: (row[11] || "").trim()
         };
       })
       .sort((a, b) => a.streetName.localeCompare(b.streetName) || (parseInt(a.streetNo) || 0) - (parseInt(b.streetNo) || 0));
+
+    // Directory reads are PII access and are always attributable.
+    await logActivity(googleToken, session.username, "viewed_resident_directory", "-", "residents",
+      `access=${session.access} scope=${expanded ? "expanded" : "basic"} records=${residents.length}`);
     return { statusCode: 200, body: JSON.stringify({ residents, count: residents.length }) };
   }
 
   // ── SET A SITE SETTING (admin only) ──
   if (action === "setSetting") {
-    if (!session.isAdmin) return { statusCode: 403, body: JSON.stringify({ error: "Admin only" }) };
     const key = (data?.key || "").trim();
     const value = String(data?.value);
     if (!key) return { statusCode: 400, body: JSON.stringify({ error: "key required" }) };
@@ -365,7 +442,7 @@ exports.handler = async (event) => {
     // so getSheetData (which maps by header name) can read the values back.
     await sheetsUpdate(googleToken, "Announcements!G1:N1", [ANNOUNCEMENT_EXT_HEADERS]);
     await sheetsAppend(googleToken, "Announcements!A:N", [[
-      id, new Date().toISOString(), title, text, "published", session.name,
+      id, new Date().toISOString(), title, text, "published", session.displayName,
       category, priority, eventDate, workStatus, summary, featured, archiveDate, relatedProject
     ]]);
     await logActivity(googleToken, session.username, "posted_announcement", id, "announcement", title.slice(0, 100));
@@ -439,7 +516,7 @@ exports.handler = async (event) => {
     // so getSheetData (which maps by header name) can read the value back.
     await sheetsUpdate(googleToken, "Minutes!H1", [["meeting_type"]]);
     await sheetsAppend(googleToken, "Minutes!A:H", [[
-      id, meetingDate, title, summary, status, session.name, attendees, meetingType
+      id, meetingDate, title, summary, status, session.displayName, attendees, meetingType
     ]]);
     await logActivity(googleToken, session.username, status === "published" ? "posted_minutes" : "drafted_minutes", id, "minutes", title.slice(0, 100));
     return { statusCode: 200, body: JSON.stringify({ success: true, id, status }) };
@@ -499,7 +576,7 @@ exports.handler = async (event) => {
     if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
     let notes = [];
     try { notes = JSON.parse(items[rowIndex].board_notes || "[]"); } catch {}
-    notes.push({ author: session.name, username: session.username, text: note, timestamp: new Date().toISOString() });
+    notes.push({ author: session.displayName, username: session.username, text: note, timestamp: new Date().toISOString() });
     await sheetsUpdate(googleToken, `Resident_Requests!L${rowIndex + 2}`, [[JSON.stringify(notes)]]);
     await logActivity(googleToken, session.username, "added_note", itemId, "request", note.slice(0, 100));
     return { statusCode: 200, body: JSON.stringify({ success: true, notes }) };
@@ -590,7 +667,7 @@ exports.handler = async (event) => {
     const TAB = accessRequestsLib.TAB_NAME;
     const updates = [
       sheetsUpdate(googleToken, `'${TAB}'!J${row}`, [[now]]),
-      sheetsUpdate(googleToken, `'${TAB}'!K${row}`, [[session.name]]),
+      sheetsUpdate(googleToken, `'${TAB}'!K${row}`, [[session.displayName]]),
       sheetsUpdate(googleToken, `'${TAB}'!O${row}`, [[delivered ? accessRequestsLib.DELIVERY_SENT : accessRequestsLib.DELIVERY_FAILED]]),
     ];
     if (delivered) {
@@ -624,7 +701,7 @@ exports.handler = async (event) => {
     await Promise.all([
       sheetsUpdate(googleToken, `'${TAB}'!H${row}`, [[status]]),
       sheetsUpdate(googleToken, `'${TAB}'!J${row}`, [[now]]),
-      sheetsUpdate(googleToken, `'${TAB}'!K${row}`, [[session.name]]),
+      sheetsUpdate(googleToken, `'${TAB}'!K${row}`, [[session.displayName]]),
     ]);
     await logActivity(googleToken, session.username, `access_request_status_${status.replace(/ /g, "_")}`, itemId, "access_request", "");
     return { statusCode: 200, body: JSON.stringify({ success: true }) };
@@ -643,13 +720,13 @@ exports.handler = async (event) => {
     const row = rowIndex + 2;
     let notes = [];
     try { notes = JSON.parse(items[rowIndex]["Internal Board Notes"] || "[]"); } catch {}
-    notes.push({ author: session.name, username: session.username, text: cleanNote, timestamp: new Date().toISOString() });
+    notes.push({ author: session.displayName, username: session.username, text: cleanNote, timestamp: new Date().toISOString() });
     const now = new Date().toISOString();
     const TAB = accessRequestsLib.TAB_NAME;
     await Promise.all([
       sheetsUpdate(googleToken, `'${TAB}'!I${row}`, [[JSON.stringify(notes)]]),
       sheetsUpdate(googleToken, `'${TAB}'!J${row}`, [[now]]),
-      sheetsUpdate(googleToken, `'${TAB}'!K${row}`, [[session.name]]),
+      sheetsUpdate(googleToken, `'${TAB}'!K${row}`, [[session.displayName]]),
     ]);
     await logActivity(googleToken, session.username, "added_access_request_note", itemId, "access_request", cleanNote.slice(0, 100));
     return { statusCode: 200, body: JSON.stringify({ success: true, notes }) };
@@ -657,6 +734,21 @@ exports.handler = async (event) => {
 
   // ── CAST VOTE ──
   if (action === "castVote") {
+    // A member with no vote columns in ARC_Requests (currently Jodi) cannot
+    // have a vote persisted. Previously the column maps below yielded
+    // `undefined`, the range became "ARC_Requests!undefined<row>", the write
+    // result was discarded and the portal reported success — so the vote was
+    // silently lost. Refuse before touching the sheet; Phase A2 adds her
+    // columns and this guard stops applying to her.
+    if (!members.canVote(session.username)) {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({
+          error: "Voting is not yet enabled for your account. Your vote was NOT recorded — please ask an administrator to record it for now.",
+          code: "voting_not_enabled"
+        })
+      };
+    }
     const { itemId, vote, conditions, note } = data;
     const arcs = await getSheetData(googleToken, "ARC_Requests");
     const rowIndex = arcs.findIndex(a => a.id === itemId);
@@ -699,7 +791,6 @@ exports.handler = async (event) => {
 
   // ── ADMIN: RECORD VOTES ON BEHALF (votes already cast by email) ──
   if (action === "adminSetVotes") {
-    if (!session.isAdmin) return { statusCode: 403, body: JSON.stringify({ error: "Admin only" }) };
     const { itemId, votes } = data || {};
     const arcs = await getSheetData(googleToken, "ARC_Requests");
     const rowIndex = arcs.findIndex(a => a.id === itemId);
@@ -748,7 +839,7 @@ exports.handler = async (event) => {
     const sheetRow = rowIndex + 2;
     let comments = [];
     try { comments = JSON.parse(violations[rowIndex].comments_json || "[]"); } catch {}
-    comments.push({ author: session.name, username: session.username, text: comment, timestamp: new Date().toISOString() });
+    comments.push({ author: session.displayName, username: session.username, text: comment, timestamp: new Date().toISOString() });
     await sheetsUpdate(googleToken, `Violations!M${sheetRow}`, [[JSON.stringify(comments)]]);
     await logActivity(googleToken, session.username, "added_comment", itemId, "Violation", comment.slice(0, 100));
 
@@ -770,7 +861,6 @@ exports.handler = async (event) => {
 
   // ── EDIT AN ARC RECORD (admin only) — correct AI-misread fields ──
   if (action === "updateARC") {
-    if (!session.isAdmin) return { statusCode: 403, body: JSON.stringify({ error: "Admin only" }) };
     const { itemId, fields } = data || {};
     const arcs = await getSheetData(googleToken, "ARC_Requests");
     const rowIndex = arcs.findIndex(a => a.id === itemId);
@@ -788,7 +878,6 @@ exports.handler = async (event) => {
 
   // ── ADD AN ARC RECORD / CONCERN (admin only) — manually create an entry ──
   if (action === "addARC") {
-    if (!session.isAdmin) return { statusCode: 403, body: JSON.stringify({ error: "Admin only" }) };
     const f = data?.fields || {};
     const prefix = /concern/i.test(f.request_type || "") ? "CON-" : "ARC-";
     const id = prefix + Date.now().toString(36).toUpperCase();
@@ -806,7 +895,6 @@ exports.handler = async (event) => {
 
   // ── DELETE AN ARC RECORD / CONCERN (admin only) — blanks the row so it disappears ──
   if (action === "deleteARC") {
-    if (!session.isAdmin) return { statusCode: 403, body: JSON.stringify({ error: "Admin only" }) };
     const { itemId } = data || {};
     const arcs = await getSheetData(googleToken, "ARC_Requests");
     const rowIndex = arcs.findIndex(a => a.id === itemId);
@@ -864,7 +952,27 @@ exports.handler = async (event) => {
     return { statusCode: 200, body: JSON.stringify({ success: true }) };
   }
 
+  // Unreachable in practice: authorize() denies any action missing from the
+  // permission table with a 403 before dispatch. Kept as a backstop.
   return { statusCode: 400, body: JSON.stringify({ error: "Unknown action" }) };
+}
+
+// A failed Sheets write must surface as a failure, never as a 200 the portal
+// renders as success. SheetsWriteError becomes a 502 naming the problem;
+// anything else is a genuine bug and stays a 500 rather than being disguised
+// as a persistence failure.
+exports.handler = async (event) => {
+  try {
+    return await handleRequest(event);
+  } catch (err) {
+    const writeError = sheetsWrite.toErrorResponse(err);
+    if (writeError) {
+      console.error(JSON.stringify({ sheetsWriteFailed: true, detail: String(err.detail || err.message || err).slice(0, 200) }));
+      return writeError;
+    }
+    console.error(err);
+    return { statusCode: 500, body: JSON.stringify({ error: "Unexpected server error." }) };
+  }
 };
 
 async function refreshGmailToken() {
