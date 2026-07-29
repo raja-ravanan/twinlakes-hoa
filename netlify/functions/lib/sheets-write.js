@@ -20,6 +20,8 @@ class SheetsWriteError extends Error {
   }
 }
 
+// Called via module.exports.request below so a test can substitute a
+// transport; production always uses this implementation.
 function request(method, hostname, path, headers, body) {
   return new Promise((resolve, reject) => {
     const data = body ? JSON.stringify(body) : null;
@@ -68,7 +70,7 @@ function parseOrThrow(res, what) {
 }
 
 async function valuesGet(token, sheetId, range) {
-  const res = await request(
+  const res = await module.exports.request(
     "GET",
     "sheets.googleapis.com",
     `/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}`,
@@ -80,7 +82,7 @@ async function valuesGet(token, sheetId, range) {
 // A successful update must report that it actually touched cells; a 200 with
 // no updatedCells means nothing was written.
 async function valuesUpdate(token, sheetId, range, values) {
-  const res = await request(
+  const res = await module.exports.request(
     "PUT",
     "sheets.googleapis.com",
     `/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}?valueInputOption=RAW`,
@@ -95,7 +97,7 @@ async function valuesUpdate(token, sheetId, range, values) {
 }
 
 async function valuesAppend(token, sheetId, range, values) {
-  const res = await request(
+  const res = await module.exports.request(
     "POST",
     "sheets.googleapis.com",
     `/v4/spreadsheets/${sheetId}/values/${encodeURIComponent(range)}:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`,

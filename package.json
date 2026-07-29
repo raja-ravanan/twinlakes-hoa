@@ -7,7 +7,13 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "test:resident-auth": "node scripts/test-resident-auth.js",
     "test:resident-audit-e2e": "node scripts/test-resident-audit-e2e.js",
-    "test:access-requests": "node scripts/test-access-requests.js"
+    "test:access-requests": "node scripts/test-access-requests.js",
+    "test:board-auth": "node scripts/test-board-auth.js",
+    "test:board-authz": "node scripts/test-board-authz.js",
+    "test:board-write": "node scripts/test-board-write-contract.js",
+    "test:board-render": "node scripts/test-board-render-safety.js",
+    "check:secrets": "node scripts/check-diff-secrets.js",
+    "test:board": "npm run test:board-auth && npm run test:board-authz && npm run test:board-write && npm run test:board-render && npm run check:secrets"
   },
   "repository": {
     "type": "git",

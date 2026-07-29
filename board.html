@@ -1391,6 +1391,29 @@
     "save-onbehalf":  (el) => saveVotesOnBehalf(el.dataset.id),
     "open-email":     (el) => openEmailModal(el.dataset.id),
     "add-comment":    (el) => addComment(el.dataset.id),
+    "add-req-note":   (el) => addRequestNote(el.dataset.id),
+    "open-access-response": (el) => openAccessResponseModal(el.dataset.id),
+    "add-accreq-note":(el) => addAccessRequestNote(el.dataset.id),
+    "edit-ann":       (el) => editAnnouncement(el.dataset.id),
+    "toggle-ann":     (el) => toggleAnnouncement(el.dataset.id, el.dataset.publish === "true"),
+    "delete-ann":     (el) => deleteAnnouncement(el.dataset.id),
+    "edit-min":       (el) => editMinutes(el.dataset.id),
+    "set-min-type":   (el) => setMinutesType(el.dataset.id, el.dataset.type),
+    "toggle-min":     (el) => toggleMinutes(el.dataset.id, el.dataset.publish === "true"),
+    "delete-min":     (el) => deleteMinutes(el.dataset.id),
+    "show-home":      (el) => showHome(Number(el.dataset.index)),
+  };
+
+  // Selects and text inputs dispatch on their own events.
+  const DELEGATED_CHANGE = {
+    "vio-status":     (el) => updateStatus(el.dataset.id, "violation", el.value),
+    "req-status":     (el) => updateRequestStatus(el.dataset.id, el.value),
+    "accreq-status":  (el) => updateAccessRequestStatus(el.dataset.id, el.value),
+  };
+  const DELEGATED_ENTER = {
+    "comment-input":     (el) => addComment(el.dataset.id),
+    "req-note-input":    (el) => addRequestNote(el.dataset.id),
+    "accreq-note-input": (el) => addAccessRequestNote(el.dataset.id),
   };
 
   document.addEventListener("click", (e) => {
@@ -1401,13 +1424,18 @@
   });
 
   document.addEventListener("change", (e) => {
-    const el = e.target.closest('[data-act="vio-status"]');
-    if (el) updateStatus(el.dataset.id, "violation", el.value);
+    const el = e.target.closest("[data-act]");
+    if (!el) return;
+    const handler = DELEGATED_CHANGE[el.dataset.act];
+    if (handler) handler(el);
   });
 
   document.addEventListener("keydown", (e) => {
-    const el = e.target.closest('[data-act="comment-input"]');
-    if (el && e.key === "Enter") addComment(el.dataset.id);
+    if (e.key !== "Enter") return;
+    const el = e.target.closest("[data-act]");
+    if (!el) return;
+    const handler = DELEGATED_ENTER[el.dataset.act];
+    if (handler) handler(el);
   });
 
   async function logout() {
@@ -1711,7 +1739,7 @@
         const r = residentsData[gi], ser = (r.series || "").toLowerCase();
         const fill = ser.startsWith("garden") ? "#2e7d4f" : ser.startsWith("patriotic") ? "#1B4B7A" : "#cfcfcf";
         const off = offenderYes(r.offender), vol = (r.committee || "").trim() !== "";
-        parts.push(`<g class="home-marker" onclick="showHome(${gi})"><title>${esc(r.name)} — ${esc(r.address)}</title>`+
+        parts.push(`<g class="home-marker" data-act="show-home" data-index="${gi}"><title>${esc(r.name)} — ${esc(r.address)}</title>`+
           `<rect x="${x}" y="${yy}" width="${sz}" height="${sz}" rx="3" fill="${fill}"${off ? ' stroke="#c0492e" stroke-width="2.5"' : ''}/>`+
           (vol ? `<text x="${x + sz / 2}" y="${yy + sz - 4}" font-size="11" fill="#C9A84C" text-anchor="middle">★</text>` : '')+`</g>`);
         maxX = Math.max(maxX, x + sz);
@@ -2309,7 +2337,7 @@
 
     return `
 <div class="vio-card" id="req-${r.id}">
-  <div class="vio-header" onclick="toggleCard('req-body-${r.id}')">
+  <div class="vio-header" data-act="toggle-card" data-id="req-body-${esc(r.id)}">
     <div class="arc-meta">
       <div class="arc-id-row">
         <span class="arc-id">${r.id}</span>
@@ -2331,7 +2359,7 @@
     </div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
       <label style="font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);">STATUS:</label>
-      <select class="status-select" onchange="updateRequestStatus('${r.id}',this.value)">
+      <select class="status-select" data-act="req-status" data-id="${esc(r.id)}">
         <option ${status==='New'?'selected':''}>New</option>
         <option ${status==='In Progress'?'selected':''}>In Progress</option>
         <option ${status==='Resolved'?'selected':''}>Resolved</option>
@@ -2342,8 +2370,8 @@
       <div class="attachments-title">Internal Board Notes</div>
       <div id="reqnotes-${r.id}">${notesHtml || '<p style="font-size:13px;font-family:sans-serif;color:var(--text-m);font-style:italic;">No notes yet.</p>'}</div>
       <div class="add-comment">
-        <input type="text" id="reqNoteInput-${r.id}" placeholder="Add an internal note..." onkeydown="if(event.key==='Enter')addRequestNote('${r.id}')"/>
-        <button class="btn-comment" onclick="addRequestNote('${r.id}')">Add</button>
+        <input type="text" id="reqNoteInput-${esc(r.id)}" placeholder="Add an internal note..." data-act="req-note-input" data-id="${esc(r.id)}"/>
+        <button class="btn-comment" data-act="add-req-note" data-id="${esc(r.id)}">Add</button>
       </div>
     </div>
   </div>
@@ -2440,7 +2468,7 @@
 
     return `
 <div class="vio-card" id="accreq-${id}">
-  <div class="vio-header" onclick="toggleCard('accreq-body-${id}')">
+  <div class="vio-header" data-act="toggle-card" data-id="accreq-body-${esc(id)}">
     <div class="arc-meta">
       <div class="arc-id-row">
         <span class="arc-id">${escapeHtml(id)}</span>
@@ -2461,21 +2489,21 @@
     </div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
       <label style="font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);">STATUS:</label>
-      <select class="status-select" onchange="updateAccessRequestStatus('${id}',this.value)">
+      <select class="status-select" data-act="accreq-status" data-id="${esc(id)}">
         <option ${status==='New'?'selected':''}>New</option>
         <option ${status==='Under Review'?'selected':''}>Under Review</option>
         <option ${status==='Approved'?'selected':''}>Approved</option>
         <option ${status==='Rejected'?'selected':''}>Rejected</option>
         <option ${status==='Closed'?'selected':''}>Closed</option>
       </select>
-      <button class="attachment-btn" onclick="openAccessResponseModal('${id}')">✉️ Reply to Resident</button>
+      <button class="attachment-btn" data-act="open-access-response" data-id="${esc(id)}">✉️ Reply to Resident</button>
     </div>
     <div class="comments-section">
       <div class="attachments-title">Internal Board Notes</div>
       <div id="accreqnotes-${id}">${notesHtml || '<p style="font-size:13px;font-family:sans-serif;color:var(--text-m);font-style:italic;">No notes yet.</p>'}</div>
       <div class="add-comment">
-        <input type="text" id="accReqNoteInput-${id}" placeholder="Add an internal note..." onkeydown="if(event.key==='Enter')addAccessRequestNote('${id}')"/>
-        <button class="btn-comment" onclick="addAccessRequestNote('${id}')">Add</button>
+        <input type="text" id="accReqNoteInput-${esc(id)}" placeholder="Add an internal note..." data-act="accreq-note-input" data-id="${esc(id)}"/>
+        <button class="btn-comment" data-act="add-accreq-note" data-id="${esc(id)}">Add</button>
       </div>
     </div>
   </div>
@@ -2592,9 +2620,9 @@
   <div style="font-size:12px;font-family:sans-serif;color:var(--text-m);margin:8px 0 10px;">${dateStr}${a.posted_by ? ' · by ' + escapeHtml(a.posted_by) : ''}</div>
   <div style="font-size:14px;font-family:sans-serif;color:var(--text);line-height:1.6;">${bodyHtml}</div>
   <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
-    <button class="btn-vote" style="background:#eef2f7;color:var(--navy);border-color:#cdd8e6;" onclick="editAnnouncement('${a.id}')">Edit</button>
-    <button class="btn-vote" style="background:#f7f4ea;color:#9a7d24;border-color:#e6dcc0;" onclick="toggleAnnouncement('${a.id}', ${published ? 'false' : 'true'})">${published ? 'Hide from website' : 'Publish'}</button>
-    <button class="btn-vote" style="background:#fdf0f0;color:var(--red);border-color:#f5b7b1;" onclick="deleteAnnouncement('${a.id}')">Delete</button>
+    <button class="btn-vote" style="background:#eef2f7;color:var(--navy);border-color:#cdd8e6;" data-act="edit-ann" data-id="${esc(a.id)}">Edit</button>
+    <button class="btn-vote" style="background:#f7f4ea;color:#9a7d24;border-color:#e6dcc0;" data-act="toggle-ann" data-id="${esc(a.id)}" data-publish="${published ? 'false' : 'true'}">${published ? 'Hide from website' : 'Publish'}</button>
+    <button class="btn-vote" style="background:#fdf0f0;color:var(--red);border-color:#f5b7b1;" data-act="delete-ann" data-id="${esc(a.id)}">Delete</button>
   </div>
 </div>`;
     }).join("");
@@ -2735,12 +2763,12 @@
   <div class="mm-preview" style="font-size:14px;font-family:sans-serif;color:var(--text);line-height:1.6;">${summaryHtml}</div>
   ${!published ? '<div style="font-size:12px;font-family:sans-serif;color:#9a6a12;background:#fdf3e0;border:1px solid #f0dcb4;border-radius:6px;padding:8px 12px;margin-top:12px;">This is a draft for board/President review. Residents can&rsquo;t see it yet. Click <strong>Publish to Website</strong> when approved.</div>' : ''}
   <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
-    <button class="btn-vote" style="background:#eef2f7;color:var(--navy);border-color:#cdd8e6;" onclick="editMinutes('${m.id}')">Edit</button>
-    <button class="btn-vote" style="background:#f4f1ea;color:#7a6a3a;border-color:#e6dcc0;" onclick="setMinutesType('${m.id}', '${isCommunity ? 'board' : 'community'}')">Move to ${isCommunity ? 'Board' : 'Community'}</button>
+    <button class="btn-vote" style="background:#eef2f7;color:var(--navy);border-color:#cdd8e6;" data-act="edit-min" data-id="${esc(m.id)}">Edit</button>
+    <button class="btn-vote" style="background:#f4f1ea;color:#7a6a3a;border-color:#e6dcc0;" data-act="set-min-type" data-id="${esc(m.id)}" data-type="${isCommunity ? 'board' : 'community'}">Move to ${isCommunity ? 'Board' : 'Community'}</button>
     ${published
-      ? `<button class="btn-vote" style="background:#f7f4ea;color:#9a7d24;border-color:#e6dcc0;" onclick="toggleMinutes('${m.id}', false)">Unpublish (hide)</button>`
-      : `<button class="btn-vote" style="background:var(--navy);color:var(--cream);border-color:var(--navy);font-weight:700;" onclick="toggleMinutes('${m.id}', true)">✓ Publish to Website</button>`}
-    <button class="btn-vote" style="background:#fdf0f0;color:var(--red);border-color:#f5b7b1;" onclick="deleteMinutes('${m.id}')">Delete</button>
+      ? `<button class="btn-vote" style="background:#f7f4ea;color:#9a7d24;border-color:#e6dcc0;" data-act="toggle-min" data-id="${esc(m.id)}" data-publish="false">Unpublish (hide)</button>`
+      : `<button class="btn-vote" style="background:var(--navy);color:var(--cream);border-color:var(--navy);font-weight:700;" data-act="toggle-min" data-id="${esc(m.id)}" data-publish="true">✓ Publish to Website</button>`}
+    <button class="btn-vote" style="background:#fdf0f0;color:var(--red);border-color:#f5b7b1;" data-act="delete-min" data-id="${esc(m.id)}">Delete</button>
   </div>
 </div>`;
     }).join("");
