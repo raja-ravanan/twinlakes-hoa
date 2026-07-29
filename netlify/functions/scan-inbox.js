@@ -1,5 +1,9 @@
 const https = require("https");
 const crypto = require("crypto");
+// Session verification + the central permission table. Carries no
+// credentials, so importing it does not pull board passwords into the
+// scanner's module graph.
+const boardAuth = require("./lib/board-auth");
 
 // ── Helpers ───────────────────────────────────────────────
 function httpsReq(method, hostname, path, headers, body) {
@@ -601,10 +605,17 @@ exports.handler = async (event) => {
   if (event.httpMethod !== "POST")
     return { statusCode: 405, body: "Method Not Allowed" };
 
+  // Authorization only — the scan pipeline below is unchanged.
+  // Previously this compared a DIGEST_SECRET that an admin typed into a
+  // browser prompt() and the page POSTed in the request body, so the shared
+  // secret lived in browser memory and was visible to anyone watching the
+  // screen. It is now the signed, HttpOnly Board session, restricted to
+  // administrators by the central permission table.
+  const session = boardAuth.getSessionContext(event);
+  const denied = boardAuth.authorize(event, "runScan", session);
+  if (denied) return denied;
+
   const reqBody = JSON.parse(event.body || "{}");
-  const { secret } = reqBody;
-  if (secret !== process.env.DIGEST_SECRET)
-    return { statusCode: 401, body: JSON.stringify({ error: "Unauthorized" }) };
 
   try {
     const [gmailToken, googleToken] = await Promise.all([
