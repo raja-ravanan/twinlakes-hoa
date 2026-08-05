@@ -1,6 +1,35 @@
 [functions]
   directory = "netlify/functions"
 
+# The publish directory is the repo root, so every committed .md file is
+# served as a static asset — https://twinlakes.netlify.app/docs/resident-portal-setup.md
+# returns 200 today. These are internal engineering documents (auth design,
+# architecture review, working notes), not site content, and nothing on the
+# site links to them. Keep them in git, out of the public site.
+[[redirects]]
+  from = "/docs/*"
+  status = 404
+  to = "/404.html"
+  force = true
+
+[[redirects]]
+  from = "/CLAUDE.md"
+  status = 404
+  to = "/404.html"
+  force = true
+
+[[redirects]]
+  from = "/HANDOVER.md"
+  status = 404
+  to = "/404.html"
+  force = true
+
+[[redirects]]
+  from = "/FABLE-DESIGN-BRIEF.md"
+  status = 404
+  to = "/404.html"
+  force = true
+
 [functions.scan-inbox]
   timeout = 300
 
