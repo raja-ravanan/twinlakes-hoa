@@ -1,6 +1,14 @@
 # Local Netlify folder
 .netlify
 .env
+.env.*
 
 # macOS Finder metadata
 .DS_Store
+**/.DS_Store
+
+# Claude Code working directory. Local-only and deliberately never committed:
+# it holds a Gmail inbox dump and an open-items export containing real
+# resident names, addresses and email bodies, plus machine-specific absolute
+# paths (launch.json) and per-machine tool permissions (settings.local.json).
+.claude/

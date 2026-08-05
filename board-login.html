@@ -58,14 +58,19 @@
       const errEl = document.getElementById("error");
       errEl.style.display = "none";
       try {
+        // The session arrives as a Secure, HttpOnly, SameSite=Strict cookie
+        // that scripts cannot read, so nothing about it is kept in
+        // localStorage any more and an XSS bug cannot steal it. The response
+        // body carries no token, name, title or privilege flag — board.html
+        // asks /board-session for its display data.
         const res = await fetch("/.netlify/functions/board-api", {
-          method: "POST", headers: { "Content-Type": "application/json" },
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json", "X-Board-Request": "1" },
           body: JSON.stringify({ action: "login", username, password })
         });
-        const data = await res.json();
-        if (res.ok && data.token) {
-          localStorage.setItem("board_token", data.token);
-          localStorage.setItem("board_user", JSON.stringify({ username, name: data.name, role: data.role, isAdmin: data.isAdmin }));
+        const data = await res.json().catch(() => ({}));
+        if (res.ok && data.ok) {
           window.location.href = "/board.html";
         } else {
           errEl.style.display = "block";

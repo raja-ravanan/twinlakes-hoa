@@ -214,6 +214,15 @@
     .vote-Deny { background:#fdf0f0; color:var(--red); font-weight:700; }
     .vote-Conditional { background:#fef9e7; color:#b7770d; font-weight:700; }
     .vote-Pending { background:#f5f5f5; color:#999; }
+    /* Scanner-written vote values ("Approved"/"Denied") are canonicalised in
+       Phase A2; until then style them alongside the portal's own wording so a
+       recorded vote is never rendered unstyled. */
+    .vote-Approved { background:#eafaf1; color:var(--green); font-weight:700; }
+    .vote-Denied { background:#fdf0f0; color:var(--red); font-weight:700; }
+    .vote-former { font-size:10px; font-style:italic; color:var(--text-m); font-weight:400; }
+    .vote-pending-setup { font-size:13px; font-family:sans-serif; line-height:1.6; color:#5a4a1a;
+      background:var(--cream-note, #FBF8F0); border:1px solid var(--gold-border, #dfc07a);
+      border-left:3px solid var(--gold); border-radius:6px; padding:12px 16px; }
     .vote-counter { font-size:13px; font-family:sans-serif; color:var(--text-m); margin-bottom:14px; }
     .vote-counter strong { color:var(--navy); }
 
@@ -398,7 +407,7 @@
   <!-- Stats Row -->
   <div class="stats-row" id="statsRow">
     <div class="stat-card urgent drillable" onclick="drillKpi('open')"><div class="stat-num" id="statOpenARC">—</div><div class="stat-label">Open ARC Requests</div><div class="stat-drill">View →</div></div>
-    <div class="stat-card warning drillable" data-admin="true" onclick="drillKpi('violations')"><div class="stat-num" id="statOpenVio">—</div><div class="stat-label">Open Violations</div><div class="stat-drill">View →</div></div>
+    <div class="stat-card warning drillable" onclick="drillKpi('violations')"><div class="stat-num" id="statOpenVio">—</div><div class="stat-label">Open Violations</div><div class="stat-drill">View →</div></div>
     <div class="stat-card drillable" onclick="drillKpi('mine')"><div class="stat-num" id="statPendingVotes">—</div><div class="stat-label">Awaiting My Vote</div><div class="stat-drill">View →</div></div>
     <div class="stat-card good drillable" onclick="drillKpi('resolved')"><div class="stat-num" id="statResolved">—</div><div class="stat-label">Resolved This Month</div><div class="stat-drill">View →</div></div>
   </div>
@@ -409,10 +418,10 @@
     <div class="sidebar-menu">
       <div class="nav-sec">Workflow</div>
       <button class="tab active" onclick="switchTab('arc')">🏗️ ARC Requests <span class="tab-badge" id="arcBadge">0</span></button>
-      <button class="tab" data-admin="true" onclick="switchTab('concerns')">📌 Concerns &amp; Requests <span class="tab-badge" id="conBadge">0</span></button>
-      <button class="tab" data-admin="true" onclick="switchTab('violations')">⚠️ Violations <span class="tab-badge" id="vioBadge">0</span></button>
-      <button class="tab" data-admin="true" onclick="switchTab('other')">📂 Other Items <span class="tab-badge" id="othBadge">0</span></button>
-      <button class="tab" data-admin="true" onclick="switchTab('requests')">📨 Resident Requests <span class="tab-badge" id="reqBadge">0</span></button>
+      <button class="tab" onclick="switchTab('concerns')">📌 Concerns &amp; Requests <span class="tab-badge" id="conBadge">0</span></button>
+      <button class="tab" onclick="switchTab('violations')">⚠️ Violations <span class="tab-badge" id="vioBadge">0</span></button>
+      <button class="tab" onclick="switchTab('other')">📂 Other Items <span class="tab-badge" id="othBadge">0</span></button>
+      <button class="tab" onclick="switchTab('requests')">📨 Resident Requests <span class="tab-badge" id="reqBadge">0</span></button>
       <button class="tab" onclick="switchTab('accessrequests')">🔑 Portal Access Requests <span class="tab-badge" id="accReqBadge">0</span></button>
       <div class="nav-sec">Community</div>
       <button class="tab" onclick="switchTab('announcements')">📣 Announcements <span class="tab-badge" id="annBadge">0</span></button>
@@ -427,7 +436,7 @@
       <button class="tab" onclick="switchTab('financials')">📊 Financials</button>
       <button class="tab" onclick="switchTab('budget')">💵 Budget vs Actual</button>
       <div class="nav-sec">Admin</div>
-      <button class="tab" data-admin="true" onclick="switchTab('activity')">📋 Activity Log</button>
+      <button class="tab" data-perm="viewDiagnostics" onclick="switchTab('activity')">📋 Activity Log</button>
     </div>
   </aside>
   <div class="content-area">
@@ -1315,49 +1324,175 @@
   let currentAccessRequestId = null;
 
   // ── Init ──────────────────────────────────────────────
-  window.addEventListener("DOMContentLoaded", () => {
-    const token = localStorage.getItem("board_token");
-    const user = localStorage.getItem("board_user");
-    if (!token || !user) { window.location.href = "/board-login.html"; return; }
-    currentUser = JSON.parse(user);
-    document.getElementById("userName").textContent = currentUser.name;
-    document.getElementById("userRole").textContent = currentUser.role;
-    if (currentUser.isAdmin) {
-      document.getElementById("scanBtnWrap").style.display = "flex";
-      document.getElementById("arcAdminBar").style.display = "flex";
+  // The session is an HttpOnly cookie the page cannot read, so who we are and
+  // what we may do is asked of the server on load. Everything it returns is a
+  // usability hint — every action is authorized again server-side.
+  window.addEventListener("DOMContentLoaded", async () => {
+    let profile;
+    try {
+      const res = await fetch("/.netlify/functions/board-session", { credentials: "include" });
+      if (!res.ok) { window.location.href = "/board-login.html"; return; }
+      profile = await res.json();
+    } catch { window.location.href = "/board-login.html"; return; }
+
+    currentUser = profile;
+    currentUser.isAdmin = profile.access === "admin";
+    document.getElementById("userName").textContent = profile.displayName;
+    document.getElementById("userRole").textContent = profile.displayTitle;
+
+    // Reveal only the controls this member is permitted to use.
+    if (can("runScan")) document.getElementById("scanBtnWrap").style.display = "flex";
+    if (can("adminSetVotes")) document.getElementById("arcAdminBar").style.display = "flex";
+    if (can("addARC")) {
       document.getElementById("arcAddBar").style.display = "block";
       document.getElementById("conAddBar").style.display = "block";
     }
-    // Board members see only ARC Requests, Announcements, Meeting Minutes.
-    // Admin-only tabs/cards (Violations, Other Items, Resident Requests, Activity Log) are hidden for non-admins.
-    if (!currentUser.isAdmin) {
-      document.querySelectorAll('[data-admin="true"]').forEach(el => { el.style.display = "none"; });
-    }
+    // Operational queues (Concerns, Violations, Other Items, Resident
+    // Requests) are now visible to every active board member. Only technical
+    // diagnostics remain restricted, and only as a hint — the server decides.
+    document.querySelectorAll("[data-perm]").forEach(el => {
+      if (!can(el.getAttribute("data-perm"))) el.style.display = "none";
+    });
+
     loadDashboard();
     checkEmailHealth();
     const ls = localStorage.getItem("lastScan");
     if (ls) document.getElementById("lastScan").textContent = "Last scan: " + new Date(ls).toLocaleString();
   });
 
-  function logout() {
-    localStorage.removeItem("board_token"); localStorage.removeItem("board_user");
+  // Backstop: any ApiError that escapes a call site still reaches the user
+  // rather than dying silently in the console. uiAction() handles the common
+  // paths; this guarantees the rest.
+  window.addEventListener("unhandledrejection", (e) => {
+    if (e.reason instanceof ApiError) {
+      e.preventDefault();
+      showToast(e.reason.userMessage, "error");
+    }
+  });
+
+  // Permission hint lookup. Never a security control.
+  function can(action) {
+    return Boolean(currentUser && Array.isArray(currentUser.permissions) && currentUser.permissions.includes(action));
+  }
+
+  // ── Delegated event dispatch ──────────────────────────
+  // Record-derived identifiers (ARC ids, violation ids) used to live inside
+  // inline onclick="fn('<id>')" strings — a value from the sheet sitting in a
+  // JS string inside an HTML attribute. They now travel as data-* attributes
+  // and are read back via dataset, so nothing from the data ever becomes code.
+  const DELEGATED = {
+    "toggle-arc":     (el) => toggleArcDetail(el.dataset.id),
+    "edit-arc":       (el) => openArcEdit(el.dataset.id),
+    "delete-arc":     (el) => deleteArc(el.dataset.id),
+    "toggle-analysis":(el) => toggleAnalysis("analysis-" + el.dataset.id),
+    "toggle-card":    (el) => toggleCard(el.dataset.id),
+    "select-vote":    (el) => selectVote(el.dataset.id, el.dataset.vote),
+    "submit-vote":    (el) => submitVote(el.dataset.id),
+    "save-onbehalf":  (el) => saveVotesOnBehalf(el.dataset.id),
+    "open-email":     (el) => openEmailModal(el.dataset.id),
+    "add-comment":    (el) => addComment(el.dataset.id),
+    "add-req-note":   (el) => addRequestNote(el.dataset.id),
+    "open-access-response": (el) => openAccessResponseModal(el.dataset.id),
+    "add-accreq-note":(el) => addAccessRequestNote(el.dataset.id),
+    "edit-ann":       (el) => editAnnouncement(el.dataset.id),
+    "toggle-ann":     (el) => toggleAnnouncement(el.dataset.id, el.dataset.publish === "true"),
+    "delete-ann":     (el) => deleteAnnouncement(el.dataset.id),
+    "edit-min":       (el) => editMinutes(el.dataset.id),
+    "set-min-type":   (el) => setMinutesType(el.dataset.id, el.dataset.type),
+    "toggle-min":     (el) => toggleMinutes(el.dataset.id, el.dataset.publish === "true"),
+    "delete-min":     (el) => deleteMinutes(el.dataset.id),
+    "show-home":      (el) => showHome(Number(el.dataset.index)),
+  };
+
+  // Selects and text inputs dispatch on their own events.
+  const DELEGATED_CHANGE = {
+    "vio-status":     (el) => updateStatus(el.dataset.id, "violation", el.value),
+    "req-status":     (el) => updateRequestStatus(el.dataset.id, el.value),
+    "accreq-status":  (el) => updateAccessRequestStatus(el.dataset.id, el.value),
+  };
+  const DELEGATED_ENTER = {
+    "comment-input":     (el) => addComment(el.dataset.id),
+    "req-note-input":    (el) => addRequestNote(el.dataset.id),
+    "accreq-note-input": (el) => addAccessRequestNote(el.dataset.id),
+  };
+
+  document.addEventListener("click", (e) => {
+    const el = e.target.closest("[data-act]");
+    if (!el) return;
+    const handler = DELEGATED[el.dataset.act];
+    if (handler) { e.preventDefault(); handler(el); }
+  });
+
+  document.addEventListener("change", (e) => {
+    const el = e.target.closest("[data-act]");
+    if (!el) return;
+    const handler = DELEGATED_CHANGE[el.dataset.act];
+    if (handler) handler(el);
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key !== "Enter") return;
+    const el = e.target.closest("[data-act]");
+    if (!el) return;
+    const handler = DELEGATED_ENTER[el.dataset.act];
+    if (handler) handler(el);
+  });
+
+  async function logout() {
+    // Ask the server to clear the HttpOnly cookie. It does so even when the
+    // session is already expired, malformed or inactive, so a broken session
+    // can never strand someone on this page.
+    try {
+      await fetch("/.netlify/functions/board-logout", {
+        method: "POST", credentials: "include", headers: { "X-Board-Request": "1" }
+      });
+    } catch { /* redirect anyway — the cookie expires on its own */ }
+    localStorage.removeItem("lastScan");
     window.location.href = "/board-login.html";
   }
 
+  // Structured failure, so a caller cannot accidentally treat an error as data.
+  class ApiError extends Error {
+    constructor(status, userMessage) { super(userMessage); this.status = status; this.userMessage = userMessage; }
+  }
+
+  // Throws on any non-2xx response. There is no sentinel return value a caller
+  // can forget to inspect, so a failed write cannot reach a success path.
   async function api(body) {
-    const token = localStorage.getItem("board_token");
     const res = await fetch("/.netlify/functions/board-api", {
-      method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json", "X-Board-Request": "1" },
       body: JSON.stringify(body)
     });
-    if (res.status === 401) { logout(); return null; }
-    return res.json();
+    if (res.status === 401) {
+      window.location.href = "/board-login.html";
+      throw new ApiError(401, "Your session has expired. Please sign in again.");
+    }
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok) throw new ApiError(res.status, payload.error || "Something went wrong and your change was not saved.");
+    return payload;
+  }
+
+  // The single path from "do a thing" to "tell the user". The success message
+  // runs only after the API call resolves, so persistence is always confirmed
+  // before anything claims success.
+  async function uiAction(fn, successMsg) {
+    try {
+      const result = await fn();
+      if (successMsg) showToast(successMsg, "success");
+      return result;
+    } catch (e) {
+      showToast((e && e.userMessage) || "Something went wrong. Your change was not saved.", "error");
+      return null;
+    }
   }
 
   // ── Load Dashboard ────────────────────────────────────
   async function loadDashboard() {
-    const data = await api({ action: "getDashboard" });
-    if (!data) return;
+    let data;
+    try { data = await api({ action: "getDashboard" }); }
+    catch (e) { showToast((e && e.userMessage) || "Could not load the dashboard.", "error"); return; }
     dashData = data;
     renderAll();
     updateStats();
@@ -1366,7 +1501,9 @@
   // ── Resident Inventory ────────────────────────────────
   async function loadResidents() {
     residentsLoaded = true;
-    const data = await api({ action: "getResidents" });
+    let data;
+    try { data = await api({ action: "getResidents" }); }
+    catch (e) { showToast((e && e.userMessage) || "Could not load the directory.", "error"); return; }
     if (!data) { residentsLoaded = false; return; }
     residentsData = data.residents || [];
     document.getElementById("resBadge").textContent = residentsData.length;
@@ -1378,8 +1515,79 @@
     renderResidents();
   }
 
+  // The one HTML-escaping function. Escapes BOTH quote styles, so a value is
+  // safe inside single- or double-quoted attributes as well as in text.
   function esc(s) {
-    return String(s == null ? "" : s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+    return String(s == null ? "" : s)
+      .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+      .replace(/"/g,"&quot;").replace(/'/g,"&#39;");
+  }
+
+  // ── URL safety ────────────────────────────────────────
+  // Board data carries URLs written by the scanner, by residents, and by AI
+  // summarisation. Only https survives, which rejects javascript:, data:,
+  // file:, vbscript: and plain http:. `new URL()` also rejects malformed
+  // input outright, and normalises the result so quotes cannot survive into
+  // an attribute.
+  const DOC_HOSTS = new Set(["drive.google.com", "docs.google.com"]);
+
+  function safeUrl(raw, opts) {
+    const driveOnly = Boolean(opts && opts.driveOnly);
+    if (typeof raw !== "string") return null;
+    const s = raw.trim();
+    if (!s) return null;
+    let u;
+    try { u = new URL(s); } catch { return null; }
+    if (u.protocol !== "https:") return null;
+    if (driveOnly && !DOC_HOSTS.has(u.hostname)) return null;
+    return u.href;
+  }
+
+  // Links are built with DOM APIs — `.href` assignment and `.textContent` —
+  // never by interpolating into an HTML string.
+  function makeLink(href, text, className) {
+    const a = document.createElement("a");
+    a.href = href;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    if (className) a.className = className;
+    a.textContent = text;
+    return a;
+  }
+
+  function plainSpan(text, className) {
+    const s = document.createElement("span");
+    if (className) s.className = className;
+    s.textContent = text;
+    return s;
+  }
+
+  // Fills attachment containers after their rows are in the DOM. Attachment
+  // links use the stricter Drive/Docs validator; anything that is not a valid
+  // Drive URL is shown as text rather than as a broken link. Web-form ARCs
+  // store a prose note in attachment_urls ("3 file(s) emailed to the board:
+  // …"), which is exactly that case.
+  function hydrateAttachments(root) {
+    const scope = root || document;
+    scope.querySelectorAll("[data-attachments-for]").forEach(box => {
+      const id = box.getAttribute("data-attachments-for");
+      const kind = box.getAttribute("data-attachments-kind") || "arc";
+      const src = kind === "vio" ? dashData.violations : dashData.arcs;
+      const item = (src || []).find(x => x.id === id);
+      box.textContent = "";
+      if (!item) return;
+      let rendered = 0;
+      const folder = safeUrl(item.drive_folder_url, { driveOnly: true });
+      if (folder) { box.appendChild(makeLink(folder, "📁 View Drive Folder", "attachment-btn")); rendered++; }
+      const raw = String(item.attachment_urls || "").split(",").map(v => v.trim()).filter(Boolean);
+      const valid = raw.map(v => safeUrl(v, { driveOnly: true })).filter(Boolean);
+      valid.forEach((href, i) => { box.appendChild(makeLink(href, `📄 Attachment ${i + 1}`, "attachment-btn")); rendered++; });
+      if (!valid.length && raw.length) {
+        box.appendChild(plainSpan(String(item.attachment_urls), "no-attachments"));
+        rendered++;
+      }
+      if (!rendered) box.appendChild(plainSpan("No attachments found", "no-attachments"));
+    });
   }
 
   function seriesPill(series) {
@@ -1531,7 +1739,7 @@
         const r = residentsData[gi], ser = (r.series || "").toLowerCase();
         const fill = ser.startsWith("garden") ? "#2e7d4f" : ser.startsWith("patriotic") ? "#1B4B7A" : "#cfcfcf";
         const off = offenderYes(r.offender), vol = (r.committee || "").trim() !== "";
-        parts.push(`<g class="home-marker" onclick="showHome(${gi})"><title>${esc(r.name)} — ${esc(r.address)}</title>`+
+        parts.push(`<g class="home-marker" data-act="show-home" data-index="${gi}"><title>${esc(r.name)} — ${esc(r.address)}</title>`+
           `<rect x="${x}" y="${yy}" width="${sz}" height="${sz}" rx="3" fill="${fill}"${off ? ' stroke="#c0492e" stroke-width="2.5"' : ''}/>`+
           (vol ? `<text x="${x + sz / 2}" y="${yy + sz - 4}" font-size="11" fill="#C9A84C" text-anchor="middle">★</text>` : '')+`</g>`);
         maxX = Math.max(maxX, x + sz);
@@ -1563,7 +1771,7 @@
   }
   async function loadFinancialsToggle() {
     const box = document.getElementById("finPublishBox");
-    if (!currentUser || !currentUser.isAdmin) { box.style.display = "none"; return; }
+    if (!can("setSetting")) { box.style.display = "none"; return; }
     box.style.display = "flex";
     try {
       const res = await fetch("/.netlify/functions/board-api", {
@@ -1761,6 +1969,7 @@
       document.getElementById("arcArchiveBtn").style.display = "block";
       document.getElementById("arcArchived").innerHTML = arcGrid(archived);
     }
+    hydrateAttachments();
   }
 
   // ── Concerns / Non-ARC Rendering ──────────────────────
@@ -1786,9 +1995,9 @@
           <div class="arc-address">${esc(c.address || "—")}</div>
           <div class="arc-fulldesc-text" style="margin-top:8px;">${desc}</div>
         </div>
-        ${currentUser.isAdmin ? `<div style="display:flex;flex-direction:column;gap:6px;">
-          <button class="btn-edit" title="Edit / recategorize" onclick="openArcEdit('${c.id}')">✏️ Edit</button>
-          <button class="btn-edit" title="Delete record" onclick="deleteArc('${c.id}')">🗑️ Delete</button>
+        ${(can("updateARC") || can("deleteARC")) ? `<div style="display:flex;flex-direction:column;gap:6px;">
+          ${can("updateARC") ? `<button class="btn-edit" title="Edit / recategorize" data-act="edit-arc" data-id="${esc(c.id)}">✏️ Edit</button>` : ""}
+          ${can("deleteARC") ? `<button class="btn-edit" title="Delete record" data-act="delete-arc" data-id="${esc(c.id)}">🗑️ Delete</button>` : ""}
         </div>` : ""}
       </div>`;
     }).join("");
@@ -1796,7 +2005,7 @@
 
   // Drill from a KPI stat card into a filtered ARC view
   function drillKpi(which) {
-    if (which === "violations") { if (currentUser.isAdmin) switchTab("violations"); return; }
+    if (which === "violations") { switchTab("violations"); return; }
     arcQuickFilter = which; // open | mine | resolved
     switchTab("arc");
     renderARCs(dashData.arcs || []);
@@ -1842,15 +2051,15 @@
       <td>${esc(arc.address || "—")}</td>
       <td><span class="arc-type-badge">${esc(arc.request_type || "Request")}</span></td>
       <td class="arc-c-desc" title="${esc(rawDesc).slice(0,300)}">${esc(desc)}${rawDesc.length > 110 ? "…" : ""}</td>
-      <td><span class="status-badge status-${status.replace(/\s.*/, "")}">${esc(status)}</span></td>
-      <td class="arc-c-votes">${voteCount}/6${myVote ? `<div class="arc-myvote">you: ${esc(myVote)}</div>` : ""}</td>
+      <td><span class="status-badge status-${esc(status.replace(/\s.*/, ""))}">${esc(status)}</span></td>
+      <td class="arc-c-votes">${voteCount}${myVote ? `<div class="arc-myvote">you: ${esc(myVote)}</div>` : ""}</td>
       <td class="arc-c-act">
-        <button class="btn-action" onclick="toggleArcDetail('${arc.id}')">Take Action</button>
-        ${currentUser.isAdmin ? `<button class="btn-edit" title="Edit record" onclick="openArcEdit('${arc.id}')">✏️</button>
-        <button class="btn-edit" title="Delete record" onclick="deleteArc('${arc.id}')">🗑️</button>` : ""}
+        <button class="btn-action" data-act="toggle-arc" data-id="${esc(arc.id)}">Take Action</button>
+        ${can("updateARC") ? `<button class="btn-edit" title="Edit record" data-act="edit-arc" data-id="${esc(arc.id)}">✏️</button>` : ""}
+        ${can("deleteARC") ? `<button class="btn-edit" title="Delete record" data-act="delete-arc" data-id="${esc(arc.id)}">🗑️</button>` : ""}
       </td>
     </tr>
-    <tr class="arc-detail-row" id="arcdetail-${arc.id}" style="display:none"><td colspan="9">${arcDetailBody(arc)}</td></tr>`;
+    <tr class="arc-detail-row" id="arcdetail-${esc(arc.id)}" style="display:none"><td colspan="9">${arcDetailBody(arc)}</td></tr>`;
   }
 
   function toggleArcDetail(id) {
@@ -1863,31 +2072,46 @@
     const status = arc.final_status || "Open";
     const isMajority = status === "Approved" || status === "Denied";
     const attachments = arc.attachment_urls ? arc.attachment_urls.split(",").filter(u => u.trim()) : [];
-    const memberVotes = [
-      { key: "tony", name: "Tony" }, { key: "yashu", name: "Yashu" },
-      { key: "ramana", name: "Ramana" }, { key: "raja", name: "Raja" },
-      { key: "aimee", name: "Aimee" }, { key: "mike", name: "Mike" }
+    // Sitting board members. Jodi is listed but has no vote columns in the
+    // sheet yet (Phase A2 adds them), so she can be shown but not voted for.
+    const activeVoteMembers = [
+      { key: "tony", name: "Tony", canVote: true },
+      { key: "yashu", name: "Yashu", canVote: true },
+      { key: "raja", name: "Raja", canVote: true },
+      { key: "aimee", name: "Aimee", canVote: true },
+      { key: "mike", name: "Mike", canVote: true },
+      { key: "jodi", name: "Jodi", canVote: false }
     ];
+    // Ramana resigned. His recorded votes still count toward the records they
+    // were cast on, so he is shown — read-only and labelled — on exactly those
+    // records, and nowhere else. Hiding him would make the grid disagree with
+    // the vote count.
+    const historicalVoteMembers = [{ key: "ramana", name: "Ramana", former: true }]
+      .filter(m => String(arc[m.key + "_vote"] || "").trim());
+    const memberVotes = activeVoteMembers.concat(historicalVoteMembers);
     const memberVotesHtml = memberVotes.map(m => {
       const v = arc[m.key + "_vote"] || "Pending";
-      return `<div class="vote-member"><div class="vote-member-name">${m.name}</div><div class="vote-member-vote vote-${v}">${v}</div></div>`;
+      const label = m.former ? `${esc(m.name)} <span class="vote-former">(former)</span>` : esc(m.name);
+      return `<div class="vote-member"><div class="vote-member-name">${label}</div><div class="vote-member-vote vote-${esc(v)}">${esc(v)}</div></div>`;
     }).join("");
     const voteCount = parseInt(arc.vote_count) || 0;
 
-    // Admin-only: record votes already cast by email, on behalf of each member.
+    // Record votes already cast by email. Restricted to the two technical
+    // administrators server-side; only members with vote columns are offered,
+    // so a selection can never be silently dropped.
     const voteOpts = ["", "Approve", "Deny", "Conditional"];
-    const onBehalfHtml = currentUser.isAdmin ? `
+    const onBehalfHtml = can("adminSetVotes") ? `
       <div class="onbehalf-section">
         <div class="onbehalf-label">✍️ Record votes on behalf (admin) <span class="onbehalf-hint">— set each member's vote as cast by email</span></div>
         <div class="onbehalf-grid">
-          ${memberVotes.map(m => {
+          ${activeVoteMembers.filter(m => m.canVote).map(m => {
             const cur = arc[m.key + "_vote"] || "";
-            return `<label class="onbehalf-row"><span>${m.name}</span>
-              <select id="ob-${arc.id}-${m.key}">${voteOpts.map(o => `<option value="${o}" ${o===cur?"selected":""}>${o||"— Pending —"}</option>`).join("")}</select>
+            return `<label class="onbehalf-row"><span>${esc(m.name)}</span>
+              <select id="ob-${esc(arc.id)}-${esc(m.key)}">${voteOpts.map(o => `<option value="${esc(o)}" ${o===cur?"selected":""}>${esc(o)||"— Pending —"}</option>`).join("")}</select>
             </label>`;
           }).join("")}
         </div>
-        <button class="btn-submit-vote" onclick="saveVotesOnBehalf('${arc.id}')">Save recorded votes</button>
+        <button class="btn-submit-vote" data-act="save-onbehalf" data-id="${esc(arc.id)}">Save recorded votes</button>
       </div>` : "";
 
     return `
@@ -1896,14 +2120,14 @@
     <!-- AI Summary (hidden unless an admin enables it) -->
     ${aiEnabled ? `<div class="ai-summary-box">
       <div class="ai-label">🤖 AI Summary <span style="font-weight:normal;font-style:italic;color:#666;font-size:10px;">— Generated by Claude AI</span></div>
-      <div class="ai-summary-text">${arc.ai_summary || "No AI summary available."}</div>
-      <span class="ai-rec ai-rec-${arc.ai_recommendation}">${arc.ai_recommendation ? "AI Suggests: " + arc.ai_recommendation : ""}</span>
-      <div><button class="expand-analysis" onclick="toggleAnalysis('analysis-${arc.id}')">▶ Show full analysis with pros & cons</button></div>
-      <div class="analysis-detail" id="analysis-${arc.id}">
-        <div class="analysis-section"><strong>Reasoning</strong><p>${arc.ai_reasoning || "N/A"}</p></div>
+      <div class="ai-summary-text">${esc(arc.ai_summary || "No AI summary available.")}</div>
+      <span class="ai-rec ai-rec-${esc(arc.ai_recommendation)}">${arc.ai_recommendation ? "AI Suggests: " + esc(arc.ai_recommendation) : ""}</span>
+      <div><button class="expand-analysis" data-act="toggle-analysis" data-id="${esc(arc.id)}">▶ Show full analysis with pros & cons</button></div>
+      <div class="analysis-detail" id="analysis-${esc(arc.id)}">
+        <div class="analysis-section"><strong>Reasoning</strong><p>${esc(arc.ai_reasoning || "N/A")}</p></div>
         <div class="pros-cons">
-          <div class="pros-box"><strong>✓ Pros</strong><ul>${(arc.ai_pros || "").split(",").filter(p=>p.trim()).map(p => `<li>${p.trim()}</li>`).join("") || "<li>N/A</li>"}</ul></div>
-          <div class="cons-box"><strong>✕ Cons</strong><ul>${(arc.ai_cons || "").split(",").filter(c=>c.trim()).map(c => `<li>${c.trim()}</li>`).join("") || "<li>N/A</li>"}</ul></div>
+          <div class="pros-box"><strong>✓ Pros</strong><ul>${(arc.ai_pros || "").split(",").filter(p=>p.trim()).map(p => `<li>${esc(p.trim())}</li>`).join("") || "<li>N/A</li>"}</ul></div>
+          <div class="cons-box"><strong>✕ Cons</strong><ul>${(arc.ai_cons || "").split(",").filter(c=>c.trim()).map(c => `<li>${esc(c.trim())}</li>`).join("") || "<li>N/A</li>"}</ul></div>
         </div>
       </div>
       <div class="ai-warning">⚠️ This analysis is AI-generated for board review only. The board makes all final decisions.</div>
@@ -1912,38 +2136,51 @@
     <!-- Full request description -->
     <div class="arc-fulldesc"><div class="attachments-title">📝 Request Details</div><div class="arc-fulldesc-text">${esc((arc.description || "No description.")).replace(/\n/g,"<br>")}</div></div>
 
-    <!-- Attachments -->
+    <!-- Attachments — populated by hydrateAttachments() using DOM APIs, so no
+         externally-supplied URL is ever interpolated into markup. -->
     <div class="attachments-section">
       <div class="attachments-title">📎 Attachments & Drive Folder</div>
-      <div class="attachment-grid">
-        ${arc.drive_folder_url ? `<a href="${arc.drive_folder_url}" target="_blank" class="attachment-btn">📁 View Drive Folder</a>` : ""}
-        ${attachments.map((url, i) => `<a href="${url.trim()}" target="_blank" class="attachment-btn">📄 Attachment ${i+1}</a>`).join("")}
-        ${!arc.drive_folder_url && attachments.length === 0 ? '<span class="no-attachments">No attachments found</span>' : ""}
-      </div>
+      <div class="attachment-grid" data-attachments-for="${esc(arc.id)}" data-attachments-kind="arc"></div>
     </div>
 
     <!-- Vote Tracker -->
     <div class="vote-section">
-      <div class="vote-title">Board Votes (${voteCount}/6 cast — 4 needed for majority)</div>
+      <!-- Denominator deliberately omitted: the board is six seated members
+           plus a vacant Treasurer seat, and which of those the majority is
+           counted against is a governance question, not a code decision. The
+           threshold itself is unchanged. -->
+      <div class="vote-title">Board Votes (${voteCount} cast — 4 needed for majority)</div>
       <div class="vote-grid">${memberVotesHtml}</div>
       <div class="vote-counter">Approve: <strong>${[arc.tony_vote,arc.yashu_vote,arc.ramana_vote,arc.raja_vote,arc.aimee_vote,arc.mike_vote].filter(v=>v==="Approve"||v==="Conditional").length}</strong> · Deny: <strong>${[arc.tony_vote,arc.yashu_vote,arc.ramana_vote,arc.raja_vote,arc.aimee_vote,arc.mike_vote].filter(v=>v==="Deny").length}</strong> · Pending: <strong>${[arc.tony_vote,arc.yashu_vote,arc.ramana_vote,arc.raja_vote,arc.aimee_vote,arc.mike_vote].filter(v=>!v||v==="").length}</strong></div>
       ${onBehalfHtml}
 
       <!-- My Vote -->
+      ${currentUser.canVote ? `
       <div class="my-vote-section">
-        <div class="my-vote-label">Your Vote ${myVote ? `(Current: ${myVote} — you can change)` : ""}</div>
+        <div class="my-vote-label">Your Vote ${myVote ? `(Current: ${esc(myVote)} — you can change)` : ""}</div>
         <div class="vote-buttons">
-          <button class="btn-vote btn-approve ${myVote==='Approve'?'selected':''}" onclick="selectVote('${arc.id}','Approve')">✅ Approve</button>
-          <button class="btn-vote btn-deny ${myVote==='Deny'?'selected':''}" onclick="selectVote('${arc.id}','Deny')">❌ Deny</button>
-          <button class="btn-vote btn-conditional ${myVote==='Conditional'?'selected':''}" onclick="selectVote('${arc.id}','Conditional')">📋 Approve with Conditions</button>
+          <button class="btn-vote btn-approve ${myVote==='Approve'?'selected':''}" data-act="select-vote" data-id="${esc(arc.id)}" data-vote="Approve">✅ Approve</button>
+          <button class="btn-vote btn-deny ${myVote==='Deny'?'selected':''}" data-act="select-vote" data-id="${esc(arc.id)}" data-vote="Deny">❌ Deny</button>
+          <button class="btn-vote btn-conditional ${myVote==='Conditional'?'selected':''}" data-act="select-vote" data-id="${esc(arc.id)}" data-vote="Conditional">📋 Approve with Conditions</button>
         </div>
-        <div class="conditions-area ${myVote==='Conditional'?'show':''}" id="cond-${arc.id}">
-          <textarea placeholder="Enter conditions for approval..." id="condtext-${arc.id}">${arc[currentUser.username+"_conditions"]||""}</textarea>
+        <div class="conditions-area ${myVote==='Conditional'?'show':''}" id="cond-${esc(arc.id)}">
+          <textarea placeholder="Enter conditions for approval..." id="condtext-${esc(arc.id)}">${esc(arc[currentUser.username+"_conditions"]||"")}</textarea>
         </div>
         <div class="private-note-label">Private note (only you can see this):</div>
-        <div class="private-note-area"><textarea placeholder="Add a private note..." id="note-${arc.id}">${arc[currentUser.username+"_note"]||""}</textarea></div>
-        <button class="btn-submit-vote" onclick="submitVote('${arc.id}')">Submit Vote</button>
-      </div>
+        <div class="private-note-area"><textarea placeholder="Add a private note..." id="note-${esc(arc.id)}">${esc(arc[currentUser.username+"_note"]||"")}</textarea></div>
+        <button class="btn-submit-vote" data-act="submit-vote" data-id="${esc(arc.id)}">Submit Vote</button>
+      </div>` : `
+      <!-- This member has no vote columns in the sheet yet. Showing the
+           controls would let them cast a vote that cannot be saved, so they
+           are told plainly instead. -->
+      <div class="my-vote-section">
+        <div class="my-vote-label">Your Vote</div>
+        <div class="vote-pending-setup">
+          🔒 Online voting isn’t enabled for your account yet — the vote columns for you are added in the next update.
+          Until then, please send your vote to the board by email and an administrator will record it.
+          <strong>Nothing you enter here would be saved</strong>, so the controls are hidden rather than shown and silently ignored.
+        </div>
+      </div>`}
     </div>
 
     <!-- Notify Mulloy (shows when majority reached) -->
@@ -1951,7 +2188,7 @@
     <div class="notify-section">
       <div class="notify-title">✅ Majority Reached — Decision: ${status}</div>
       <div class="notify-desc">The board has reached a majority decision. Click below to preview and send the notification email to Mulloy Properties, who will forward to the homeowner.</div>
-      <button class="btn-notify ${arc.notified_mulloy==='Yes'?'sent':''}" onclick="openEmailModal('${arc.id}')">${arc.notified_mulloy==='Yes'?'✓ Notification Sent':'📧 Notify Mulloy'}</button>
+      ${can("sendNotification") ? `<button class="btn-notify ${arc.notified_mulloy==='Yes'?'sent':''}" data-act="open-email" data-id="${esc(arc.id)}">${arc.notified_mulloy==='Yes'?'✓ Notification Sent':'📧 Notify Mulloy'}</button>` : `<div class="notify-desc">Official notification is sent by an officer or administrator.</div>`}
     </div>` : ""}
 
   </div>`;
@@ -1962,6 +2199,7 @@
     document.getElementById("vioList").innerHTML = violations.length
       ? violations.map(renderVioCard).join("")
       : '<div class="empty-state"><svg fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg><div class="empty-title">No violations found</div></div>';
+    hydrateAttachments();
   }
 
   function renderVioCard(vio) {
@@ -1969,38 +2207,40 @@
     try { comments = JSON.parse(vio.comments_json || "[]"); } catch {}
     const commentsHtml = comments.map(c => `
       <div class="comment-item">
-        <span class="comment-author">${c.author}</span>
+        <span class="comment-author">${esc(c.author)}</span>
         <span class="comment-time">${new Date(c.timestamp).toLocaleString()}</span>
-        <div class="comment-text">${c.text}</div>
+        <div class="comment-text">${esc(c.text)}</div>
       </div>`).join("");
 
     return `
-<div class="vio-card" id="vio-${vio.id}">
-  <div class="vio-header" onclick="toggleCard('vio-body-${vio.id}')">
+<div class="vio-card" id="vio-${esc(vio.id)}">
+  <div class="vio-header" data-act="toggle-card" data-id="vio-body-${esc(vio.id)}">
     <div class="arc-meta">
       <div class="arc-id-row">
-        <span class="arc-id">${vio.id}</span>
-        <span class="vio-type-badge">${vio.violation_type || "Violation"}</span>
+        <span class="arc-id">${esc(vio.id)}</span>
+        <span class="vio-type-badge">${esc(vio.violation_type || "Violation")}</span>
       </div>
-      <div class="arc-name">${vio.homeowner_name || "Unknown"}</div>
-      <div class="arc-address">📍 ${vio.address || "Unknown"}</div>
-      <div class="arc-date">${vio.date_received ? new Date(vio.date_received).toLocaleDateString() : ""} · ${vio.email_subject || ""}</div>
+      <div class="arc-name">${esc(vio.homeowner_name || "Unknown")}</div>
+      <div class="arc-address">📍 ${esc(vio.address || "Unknown")}</div>
+      <div class="arc-date">${vio.date_received ? new Date(vio.date_received).toLocaleDateString() : ""} · ${esc(vio.email_subject || "")}</div>
     </div>
     <div class="arc-status-col">
-      <span class="status-badge status-${vio.status || 'Open'}">${vio.status || "Open"}</span>
+      <span class="status-badge status-${esc(vio.status || 'Open')}">${esc(vio.status || "Open")}</span>
     </div>
   </div>
-  <div class="vio-body" id="vio-body-${vio.id}">
+  <div class="vio-body" id="vio-body-${esc(vio.id)}">
     <div class="ai-summary-box">
       <div class="ai-label">🤖 AI Summary</div>
-      <div class="ai-summary-text">${vio.ai_summary || "No summary available."}</div>
-      ${vio.ai_suggestion ? `<div style="margin-top:10px;font-size:13px;font-family:sans-serif;color:#555;"><strong>Suggested Action:</strong> ${vio.ai_suggestion}</div>` : ""}
+      <div class="ai-summary-text">${esc(vio.ai_summary || "No summary available.")}</div>
+      ${vio.ai_suggestion ? `<div style="margin-top:10px;font-size:13px;font-family:sans-serif;color:#555;"><strong>Suggested Action:</strong> ${esc(vio.ai_suggestion)}</div>` : ""}
       <div class="ai-warning">⚠️ AI-generated — for board review only.</div>
     </div>
-    ${vio.drive_folder_url ? `<div class="attachments-section"><div class="attachments-title">📎 Drive</div><a href="${vio.drive_folder_url}" target="_blank" class="attachment-btn">📁 View Drive Folder</a></div>` : ""}
+    <div class="attachments-section"><div class="attachments-title">📎 Drive</div>
+      <div class="attachment-grid" data-attachments-for="${esc(vio.id)}" data-attachments-kind="vio"></div>
+    </div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
       <label style="font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);">STATUS:</label>
-      <select class="status-select" onchange="updateStatus('${vio.id}','violation',this.value)">
+      <select class="status-select" data-act="vio-status" data-id="${esc(vio.id)}">
         <option ${vio.status==='Open'?'selected':''}>Open</option>
         <option ${vio.status==='In Progress'?'selected':''}>In Progress</option>
         <option ${vio.status==='Closed'?'selected':''}>Closed</option>
@@ -2008,10 +2248,10 @@
     </div>
     <div class="comments-section">
       <div class="attachments-title">Comments</div>
-      <div id="comments-${vio.id}">${commentsHtml || '<p style="font-size:13px;font-family:sans-serif;color:var(--text-m);font-style:italic;">No comments yet.</p>'}</div>
+      <div id="comments-${esc(vio.id)}">${commentsHtml || '<p style="font-size:13px;font-family:sans-serif;color:var(--text-m);font-style:italic;">No comments yet.</p>'}</div>
       <div class="add-comment">
-        <input type="text" id="commentInput-${vio.id}" placeholder="Add a comment..." onkeydown="if(event.key==='Enter')addComment('${vio.id}')"/>
-        <button class="btn-comment" onclick="addComment('${vio.id}')">Add</button>
+        <input type="text" id="commentInput-${esc(vio.id)}" placeholder="Add a comment..." data-act="comment-input" data-id="${esc(vio.id)}"/>
+        <button class="btn-comment" data-act="add-comment" data-id="${esc(vio.id)}">Add</button>
       </div>
     </div>
   </div>
@@ -2024,11 +2264,11 @@
     document.getElementById("othList").innerHTML = attention.length
       ? attention.map(o => `
 <div class="other-card">
-  <span class="other-category">${o.category || "Other"}</span>
+  <span class="other-category">${esc(o.category || "Other")}</span>
   <div class="other-content">
-    <div class="other-subject">${o.subject || "No subject"}</div>
-    <div class="other-from">From: ${o.from || "Unknown"} · ${o.date_received ? new Date(o.date_received).toLocaleDateString() : ""}</div>
-    <div class="other-summary">${o.ai_summary || "No summary."}</div>
+    <div class="other-subject">${esc(o.subject || "No subject")}</div>
+    <div class="other-from">From: ${esc(o.from || "Unknown")} · ${o.date_received ? new Date(o.date_received).toLocaleDateString() : ""}</div>
+    <div class="other-summary">${esc(o.ai_summary || "No summary.")}</div>
   </div>
 </div>`).join("")
       : '<div class="empty-state"><div class="empty-title">No items needing attention</div></div>';
@@ -2097,7 +2337,7 @@
 
     return `
 <div class="vio-card" id="req-${r.id}">
-  <div class="vio-header" onclick="toggleCard('req-body-${r.id}')">
+  <div class="vio-header" data-act="toggle-card" data-id="req-body-${esc(r.id)}">
     <div class="arc-meta">
       <div class="arc-id-row">
         <span class="arc-id">${r.id}</span>
@@ -2119,7 +2359,7 @@
     </div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
       <label style="font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);">STATUS:</label>
-      <select class="status-select" onchange="updateRequestStatus('${r.id}',this.value)">
+      <select class="status-select" data-act="req-status" data-id="${esc(r.id)}">
         <option ${status==='New'?'selected':''}>New</option>
         <option ${status==='In Progress'?'selected':''}>In Progress</option>
         <option ${status==='Resolved'?'selected':''}>Resolved</option>
@@ -2130,8 +2370,8 @@
       <div class="attachments-title">Internal Board Notes</div>
       <div id="reqnotes-${r.id}">${notesHtml || '<p style="font-size:13px;font-family:sans-serif;color:var(--text-m);font-style:italic;">No notes yet.</p>'}</div>
       <div class="add-comment">
-        <input type="text" id="reqNoteInput-${r.id}" placeholder="Add an internal note..." onkeydown="if(event.key==='Enter')addRequestNote('${r.id}')"/>
-        <button class="btn-comment" onclick="addRequestNote('${r.id}')">Add</button>
+        <input type="text" id="reqNoteInput-${esc(r.id)}" placeholder="Add an internal note..." data-act="req-note-input" data-id="${esc(r.id)}"/>
+        <button class="btn-comment" data-act="add-req-note" data-id="${esc(r.id)}">Add</button>
       </div>
     </div>
   </div>
@@ -2170,7 +2410,9 @@
   const ACC_REQ_TEMPLATE_LABELS = { approved: "Access Approved", more_info: "More Information Needed", unable_to_verify: "Unable to Verify" };
 
   async function loadAccessRequests() {
-    const data = await api({ action: "getAccessRequests" });
+    let data;
+    try { data = await api({ action: "getAccessRequests" }); }
+    catch (e) { showToast((e && e.userMessage) || "Could not load access requests.", "error"); return; }
     if (!data) return;
     accessRequestsData = data.requests || [];
     accessRequestsLoaded = true;
@@ -2226,7 +2468,7 @@
 
     return `
 <div class="vio-card" id="accreq-${id}">
-  <div class="vio-header" onclick="toggleCard('accreq-body-${id}')">
+  <div class="vio-header" data-act="toggle-card" data-id="accreq-body-${esc(id)}">
     <div class="arc-meta">
       <div class="arc-id-row">
         <span class="arc-id">${escapeHtml(id)}</span>
@@ -2247,21 +2489,21 @@
     </div>
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
       <label style="font-size:12px;font-family:sans-serif;font-weight:700;color:var(--text-m);">STATUS:</label>
-      <select class="status-select" onchange="updateAccessRequestStatus('${id}',this.value)">
+      <select class="status-select" data-act="accreq-status" data-id="${esc(id)}">
         <option ${status==='New'?'selected':''}>New</option>
         <option ${status==='Under Review'?'selected':''}>Under Review</option>
         <option ${status==='Approved'?'selected':''}>Approved</option>
         <option ${status==='Rejected'?'selected':''}>Rejected</option>
         <option ${status==='Closed'?'selected':''}>Closed</option>
       </select>
-      <button class="attachment-btn" onclick="openAccessResponseModal('${id}')">✉️ Reply to Resident</button>
+      <button class="attachment-btn" data-act="open-access-response" data-id="${esc(id)}">✉️ Reply to Resident</button>
     </div>
     <div class="comments-section">
       <div class="attachments-title">Internal Board Notes</div>
       <div id="accreqnotes-${id}">${notesHtml || '<p style="font-size:13px;font-family:sans-serif;color:var(--text-m);font-style:italic;">No notes yet.</p>'}</div>
       <div class="add-comment">
-        <input type="text" id="accReqNoteInput-${id}" placeholder="Add an internal note..." onkeydown="if(event.key==='Enter')addAccessRequestNote('${id}')"/>
-        <button class="btn-comment" onclick="addAccessRequestNote('${id}')">Add</button>
+        <input type="text" id="accReqNoteInput-${esc(id)}" placeholder="Add an internal note..." data-act="accreq-note-input" data-id="${esc(id)}"/>
+        <button class="btn-comment" data-act="add-accreq-note" data-id="${esc(id)}">Add</button>
       </div>
     </div>
   </div>
@@ -2378,9 +2620,9 @@
   <div style="font-size:12px;font-family:sans-serif;color:var(--text-m);margin:8px 0 10px;">${dateStr}${a.posted_by ? ' · by ' + escapeHtml(a.posted_by) : ''}</div>
   <div style="font-size:14px;font-family:sans-serif;color:var(--text);line-height:1.6;">${bodyHtml}</div>
   <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
-    <button class="btn-vote" style="background:#eef2f7;color:var(--navy);border-color:#cdd8e6;" onclick="editAnnouncement('${a.id}')">Edit</button>
-    <button class="btn-vote" style="background:#f7f4ea;color:#9a7d24;border-color:#e6dcc0;" onclick="toggleAnnouncement('${a.id}', ${published ? 'false' : 'true'})">${published ? 'Hide from website' : 'Publish'}</button>
-    <button class="btn-vote" style="background:#fdf0f0;color:var(--red);border-color:#f5b7b1;" onclick="deleteAnnouncement('${a.id}')">Delete</button>
+    <button class="btn-vote" style="background:#eef2f7;color:var(--navy);border-color:#cdd8e6;" data-act="edit-ann" data-id="${esc(a.id)}">Edit</button>
+    <button class="btn-vote" style="background:#f7f4ea;color:#9a7d24;border-color:#e6dcc0;" data-act="toggle-ann" data-id="${esc(a.id)}" data-publish="${published ? 'false' : 'true'}">${published ? 'Hide from website' : 'Publish'}</button>
+    <button class="btn-vote" style="background:#fdf0f0;color:var(--red);border-color:#f5b7b1;" data-act="delete-ann" data-id="${esc(a.id)}">Delete</button>
   </div>
 </div>`;
     }).join("");
@@ -2480,20 +2722,14 @@
   }
 
   function toggleAnnouncement(id, publish) {
-    api({ action: "updateAnnouncement", data: { itemId: id, status: publish ? "published" : "unpublished" } }).then(d => {
-      if (d && d.success) { showToast(publish ? "Published to website" : "Hidden from website", "success"); loadDashboard(); }
-      else showToast("Update failed", "error");
-    });
+    uiAction(() => api({ action: "updateAnnouncement", data: { itemId: id, status: publish ? "published" : "unpublished" } }), publish ? "Published to website" : "Hidden from website").then(r => { if (r) loadDashboard(); });
   }
 
   function deleteAnnouncement(id) {
     const a = (dashData.announcements || []).find(x => x.id === id);
     const title = a ? a.title : "this announcement";
     if (!confirm(`Delete "${title}"? This removes it from the website permanently and cannot be undone.`)) return;
-    api({ action: "deleteAnnouncement", data: { itemId: id } }).then(d => {
-      if (d && d.success) { showToast("Announcement deleted", "success"); loadDashboard(); }
-      else showToast("Delete failed", "error");
-    });
+    uiAction(() => api({ action: "deleteAnnouncement", data: { itemId: id } }), "Announcement deleted").then(r => { if (r) loadDashboard(); });
   }
 
   // ── Meeting Minutes ───────────────────────────────────
@@ -2527,12 +2763,12 @@
   <div class="mm-preview" style="font-size:14px;font-family:sans-serif;color:var(--text);line-height:1.6;">${summaryHtml}</div>
   ${!published ? '<div style="font-size:12px;font-family:sans-serif;color:#9a6a12;background:#fdf3e0;border:1px solid #f0dcb4;border-radius:6px;padding:8px 12px;margin-top:12px;">This is a draft for board/President review. Residents can&rsquo;t see it yet. Click <strong>Publish to Website</strong> when approved.</div>' : ''}
   <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
-    <button class="btn-vote" style="background:#eef2f7;color:var(--navy);border-color:#cdd8e6;" onclick="editMinutes('${m.id}')">Edit</button>
-    <button class="btn-vote" style="background:#f4f1ea;color:#7a6a3a;border-color:#e6dcc0;" onclick="setMinutesType('${m.id}', '${isCommunity ? 'board' : 'community'}')">Move to ${isCommunity ? 'Board' : 'Community'}</button>
+    <button class="btn-vote" style="background:#eef2f7;color:var(--navy);border-color:#cdd8e6;" data-act="edit-min" data-id="${esc(m.id)}">Edit</button>
+    <button class="btn-vote" style="background:#f4f1ea;color:#7a6a3a;border-color:#e6dcc0;" data-act="set-min-type" data-id="${esc(m.id)}" data-type="${isCommunity ? 'board' : 'community'}">Move to ${isCommunity ? 'Board' : 'Community'}</button>
     ${published
-      ? `<button class="btn-vote" style="background:#f7f4ea;color:#9a7d24;border-color:#e6dcc0;" onclick="toggleMinutes('${m.id}', false)">Unpublish (hide)</button>`
-      : `<button class="btn-vote" style="background:var(--navy);color:var(--cream);border-color:var(--navy);font-weight:700;" onclick="toggleMinutes('${m.id}', true)">✓ Publish to Website</button>`}
-    <button class="btn-vote" style="background:#fdf0f0;color:var(--red);border-color:#f5b7b1;" onclick="deleteMinutes('${m.id}')">Delete</button>
+      ? `<button class="btn-vote" style="background:#f7f4ea;color:#9a7d24;border-color:#e6dcc0;" data-act="toggle-min" data-id="${esc(m.id)}" data-publish="false">Unpublish (hide)</button>`
+      : `<button class="btn-vote" style="background:var(--navy);color:var(--cream);border-color:var(--navy);font-weight:700;" data-act="toggle-min" data-id="${esc(m.id)}" data-publish="true">✓ Publish to Website</button>`}
+    <button class="btn-vote" style="background:#fdf0f0;color:var(--red);border-color:#f5b7b1;" data-act="delete-min" data-id="${esc(m.id)}">Delete</button>
   </div>
 </div>`;
     }).join("");
@@ -2568,10 +2804,7 @@
 
   function setMinutesType(id, type) {
     const target = type === "community" ? "community" : "board";
-    api({ action: "updateMinutes", data: { itemId: id, meeting_type: target } }).then(d => {
-      if (d && d.success) { showToast(`Moved to ${target === "community" ? "Community" : "Board"} Meetings`, "success"); loadDashboard(); }
-      else showToast("Update failed", "error");
-    });
+    uiAction(() => api({ action: "updateMinutes", data: { itemId: id, meeting_type: target } }), `Moved to ${target === "community" ? "Community" : "Board"} Meetings`).then(r => { if (r) loadDashboard(); });
   }
 
   function editMinutes(id) {
@@ -2585,27 +2818,18 @@
     if (newAttendees === null) return;
     const newSummary = prompt("Edit summary:", m.summary || "");
     if (newSummary === null) return;
-    api({ action: "updateMinutes", data: { itemId: id, meeting_date: newDate, title: newTitle, attendees: newAttendees, summary: newSummary } }).then(d => {
-      if (d && d.success) { showToast("Meeting minutes updated", "success"); loadDashboard(); }
-      else showToast("Update failed", "error");
-    });
+    uiAction(() => api({ action: "updateMinutes", data: { itemId: id, meeting_date: newDate, title: newTitle, attendees: newAttendees, summary: newSummary } }), "Meeting minutes updated").then(r => { if (r) loadDashboard(); });
   }
 
   function toggleMinutes(id, publish) {
-    api({ action: "updateMinutes", data: { itemId: id, status: publish ? "published" : "unpublished" } }).then(d => {
-      if (d && d.success) { showToast(publish ? "Published to website" : "Hidden from website", "success"); loadDashboard(); }
-      else showToast("Update failed", "error");
-    });
+    uiAction(() => api({ action: "updateMinutes", data: { itemId: id, status: publish ? "published" : "unpublished" } }), publish ? "Published to website" : "Hidden from website").then(r => { if (r) loadDashboard(); });
   }
 
   function deleteMinutes(id) {
     const m = (dashData.minutes || []).find(x => x.id === id);
     const title = m ? m.title : "these meeting minutes";
     if (!confirm(`Delete "${title}"? This removes it from the website permanently and cannot be undone.`)) return;
-    api({ action: "deleteMinutes", data: { itemId: id } }).then(d => {
-      if (d && d.success) { showToast("Meeting minutes deleted", "success"); loadDashboard(); }
-      else showToast("Delete failed", "error");
-    });
+    uiAction(() => api({ action: "deleteMinutes", data: { itemId: id } }), "Meeting minutes deleted").then(r => { if (r) loadDashboard(); });
   }
 
   // ── Activity Rendering ────────────────────────────────
@@ -2614,7 +2838,7 @@
       ? rows.slice(0, 30).map(row => `
 <div class="activity-item">
   <div class="activity-dot"></div>
-  <div class="activity-text"><strong>${row[1] || "Unknown"}</strong> ${formatAction(row[2] || "")} on <strong>${row[3] || "-"}</strong>${row[5] ? ` — ${row[5]}` : ""}</div>
+  <div class="activity-text"><strong>${esc(row[1] || "Unknown")}</strong> ${esc(formatAction(row[2] || ""))} on <strong>${esc(row[3] || "-")}</strong>${row[5] ? ` — ${esc(row[5])}` : ""}</div>
   <div class="activity-time">${row[0] ? new Date(row[0]).toLocaleString() : ""}</div>
 </div>`).join("")
       : '<p style="font-size:13px;font-family:sans-serif;color:var(--text-m);">No activity yet.</p>';
@@ -2690,16 +2914,18 @@
     const commentsDiv = document.getElementById("comments-" + vioId);
     commentsDiv.innerHTML = data.comments.map(c => `
       <div class="comment-item">
-        <span class="comment-author">${c.author}</span>
+        <span class="comment-author">${esc(c.author)}</span>
         <span class="comment-time">${new Date(c.timestamp).toLocaleString()}</span>
-        <div class="comment-text">${c.text}</div>
+        <div class="comment-text">${esc(c.text)}</div>
       </div>`).join("");
     showToast("Comment added", "success");
   }
 
   async function updateStatus(itemId, itemType, status) {
-    await api({ action: "updateStatus", data: { itemId, itemType, status } });
-    showToast("Status updated to " + status, "success");
+    await uiAction(
+      () => api({ action: "updateStatus", data: { itemId, itemType, status } }),
+      "Status updated to " + status
+    );
   }
 
   // ── Email Modal ───────────────────────────────────────
@@ -2730,15 +2956,24 @@
 
   // ── Scan Inbox ────────────────────────────────────────
   async function runScan(daysBack = 30, maxEmails = 20, beforeDays = 0) {
-    const secret = prompt("Enter admin secret:");
-    if (!secret) return;
+    // No secret to type any more: the scan is authorized by the signed,
+    // HttpOnly board session and restricted to administrators server-side.
     document.getElementById("scanOverlay").classList.add("show");
     document.getElementById("scanBtn").disabled = true;
     try {
       const res = await fetch("/.netlify/functions/scan-inbox", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ secret, daysBack, maxEmails, beforeDays })
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json", "X-Board-Request": "1" },
+        body: JSON.stringify({ daysBack, maxEmails, beforeDays })
       });
+      if (res.status === 401) { window.location.href = "/board-login.html"; return; }
+      if (res.status === 403) {
+        showToast("You do not have permission to run a scan.", "error");
+        document.getElementById("scanOverlay").classList.remove("show");
+        document.getElementById("scanBtn").disabled = false;
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         localStorage.setItem("lastScan", new Date().toISOString());

@@ -37,6 +37,9 @@ process.env.GMAIL_CLIENT_ID = "fake-client-id";
 process.env.GMAIL_CLIENT_SECRET = "fake-client-secret";
 process.env.GMAIL_REFRESH_TOKEN = "fake-refresh-token";
 process.env.RESIDENT_PORTAL_PASSWORD = FAKE_REAL_PASSWORD;
+// Fake board session config — never a real secret.
+process.env.BOARD_SESSION_SECRET = "fake-board-session-secret-for-tests";
+process.env.BOARD_SESSION_VERSION = "1";
 
 let passed = 0;
 function test(name, fn) {
@@ -270,7 +273,11 @@ function installFakeHttps(state) {
                   if (rows && rows[dataRowIndex]) rows[dataRowIndex][colIndex] = parsed.values[0][0];
                 }
               }
-              respBody = "{}";
+              // The real API reports how much it changed, and the board API
+              // now treats a missing/zero count as a failed write. Mirror the
+              // real response shape so the fake exercises the success path.
+              const cellCount = (parsed.values || []).reduce((n, row) => n + row.length, 0);
+              respBody = JSON.stringify({ updatedRange: parsed.range, updatedCells: cellCount });
             } else if (options.method === "POST" && path.endsWith(":batchUpdate")) {
               const parsed = JSON.parse(bodyStr);
               (parsed.requests || []).forEach((r) => { if (r.addSheet) state.tabs.add(r.addSheet.properties.title); });
@@ -281,7 +288,7 @@ function installFakeHttps(state) {
               const parsed = JSON.parse(bodyStr);
               if (!state.rows.has(tab)) state.rows.set(tab, []);
               state.rows.get(tab).push(...parsed.values);
-              respBody = "{}";
+              respBody = JSON.stringify({ updates: { updatedRows: parsed.values.length } });
             } else {
               status = 404;
             }
@@ -315,16 +322,30 @@ function freshModules() {
   };
 }
 
-function fakeBoardToken(overrides) {
-  const payload = { username: "raja", name: "Raja Ravanan", role: "Secretary", isAdmin: true, exp: Date.now() + 3600000, ...(overrides || {}) };
-  return Buffer.from(JSON.stringify(payload)).toString("base64");
+// Board sessions are now HMAC-signed and delivered in a cookie; the old
+// `Authorization: Bearer <base64(JSON)>` token is not read anywhere. An
+// authenticated request must also carry the CSRF header and a same-origin
+// Origin, so this builds the request the way the portal now does.
+const boardAuthLib = require("../netlify/functions/lib/board-auth");
+
+function fakeBoardToken(sub) {
+  return boardAuthLib.signSession(
+    process.env.BOARD_SESSION_SECRET,
+    process.env.BOARD_SESSION_VERSION,
+    sub || "raja"
+  );
 }
 
 function boardEvent(action, data, tokenOverride) {
   const token = tokenOverride === undefined ? fakeBoardToken() : tokenOverride;
   return {
     httpMethod: "POST",
-    headers: token ? { authorization: `Bearer ${token}` } : {},
+    headers: {
+      host: "board.test",
+      origin: "https://board.test",
+      "x-board-request": "1",
+      ...(token ? { cookie: `${boardAuthLib.COOKIE_NAME}=${encodeURIComponent(token)}` } : {}),
+    },
     body: JSON.stringify({ action, data }),
   };
 }
