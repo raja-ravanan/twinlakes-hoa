@@ -620,6 +620,11 @@
             <input type="checkbox" id="annFeatured" style="width:auto;"/>
             <label for="annFeatured" style="margin:0;text-transform:none;font-weight:600;color:var(--text-s);">Feature on homepage</label>
           </div>
+          <div class="ae-field" style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+            <input type="checkbox" id="annShowOnBanner" style="width:auto;" checked/>
+            <label for="annShowOnBanner" style="margin:0;text-transform:none;font-weight:600;color:var(--text-s);">Show in top banner</label>
+          </div>
+          <p style="grid-column:1/-1;margin:2px 0 0;font-size:12px;font-family:sans-serif;color:var(--text-m);">The banner shows only the newest announcement that has this switched on. Turning it off keeps the announcement on the website's Updates page.</p>
         </div>
       </details>
       <button class="btn-scan" id="annPostBtn" onclick="postAnnouncement()">Publish Announcement</button>
@@ -1299,6 +1304,10 @@
           <input type="checkbox" id="ae-ann-featured" style="width:auto;"/>
           <label for="ae-ann-featured" style="margin:0;text-transform:none;font-weight:600;color:var(--text-s);">Feature on homepage</label>
         </div>
+        <div class="ae-field" style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+          <input type="checkbox" id="ae-ann-showonbanner" style="width:auto;"/>
+          <label for="ae-ann-showonbanner" style="margin:0;text-transform:none;font-weight:600;color:var(--text-s);">Show in top banner</label>
+        </div>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:18px;">
         <button class="btn-logout" style="color:var(--text-m);" onclick="closeAnnouncementEdit()">Cancel</button>
@@ -1396,6 +1405,7 @@
     "add-accreq-note":(el) => addAccessRequestNote(el.dataset.id),
     "edit-ann":       (el) => editAnnouncement(el.dataset.id),
     "toggle-ann":     (el) => toggleAnnouncement(el.dataset.id, el.dataset.publish === "true"),
+    "toggle-ann-banner": (el) => toggleAnnouncementBanner(el.dataset.id, el.dataset.banner === "yes"),
     "delete-ann":     (el) => deleteAnnouncement(el.dataset.id),
     "edit-min":       (el) => editMinutes(el.dataset.id),
     "set-min-type":   (el) => setMinutesType(el.dataset.id, el.dataset.type),
@@ -2606,10 +2616,13 @@
       const category = a.category || "General";
       const priority = a.priority || "normal";
       const featured = a.featured === "yes";
+      // Column O defaults to "yes" server-side, so only an explicit "no" is off.
+      const onBanner = a.show_on_banner !== "no";
       const tags = [tagBadge(category, "#eef2f7", "var(--navy)")];
       if (priority === "critical") tags.push(tagBadge("Critical", "#fdf0f0", "var(--red)"));
       else if (priority === "high") tags.push(tagBadge("High priority", "#fff7e6", "#9a7d24"));
       if (featured) tags.push(tagBadge("Featured", "var(--gold-light)", "var(--gold-dark)"));
+      if (!onBanner) tags.push(tagBadge("Not in banner", "#f0f0f0", "#888"));
       return `
 <div style="background:#fff;border:1px solid var(--line);border-left:4px solid ${published ? 'var(--gold)' : '#bbb'};border-radius:10px;padding:18px;margin-bottom:14px;">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
@@ -2622,6 +2635,7 @@
   <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
     <button class="btn-vote" style="background:#eef2f7;color:var(--navy);border-color:#cdd8e6;" data-act="edit-ann" data-id="${esc(a.id)}">Edit</button>
     <button class="btn-vote" style="background:#f7f4ea;color:#9a7d24;border-color:#e6dcc0;" data-act="toggle-ann" data-id="${esc(a.id)}" data-publish="${published ? 'false' : 'true'}">${published ? 'Hide from website' : 'Publish'}</button>
+    <button class="btn-vote" style="background:#eef2f7;color:var(--navy);border-color:#cdd8e6;" title="The banner shows the newest announcement that is switched on. This does not affect the Updates page." data-act="toggle-ann-banner" data-id="${esc(a.id)}" data-banner="${onBanner ? 'no' : 'yes'}">${onBanner ? 'Remove from banner' : 'Show in banner'}</button>
     <button class="btn-vote" style="background:#fdf0f0;color:var(--red);border-color:#f5b7b1;" data-act="delete-ann" data-id="${esc(a.id)}">Delete</button>
   </div>
 </div>`;
@@ -2650,7 +2664,8 @@
       summary: fval("annSummary"),
       featured: document.getElementById("annFeatured").checked ? "yes" : "no",
       archive_date: fval("annArchiveDate"),
-      related_project: fval("annRelatedProject")
+      related_project: fval("annRelatedProject"),
+      show_on_banner: document.getElementById("annShowOnBanner").checked ? "yes" : "no"
     };
     const data = await api({ action: "addAnnouncement", data: payload });
     btn.disabled = false; btn.textContent = label;
@@ -2664,6 +2679,7 @@
       document.getElementById("annFeatured").checked = false;
       document.getElementById("annArchiveDate").value = "";
       document.getElementById("annRelatedProject").value = "";
+      document.getElementById("annShowOnBanner").checked = true;   // back to the default, not cleared
       const details = document.getElementById("annOrganizeDetails");
       if (details) details.open = false;
       msg.textContent = "Published! It is now live on the website."; msg.style.color = "#3a7d44";
@@ -2692,6 +2708,7 @@
     set("ae-ann-archivedate", a.archive_date || "");
     set("ae-ann-relatedproject", a.related_project || "");
     document.getElementById("ae-ann-featured").checked = (a.featured === "yes");
+    document.getElementById("ae-ann-showonbanner").checked = (a.show_on_banner !== "no");
     document.getElementById("annEditModal").classList.add("show");
   }
   function closeAnnouncementEdit() { document.getElementById("annEditModal").classList.remove("show"); }
@@ -2712,7 +2729,8 @@
       summary: val("ae-ann-summary"),
       featured: document.getElementById("ae-ann-featured").checked ? "yes" : "no",
       archive_date: val("ae-ann-archivedate"),
-      related_project: val("ae-ann-relatedproject")
+      related_project: val("ae-ann-relatedproject"),
+      show_on_banner: document.getElementById("ae-ann-showonbanner").checked ? "yes" : "no"
     };
     const btn = document.getElementById("annEditSave"); btn.disabled = true; btn.textContent = "Saving…";
     const d = await api({ action: "updateAnnouncement", data: payload });
@@ -2723,6 +2741,16 @@
 
   function toggleAnnouncement(id, publish) {
     uiAction(() => api({ action: "updateAnnouncement", data: { itemId: id, status: publish ? "published" : "unpublished" } }), publish ? "Published to website" : "Hidden from website").then(r => { if (r) loadDashboard(); });
+  }
+
+  // Banner visibility only — the announcement stays published either way, so
+  // the toast says so plainly. Sends just show_on_banner, which leaves every
+  // other column untouched (updateAnnouncement writes per-column).
+  function toggleAnnouncementBanner(id, show) {
+    uiAction(
+      () => api({ action: "updateAnnouncement", data: { itemId: id, show_on_banner: show ? "yes" : "no" } }),
+      show ? "Shown in the top banner" : "Removed from the banner — still on the Updates page"
+    ).then(r => { if (r) loadDashboard(); });
   }
 
   function deleteAnnouncement(id) {

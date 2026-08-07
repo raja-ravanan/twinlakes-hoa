@@ -609,26 +609,25 @@ function annItemKey(e, el) {
   if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); toggleAnnItem(el); }
 }
 
-// Top announcements banner — shows the 3 most recent board posts.
-// Same data source as the Announcements page, so one portal post updates both.
+// Top announcements banner — shows the single most recent board post that the
+// board has left switched on for the banner. Same data source as the
+// Announcements page, so one portal post updates both; a post switched off
+// here (show_on_banner = "no") stays published and visible on Updates, which
+// is the whole point of the flag — hiding from the banner is not unpublishing.
 async function loadBanner() {
   var bar = document.getElementById('announcement-bar');
   var inner = document.getElementById('dynamic-banner');
   if (!bar || !inner) return;
   try {
-    var res = await fetch('/.netlify/functions/board-api', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'getPublicAnnouncements' })
-    });
-    var data = await res.json();
-    var list = (data && data.announcements) || [];
-    if (!list.length) { bar.style.display = 'none'; return; }
-    var top = list.slice(0, 3);
-    inner.innerHTML = top.map(function(a) {
-      var bodyHtml = formatAnnouncementBody(a.body);
-      var dateStr = formatAnnouncementDate(a.date_posted);
-      return '<div class="announcement-item" role="button" tabindex="0" aria-expanded="false" onclick="toggleAnnItem(this)" onkeydown="annItemKey(event, this)">' +
+    var list = await fetchPublicAnnouncements();   // newest-first from the API
+    var a = list.filter(function(x) {
+      return x.show_on_banner !== 'no' && !isAnnouncementArchived(x);
+    })[0];
+    if (!a) { bar.style.display = 'none'; return; }
+    var bodyHtml = formatAnnouncementBody(a.body);
+    var dateStr = formatAnnouncementDate(a.date_posted);
+    inner.innerHTML =
+      '<div class="announcement-item" role="button" tabindex="0" aria-expanded="false" onclick="toggleAnnItem(this)" onkeydown="annItemKey(event, this)">' +
         '<div class="ann-dot info"></div>' +
         '<span class="ann-text"><strong>' + escapeHtmlText(a.title) + '</strong></span>' +
         '<span class="ann-chevron">&#9660;</span>' +
@@ -638,7 +637,6 @@ async function loadBanner() {
           '<div class="ann-dropdown-footer">HOA Board' + (dateStr ? ' &middot; ' + dateStr : '') + '</div>' +
         '</div>' +
       '</div>';
-    }).join('');
     bar.style.display = '';
   } catch (e) {
     bar.style.display = 'none';

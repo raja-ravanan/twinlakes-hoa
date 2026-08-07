@@ -77,10 +77,10 @@ const SA_KEY   = process.env.GOOGLE_SA_KEY;
 const SCOPES   = ["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"];
 
 // ── Announcement organization fields (Phase 1A) ─────────────
-// Columns G-N of the Announcements sheet. All optional; unknown/invalid
+// Columns G-O of the Announcements sheet. All optional; unknown/invalid
 // input is safely defaulted rather than trusted or rejected outright, so a
 // stray dropdown value never lands in the sheet unchecked.
-const ANNOUNCEMENT_EXT_HEADERS = ["category","priority","event_date","work_status","summary","featured","archive_date","related_project"];
+const ANNOUNCEMENT_EXT_HEADERS = ["category","priority","event_date","work_status","summary","featured","archive_date","related_project","show_on_banner"];
 const ANN_CATEGORIES = ["General","Board & Meetings","Ponds","Landscaping","Irrigation","Traffic","Safety","Community Events","Maintenance","Documents"];
 const ANN_PRIORITIES = ["normal","high","critical"];
 const ANN_WORK_STATUSES = ["none","upcoming","in-progress","completed"];
@@ -90,6 +90,11 @@ function normalizeAnnPriority(v) { const s = String(v || "").trim().toLowerCase(
 function normalizeAnnWorkStatus(v) { const s = String(v || "").trim().toLowerCase(); return ANN_WORK_STATUSES.includes(s) ? s : "none"; }
 function normalizeAnnFeatured(v) { return (v === true || v === "yes" || v === "true") ? "yes" : "no"; }
 function normalizeAnnDate(v) { const s = String(v || "").trim(); return /^\d{4}-\d{2}-\d{2}$/.test(s) ? s : ""; }
+// Defaults to "yes" — the opposite of every other flag here, and deliberately
+// so: legacy A-N rows carry no value for column O, and an announcement that
+// silently vanished from the banner on deploy would be a regression. Only an
+// explicit "no" takes a post off the banner.
+function normalizeAnnShowOnBanner(v) { return (v === false || v === "no" || v === "false") ? "no" : "yes"; }
 
 async function sheetsGet(token, range) {
   const r = await httpsReq("GET", "sheets.googleapis.com",
@@ -134,7 +139,7 @@ async function ensureSheetTabs(token) {
       Other_Items: [["id","date_received","from","subject","category","ai_summary","status","drive_folder_url","needs_attention"]],
       Activity_Log: [["timestamp","board_member","action","item_id","item_type","details"]],
       Resident_Requests: [["id","date_received","request_type","name","email","address","subject","description","sent_to","status","assigned_to","board_notes"]],
-      Announcements: [["id","date_posted","title","body","status","posted_by","category","priority","event_date","work_status","summary","featured","archive_date","related_project"]],
+      Announcements: [["id","date_posted","title","body","status","posted_by","category","priority","event_date","work_status","summary","featured","archive_date","related_project","show_on_banner"]],
       Minutes: [["id","meeting_date","title","summary","status","posted_by","attendees","meeting_type"]],
       Settings: [["key","value"],["financials_published","false"]]
     };
@@ -253,7 +258,8 @@ async function handleRequest(event) {
         summary: String(a.summary || "").trim(),
         featured: normalizeAnnFeatured(a.featured),
         archive_date: normalizeAnnDate(a.archive_date),
-        related_project: String(a.related_project || "").trim()
+        related_project: String(a.related_project || "").trim(),
+        show_on_banner: normalizeAnnShowOnBanner(a.show_on_banner)
       }))
       .sort((x, y) => new Date(y.date_posted) - new Date(x.date_posted));
     return {
@@ -328,6 +334,7 @@ async function handleRequest(event) {
       a.featured = normalizeAnnFeatured(a.featured);
       a.archive_date = normalizeAnnDate(a.archive_date);
       a.related_project = String(a.related_project || "").trim();
+      a.show_on_banner = normalizeAnnShowOnBanner(a.show_on_banner);
     });
 
     // Calculate days open
@@ -438,12 +445,13 @@ async function handleRequest(event) {
     const featured       = normalizeAnnFeatured(data?.featured);
     const archiveDate    = normalizeAnnDate(data?.archive_date);
     const relatedProject = String(data?.related_project || "").trim();
-    // Self-heal the header for sheets created before columns G-N existed,
+    const showOnBanner   = normalizeAnnShowOnBanner(data?.show_on_banner);
+    // Self-heal the header for sheets created before columns G-O existed,
     // so getSheetData (which maps by header name) can read the values back.
-    await sheetsUpdate(googleToken, "Announcements!G1:N1", [ANNOUNCEMENT_EXT_HEADERS]);
-    await sheetsAppend(googleToken, "Announcements!A:N", [[
+    await sheetsUpdate(googleToken, "Announcements!G1:O1", [ANNOUNCEMENT_EXT_HEADERS]);
+    await sheetsAppend(googleToken, "Announcements!A:O", [[
       id, new Date().toISOString(), title, text, "published", session.displayName,
-      category, priority, eventDate, workStatus, summary, featured, archiveDate, relatedProject
+      category, priority, eventDate, workStatus, summary, featured, archiveDate, relatedProject, showOnBanner
     ]]);
     await logActivity(googleToken, session.username, "posted_announcement", id, "announcement", title.slice(0, 100));
     return { statusCode: 200, body: JSON.stringify({ success: true, id }) };
@@ -454,7 +462,8 @@ async function handleRequest(event) {
     const {
       itemId, title, body: text, status,
       category, priority, event_date: eventDate, work_status: workStatus,
-      summary, featured, archive_date: archiveDate, related_project: relatedProject
+      summary, featured, archive_date: archiveDate, related_project: relatedProject,
+      show_on_banner: showOnBanner
     } = data || {};
     const items = await getSheetData(googleToken, "Announcements");
     const rowIndex = items.findIndex(i => i.id === itemId);
@@ -465,13 +474,13 @@ async function handleRequest(event) {
     if (typeof text === "string")   updates.push(sheetsUpdate(googleToken, `Announcements!D${row}`, [[text.trim()]]));
     if (typeof status === "string") updates.push(sheetsUpdate(googleToken, `Announcements!E${row}`, [[status]]));
 
-    // Phase 1A fields (G-N) — each is independently optional, only touched
+    // Phase 1A fields (G-O) — each is independently optional, only touched
     // when the caller actually sent it, and normalized rather than trusted.
-    const hasExtField = [category, priority, eventDate, workStatus, summary, featured, archiveDate, relatedProject]
+    const hasExtField = [category, priority, eventDate, workStatus, summary, featured, archiveDate, relatedProject, showOnBanner]
       .some(v => typeof v === "string" || typeof v === "boolean");
     if (hasExtField) {
-      // Self-heal the header for sheets created before columns G-N existed.
-      updates.push(sheetsUpdate(googleToken, "Announcements!G1:N1", [ANNOUNCEMENT_EXT_HEADERS]));
+      // Self-heal the header for sheets created before columns G-O existed.
+      updates.push(sheetsUpdate(googleToken, "Announcements!G1:O1", [ANNOUNCEMENT_EXT_HEADERS]));
       if (typeof category === "string")       updates.push(sheetsUpdate(googleToken, `Announcements!G${row}`, [[normalizeAnnCategory(category)]]));
       if (typeof priority === "string")       updates.push(sheetsUpdate(googleToken, `Announcements!H${row}`, [[normalizeAnnPriority(priority)]]));
       if (typeof eventDate === "string")      updates.push(sheetsUpdate(googleToken, `Announcements!I${row}`, [[normalizeAnnDate(eventDate)]]));
@@ -480,6 +489,7 @@ async function handleRequest(event) {
       if (typeof featured !== "undefined")    updates.push(sheetsUpdate(googleToken, `Announcements!L${row}`, [[normalizeAnnFeatured(featured)]]));
       if (typeof archiveDate === "string")    updates.push(sheetsUpdate(googleToken, `Announcements!M${row}`, [[normalizeAnnDate(archiveDate)]]));
       if (typeof relatedProject === "string") updates.push(sheetsUpdate(googleToken, `Announcements!N${row}`, [[relatedProject.trim()]]));
+      if (typeof showOnBanner !== "undefined")updates.push(sheetsUpdate(googleToken, `Announcements!O${row}`, [[normalizeAnnShowOnBanner(showOnBanner)]]));
     }
 
     await Promise.all(updates);
@@ -494,8 +504,8 @@ async function handleRequest(event) {
     const rowIndex = items.findIndex(i => i.id === itemId);
     if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
     const row = rowIndex + 2;
-    // Clear the row's content (A:N) so it no longer appears on the site or portal
-    await sheetsUpdate(googleToken, `Announcements!A${row}:N${row}`, [["", "", "", "", "deleted", "", "", "", "", "", "", "", "", ""]]);
+    // Clear the row's content (A:O) so it no longer appears on the site or portal
+    await sheetsUpdate(googleToken, `Announcements!A${row}:O${row}`, [["", "", "", "", "deleted", "", "", "", "", "", "", "", "", "", ""]]);
     await logActivity(googleToken, session.username, "deleted_announcement", itemId, "announcement", "");
     return { statusCode: 200, body: JSON.stringify({ success: true }) };
   }
