@@ -265,12 +265,24 @@ function installFakeHttps(state) {
                 // later calls in the same test (e.g. a second
                 // sendAccessResponse) re-read the row via a full GET and
                 // need to see this write, not the original seeded value.
-                const m = cellRef.match(/^([A-Z]+)(\d+)$/);
-                if (m) {
-                  const colIndex = colLettersToIndex(m[1]);
-                  const dataRowIndex = parseInt(m[2], 10) - 2; // row 1 = header, row 2 = first data row
+                const single = cellRef.match(/^([A-Z]+)(\d+)$/);
+                // Full-row update like "A5:O5" (the delete actions blank an
+                // entire row in one PUT, same pattern as the pre-existing
+                // deleteARC action) — apply every column in the span, not
+                // just the first cell.
+                const span = cellRef.match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/);
+                if (single) {
+                  const colIndex = colLettersToIndex(single[1]);
+                  const dataRowIndex = parseInt(single[2], 10) - 2; // row 1 = header, row 2 = first data row
                   const rows = state.rows.get(tab);
                   if (rows && rows[dataRowIndex]) rows[dataRowIndex][colIndex] = parsed.values[0][0];
+                } else if (span && span[2] === span[4]) {
+                  const startCol = colLettersToIndex(span[1]);
+                  const dataRowIndex = parseInt(span[2], 10) - 2;
+                  const rows = state.rows.get(tab);
+                  if (rows && rows[dataRowIndex]) {
+                    (parsed.values[0] || []).forEach((val, i) => { rows[dataRowIndex][startCol + i] = val; });
+                  }
                 }
               }
               // The real API reports how much it changed, and the board API
@@ -626,6 +638,38 @@ function seedOneRequest(state, overrides) {
       assert.strictEqual(body.notes.length, 1);
       assert.strictEqual(body.notes[0].author, "Raja Ravanan");
       assert.ok(!JSON.stringify(body).includes(FAKE_REAL_PASSWORD));
+    } finally { restore(); }
+  });
+
+  await step("deleteAccessRequest: blanks the row (admin only), and a missing itemId 404s", async () => {
+    const state = createFakeState();
+    const id = seedOneRequest(state);
+    const restore = installFakeHttps(state);
+    try {
+      const { boardApi } = freshModules();
+      const missing = await boardApi(boardEvent("deleteAccessRequest", { itemId: "ACC-DOES-NOT-EXIST" }));
+      assert.strictEqual(missing.statusCode, 404);
+
+      const res = await boardApi(boardEvent("deleteAccessRequest", { itemId: id }));
+      assert.strictEqual(res.statusCode, 200);
+      assert.strictEqual(JSON.parse(res.body).success, true);
+
+      const row = state.rows.get(TAB)[0];
+      assert.strictEqual(row.length, lib.HEADERS.length);
+      assert.ok(row.every(cell => cell === ""), "every column of a deleted row is blanked, not just the id");
+    } finally { restore(); }
+  });
+
+  await step("deleteAccessRequest: a non-admin board member is refused before the row is touched", async () => {
+    const state = createFakeState();
+    const id = seedOneRequest(state);
+    const restore = installFakeHttps(state);
+    try {
+      const { boardApi } = freshModules();
+      const res = await boardApi(boardEvent("deleteAccessRequest", { itemId: id }, fakeBoardToken("tony")));
+      assert.strictEqual(res.statusCode, 403);
+      const row = state.rows.get(TAB)[0];
+      assert.strictEqual(row[0], id, "the row must be untouched after a refused delete");
     } finally { restore(); }
   });
 

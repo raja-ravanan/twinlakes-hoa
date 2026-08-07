@@ -359,7 +359,7 @@ async function handleRequest(event) {
     return {
       statusCode: 200,
       body: JSON.stringify({
-        arcs: arcs.filter(a => a.id), violations, others, requests, announcements, minutes,
+        arcs: arcs.filter(a => a.id), violations, others, requests: requests.filter(rq => rq.id), announcements, minutes,
         activity: canSeeDiagnostics ? activityRows : []
       })
     };
@@ -592,6 +592,18 @@ async function handleRequest(event) {
     return { statusCode: 200, body: JSON.stringify({ success: true, notes }) };
   }
 
+  // ── DELETE A RESIDENT REQUEST (admin only) — blanks the row so it disappears ──
+  if (action === "deleteRequest") {
+    const { itemId } = data || {};
+    const items = await getSheetData(googleToken, "Resident_Requests");
+    const rowIndex = items.findIndex(i => i.id === itemId);
+    if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+    const row = rowIndex + 2;
+    await sheetsUpdate(googleToken, `Resident_Requests!A${row}:L${row}`, [Array(12).fill("")]);
+    await logActivity(googleToken, session.username, "deleted_request", itemId, "request", "");
+    return { statusCode: 200, body: JSON.stringify({ success: true }) };
+  }
+
   // ── RESIDENT PORTAL ACCESS REQUESTS (Board review of public submissions) ──
   // Internal Board Notes are only ever read here, behind the same AUTH CHECK
   // as every other board-only action above — there is no public endpoint
@@ -740,6 +752,21 @@ async function handleRequest(event) {
     ]);
     await logActivity(googleToken, session.username, "added_access_request_note", itemId, "access_request", cleanNote.slice(0, 100));
     return { statusCode: 200, body: JSON.stringify({ success: true, notes }) };
+  }
+
+  // ── DELETE A PORTAL ACCESS REQUEST (admin only) — blanks the row so it disappears ──
+  if (action === "deleteAccessRequest") {
+    const { itemId } = data || {};
+    await accessRequestsLib.ensureAccessRequestsTab(googleToken);
+    const items = await getSheetData(googleToken, accessRequestsLib.TAB_NAME);
+    const rowIndex = items.findIndex(r => r["Request ID"] === itemId);
+    if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+    const row = rowIndex + 2;
+    const TAB = accessRequestsLib.TAB_NAME;
+    const lastCol = String.fromCharCode(64 + accessRequestsLib.HEADERS.length);
+    await sheetsUpdate(googleToken, `'${TAB}'!A${row}:${lastCol}${row}`, [Array(accessRequestsLib.HEADERS.length).fill("")]);
+    await logActivity(googleToken, session.username, "deleted_access_request", itemId, "access_request", "");
+    return { statusCode: 200, body: JSON.stringify({ success: true }) };
   }
 
   // ── CAST VOTE ──

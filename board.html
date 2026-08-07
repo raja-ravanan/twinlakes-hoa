@@ -1401,8 +1401,10 @@
     "open-email":     (el) => openEmailModal(el.dataset.id),
     "add-comment":    (el) => addComment(el.dataset.id),
     "add-req-note":   (el) => addRequestNote(el.dataset.id),
+    "delete-req":     (el) => deleteRequest(el.dataset.id),
     "open-access-response": (el) => openAccessResponseModal(el.dataset.id),
     "add-accreq-note":(el) => addAccessRequestNote(el.dataset.id),
+    "delete-accreq":  (el) => deleteAccessRequest(el.dataset.id),
     "edit-ann":       (el) => editAnnouncement(el.dataset.id),
     "toggle-ann":     (el) => toggleAnnouncement(el.dataset.id, el.dataset.publish === "true"),
     "toggle-ann-banner": (el) => toggleAnnouncementBanner(el.dataset.id, el.dataset.banner === "yes"),
@@ -2373,8 +2375,10 @@
         <option ${status==='New'?'selected':''}>New</option>
         <option ${status==='In Progress'?'selected':''}>In Progress</option>
         <option ${status==='Resolved'?'selected':''}>Resolved</option>
+        <option ${status==='Closed'?'selected':''}>Closed</option>
       </select>
       <a href="mailto:${encodeURIComponent(r.email || "")}?subject=${encodeURIComponent("Re: " + (r.subject || "Your request") + " (" + r.id + ")")}" class="attachment-btn" style="text-decoration:none;">✉️ Reply to resident</a>
+      ${can("deleteRequest") ? `<button class="btn-edit" title="Delete record" data-act="delete-req" data-id="${esc(r.id)}">🗑️ Delete</button>` : ""}
     </div>
     <div class="comments-section">
       <div class="attachments-title">Internal Board Notes</div>
@@ -2414,6 +2418,19 @@
         <div class="comment-text">${escapeHtml(n.text)}</div>
       </div>`).join("");
     showToast("Note added", "success");
+  }
+
+  async function deleteRequest(id) {
+    if (!confirm("Delete this resident request permanently? This cannot be undone.")) return;
+    const d = await api({ action: "deleteRequest", data: { itemId: id } });
+    if (d && d.success) {
+      showToast("Request deleted", "success");
+      dashData.requests = (dashData.requests || []).filter(r => r.id !== id);
+      renderRequests();
+      updateStats();
+    } else {
+      showToast((d && d.error) || "Delete failed", "error");
+    }
   }
 
   // ── Resident Portal Access Requests ───────────────────
@@ -2507,6 +2524,7 @@
         <option ${status==='Closed'?'selected':''}>Closed</option>
       </select>
       <button class="attachment-btn" data-act="open-access-response" data-id="${esc(id)}">✉️ Reply to Resident</button>
+      ${can("deleteAccessRequest") ? `<button class="btn-edit" title="Delete record" data-act="delete-accreq" data-id="${esc(id)}">🗑️ Delete</button>` : ""}
     </div>
     <div class="comments-section">
       <div class="attachments-title">Internal Board Notes</div>
@@ -2546,6 +2564,19 @@
         <div class="comment-text">${escapeHtml(n.text)}</div>
       </div>`).join("");
     showToast("Note added", "success");
+  }
+
+  async function deleteAccessRequest(id) {
+    if (!confirm("Delete this portal access request permanently? This cannot be undone.")) return;
+    const d = await api({ action: "deleteAccessRequest", data: { itemId: id } });
+    if (d && d.success) {
+      showToast("Request deleted", "success");
+      accessRequestsData = accessRequestsData.filter(r => r["Request ID"] !== id);
+      renderAccessRequests();
+      updateAccessRequestStats();
+    } else {
+      showToast((d && d.error) || "Delete failed", "error");
+    }
   }
 
   // ── Reply to Resident modal ───────────────────────────

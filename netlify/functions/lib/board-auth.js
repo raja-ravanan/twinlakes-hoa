@@ -171,6 +171,8 @@ const PERMISSIONS = {
   viewDiagnostics:           { access: "admin", mutates: false },
   setSetting:                { access: "admin", mutates: true },
   deleteARC:                 { access: "admin", mutates: true },
+  deleteRequest:             { access: "admin", mutates: true },
+  deleteAccessRequest:       { access: "admin", mutates: true },
   // Recording a vote on another member's behalf is restricted to the two
   // technical administrators by name, not merely by access level, so adding
   // a future admin does not silently grant vote override.

@@ -51,6 +51,8 @@ const EXPECTED = {
   viewDiagnostics:           "admin",
   setSetting:                "admin",
   deleteARC:                 "admin",
+  deleteRequest:             "admin",
+  deleteAccessRequest:       "admin",
   adminSetVotes:             "admin",
   runScan:                   "admin",
 };
@@ -209,9 +211,15 @@ const outcomes = [
   ["tony",  "setSetting",         false, "the President cannot change portal settings"],
   ["tony",  "runScan",            false, "the President cannot run inbox scans"],
   ["tony",  "adminSetVotes",      false, "the President cannot override votes"],
+  ["tony",  "deleteRequest",      false, "the President cannot delete resident requests"],
+  ["tony",  "deleteAccessRequest",false, "the President cannot delete portal access requests"],
+  ["mike",  "deleteRequest",      false, "a Member at Large cannot delete resident requests"],
+  ["mike",  "deleteAccessRequest",false, "a Member at Large cannot delete portal access requests"],
   ["raja",  "adminSetVotes",      true,  "Raja can record votes on behalf"],
   ["yashu", "adminSetVotes",      true,  "Yashu can record votes on behalf"],
   ["raja",  "deleteARC",          true,  "Raja can delete ARC records"],
+  ["raja",  "deleteRequest",      true,  "Raja can delete resident requests"],
+  ["raja",  "deleteAccessRequest",true,  "Raja can delete portal access requests"],
   ["yashu", "runScan",            true,  "Yashu can run inbox scans"],
 ];
 
