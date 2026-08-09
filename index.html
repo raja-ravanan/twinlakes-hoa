@@ -2,6 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <script>
+    // Netlify Identity invitation/recovery/confirmation links land here at the
+    // site root. Forward the token, untouched, to the isolated identity test
+    // page so it can be processed — this is a no-op for every normal visit.
+    (function () {
+      var hash = window.location.hash || "";
+      if (/^#(invite_token|recovery_token|confirmation_token|error)=/.test(hash)) {
+        window.location.replace("/identity-test" + hash);
+      }
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Twin Lakes at Floyds Fork — Louisville, Kentucky</title>
   <meta name="description" content="Twin Lakes at Floyds Fork is a premier lakeside community in Louisville, Kentucky. Find community updates, board information, documents, and contact details." />

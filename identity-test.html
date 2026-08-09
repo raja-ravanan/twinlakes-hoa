@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="robots" content="noindex, nofollow"/>
+  <title>Identity Test — Twin Lakes HOA</title>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --navy:#1B4B7A; --navy-dark:#0F2D4A; --gold:#C9A84C; --gold-deep:#B8973E;
+      --cream:#FAF7F2; --cream-note:#FBF8F0; --gold-border:#dfc07a; --text-m:#5a6a7a;
+      --white:#fff; --line:#ddd; --red-light:#fdf0f0; --red-border:#f5c6c6; --red-dark:#6b1a1a;
+      --green-light:#e8f5e8; --green-border:#bfe0bf; --green-dark:#1a4a1a;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Georgia, serif; background: var(--navy-dark); min-height:100vh; display:flex; align-items:center; justify-content:center; padding:24px; }
+    .card { background:var(--white); border-radius:16px; padding:48px 40px; max-width:440px; width:100%; box-shadow:0 24px 64px rgba(0,0,0,0.3); border-top:4px solid var(--gold); text-align:center; }
+    .logo { width:64px; height:64px; background:linear-gradient(135deg,var(--navy),var(--navy-dark)); border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; margin:0 auto 20px; font-size:22px; font-style:italic; color:var(--gold); font-family:Georgia,serif; }
+    .eyebrow { font-size:11px; font-family:sans-serif; letter-spacing:3px; text-transform:uppercase; color:var(--gold); margin-bottom:8px; }
+    h1 { font-size:26px; color:var(--navy); font-weight:normal; margin-bottom:6px; }
+    .subtitle { font-size:14px; color:var(--text-m); font-style:italic; margin-bottom:32px; }
+    .notice { background:var(--cream-note); border:1px solid var(--gold-border); border-left:3px solid var(--gold); border-radius:4px; padding:12px 16px; margin-bottom:24px; font-size:13px; font-family:sans-serif; color:#5a4a1a; text-align:left; line-height:1.6; }
+    .form-group { margin-bottom:18px; text-align:left; }
+    label { display:block; font-size:11px; font-family:sans-serif; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#2c3e50; margin-bottom:7px; }
+    input { width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:6px; font-size:15px; font-family:sans-serif; outline:none; transition:border-color 0.2s; }
+    input:focus { border-color:var(--gold); }
+    button { width:100%; background:linear-gradient(135deg,var(--navy),var(--navy-dark)); color:var(--cream); border:none; padding:16px; border-radius:8px; font-size:15px; font-family:sans-serif; font-weight:700; letter-spacing:1px; text-transform:uppercase; cursor:pointer; transition:all 0.2s; margin-top:8px; }
+    button:hover:not(:disabled) { background:linear-gradient(135deg,var(--gold),var(--gold-deep)); color:var(--navy); }
+    button:disabled { opacity:0.65; cursor:not-allowed; }
+    button.secondary { background:none; border:1px solid var(--line); color:var(--navy); }
+    button.secondary:hover:not(:disabled) { background:var(--cream-note); color:var(--navy); }
+    .error { background:var(--red-light); border:1px solid var(--red-border); border-radius:6px; padding:12px; font-size:13px; font-family:sans-serif; color:var(--red-dark); margin-top:16px; display:none; text-align:left; }
+    .status-ok { background:var(--green-light); border:1px solid var(--green-border); border-radius:6px; padding:12px; font-size:13px; font-family:sans-serif; color:var(--green-dark); margin-top:16px; display:none; text-align:left; }
+    .link-row { margin-top:14px; font-size:13px; font-family:sans-serif; }
+    .link-row a { color:var(--navy); text-decoration:none; cursor:pointer; }
+    .link-row a:hover { text-decoration:underline; }
+    .back-link { margin-top:20px; font-size:13px; font-family:sans-serif; color:#999; }
+    .back-link a { color:var(--navy); text-decoration:none; }
+    a:focus-visible, button:focus-visible, input:focus-visible { outline:3px solid var(--gold); outline-offset:2px; border-radius:4px; }
+    .success-icon { width:56px; height:56px; border-radius:50%; background:var(--green-light); border:2px solid var(--green-border); color:var(--green-dark); font-size:26px; display:flex; align-items:center; justify-content:center; margin:0 auto 18px; }
+    .field-row { text-align:left; font-family:sans-serif; margin-bottom:14px; }
+    .field-row .field-label { font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#2c3e50; margin-bottom:4px; }
+    .field-row .field-value { font-size:15px; color:var(--text-m); word-break:break-all; }
+    .hidden { display:none !important; }
+    .loading-state { font-family:sans-serif; font-size:14px; color:var(--text-m); padding:12px 0; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">TL</div>
+    <div class="eyebrow">Identity Test</div>
+    <h1>Twin Lakes Identity Test</h1>
+    <p class="subtitle">This page is being used to test secure resident authentication.</p>
+
+    <div class="error" id="banner-error" role="alert" aria-live="polite"></div>
+
+    <div id="loading-state" class="loading-state">Checking your session&hellip;</div>
+
+    <!-- Signed-out: sign in form -->
+    <div id="signed-out-state" class="hidden">
+      <div class="notice">🔒 This page tests Netlify Identity sign-in only. Twin Lakes accounts are created by invitation — there is no public sign-up here.</div>
+
+      <form id="login-form" novalidate>
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" autocomplete="username" required/>
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" autocomplete="current-password" required/>
+        </div>
+        <button type="submit" id="login-btn">Sign In</button>
+        <div class="error" id="login-error" role="alert" aria-live="polite"></div>
+      </form>
+      <p class="link-row"><a id="forgot-link">Forgot Password?</a></p>
+
+      <!-- Forgot-password sub-form -->
+      <form id="recover-form" class="hidden" novalidate style="margin-top:18px;border-top:1px solid var(--line);padding-top:18px;">
+        <div class="form-group">
+          <label for="recover-email">Email</label>
+          <input type="email" id="recover-email" name="recover-email" autocomplete="username" required/>
+        </div>
+        <button type="submit" id="recover-btn">Send Reset Link</button>
+        <div class="status-ok" id="recover-status" role="status" aria-live="polite"></div>
+      </form>
+      <p class="link-row hidden" id="back-to-signin"><a id="back-to-signin-link">← Back to Sign In</a></p>
+    </div>
+
+    <!-- Signed-in state -->
+    <div id="signed-in-state" class="hidden">
+      <div class="success-icon">✓</div>
+      <h1 style="margin-bottom:20px;">Authentication Successful</h1>
+      <div class="field-row">
+        <div class="field-label">Signed in as</div>
+        <div class="field-value" id="user-email">&mdash;</div>
+      </div>
+      <div class="field-row">
+        <div class="field-label">User ID</div>
+        <div class="field-value" id="user-id">&mdash;</div>
+      </div>
+      <button id="logout-btn" style="margin-top:8px;">Sign Out</button>
+    </div>
+
+    <p class="back-link"><a href="/">← Back to Twin Lakes website</a></p>
+  </div>
+
+  <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+  <script>
+    var DEFAULT_LOGIN_ERROR = "Unable to sign in. Please verify your email and password and try again.";
+    var SERVICE_UNAVAILABLE_ERROR = "We're having trouble reaching the identity service right now. Please refresh the page or try again in a moment.";
+    var identityReady = false;
+
+    var loadingEl = document.getElementById("loading-state");
+    var signedOutEl = document.getElementById("signed-out-state");
+    var signedInEl = document.getElementById("signed-in-state");
+    var bannerErrorEl = document.getElementById("banner-error");
+
+    var loginForm = document.getElementById("login-form");
+    var loginBtn = document.getElementById("login-btn");
+    var loginErrorEl = document.getElementById("login-error");
+
+    var forgotLink = document.getElementById("forgot-link");
+    var recoverForm = document.getElementById("recover-form");
+    var recoverBtn = document.getElementById("recover-btn");
+    var recoverStatusEl = document.getElementById("recover-status");
+    var backToSignIn = document.getElementById("back-to-signin");
+    var backToSignInLink = document.getElementById("back-to-signin-link");
+
+    var logoutBtn = document.getElementById("logout-btn");
+
+    function showSignedOut() {
+      loadingEl.classList.add("hidden");
+      signedInEl.classList.add("hidden");
+      signedOutEl.classList.remove("hidden");
+    }
+
+    function showSignedIn(user) {
+      loadingEl.classList.add("hidden");
+      signedOutEl.classList.add("hidden");
+      signedInEl.classList.remove("hidden");
+      document.getElementById("user-email").textContent = (user && user.email) || "—";
+      document.getElementById("user-id").textContent = (user && user.id) || "—";
+    }
+
+    function friendlyLoginError(err) {
+      var msg = (err && err.message ? String(err.message) : "").toLowerCase();
+      if (msg.indexOf("email not confirmed") !== -1 || msg.indexOf("not confirmed") !== -1) {
+        return "Your account is not yet confirmed. Please check your email for a confirmation link, or contact the Twin Lakes HOA.";
+      }
+      if (msg.indexOf("failed to fetch") !== -1 || msg.indexOf("network") !== -1) {
+        return "We couldn't reach the authentication service. Please try again in a moment.";
+      }
+      return DEFAULT_LOGIN_ERROR;
+    }
+
+    function friendlyBannerError(err) {
+      var msg = (err && err.message ? String(err.message) : "").toLowerCase();
+      if (msg.indexOf("invite") !== -1 || (msg.indexOf("expired") !== -1 && msg.indexOf("token") !== -1)) {
+        return "This invitation is no longer valid. Please request a new invitation from the Twin Lakes HOA.";
+      }
+      if (msg.indexOf("recover") !== -1) {
+        return "This password reset link has expired. Please request a new one below.";
+      }
+      return "We hit a snag completing that request. Please try again, or contact the Twin Lakes HOA for help.";
+    }
+
+    loginForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      loginErrorEl.style.display = "none";
+      loginBtn.disabled = true;
+      loginBtn.textContent = "Signing In…";
+
+      if (!window.netlifyIdentity.gotrue) {
+        loginErrorEl.textContent = SERVICE_UNAVAILABLE_ERROR;
+        loginErrorEl.style.display = "block";
+        loginBtn.disabled = false;
+        loginBtn.textContent = "Sign In";
+        return;
+      }
+
+      var email = document.getElementById("email").value.trim();
+      var password = document.getElementById("password").value;
+
+      window.netlifyIdentity.gotrue.login(email, password, true).then(
+        function () {
+          window.location.reload();
+        },
+        function (err) {
+          loginErrorEl.textContent = friendlyLoginError(err);
+          loginErrorEl.style.display = "block";
+          loginBtn.disabled = false;
+          loginBtn.textContent = "Sign In";
+        }
+      );
+    });
+
+    forgotLink.addEventListener("click", function () {
+      loginForm.classList.add("hidden");
+      forgotLink.parentElement.classList.add("hidden");
+      recoverForm.classList.remove("hidden");
+      backToSignIn.classList.remove("hidden");
+      recoverStatusEl.style.display = "none";
+      var recoverEmailInput = document.getElementById("recover-email");
+      recoverEmailInput.value = document.getElementById("email").value || "";
+      recoverEmailInput.focus();
+    });
+
+    backToSignInLink.addEventListener("click", function () {
+      recoverForm.classList.add("hidden");
+      backToSignIn.classList.add("hidden");
+      loginForm.classList.remove("hidden");
+      forgotLink.parentElement.classList.remove("hidden");
+    });
+
+    recoverForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      recoverBtn.disabled = true;
+      recoverBtn.textContent = "Sending…";
+      recoverStatusEl.style.display = "none";
+
+      if (!window.netlifyIdentity.gotrue) {
+        recoverStatusEl.textContent = SERVICE_UNAVAILABLE_ERROR;
+        recoverStatusEl.style.display = "block";
+        recoverBtn.disabled = false;
+        recoverBtn.textContent = "Send Reset Link";
+        return;
+      }
+
+      var email = document.getElementById("recover-email").value.trim();
+
+      window.netlifyIdentity.gotrue.requestPasswordRecovery(email).then(
+        function () { showRecoverSent(); },
+        function () { showRecoverSent(); }
+      );
+
+      function showRecoverSent() {
+        recoverStatusEl.textContent = "If that email is registered with Twin Lakes, a password reset link has been sent.";
+        recoverStatusEl.style.display = "block";
+        recoverBtn.disabled = false;
+        recoverBtn.textContent = "Send Reset Link";
+      }
+    });
+
+    logoutBtn.addEventListener("click", function () {
+      logoutBtn.disabled = true;
+      logoutBtn.textContent = "Signing Out…";
+      window.netlifyIdentity.logout();
+    });
+
+    window.netlifyIdentity.on("init", function (user) {
+      identityReady = true;
+      if (user) { showSignedIn(user); } else { showSignedOut(); }
+    });
+
+    window.netlifyIdentity.on("login", function (user) {
+      bannerErrorEl.style.display = "none";
+      showSignedIn(user);
+    });
+
+    window.netlifyIdentity.on("logout", function () {
+      logoutBtn.disabled = false;
+      logoutBtn.textContent = "Sign Out";
+      showSignedOut();
+    });
+
+    window.netlifyIdentity.on("error", function (err) {
+      identityReady = true;
+      bannerErrorEl.textContent = friendlyBannerError(err);
+      bannerErrorEl.style.display = "block";
+      loadingEl.classList.add("hidden");
+      signedInEl.classList.add("hidden");
+      signedOutEl.classList.remove("hidden");
+    });
+
+    window.netlifyIdentity.init();
+
+    // Guards against the identity service being unreachable: init()/error
+    // never fire in that case, so without this the page would be stuck on
+    // "Checking your session…" forever.
+    setTimeout(function () {
+      if (identityReady) return;
+      bannerErrorEl.textContent = SERVICE_UNAVAILABLE_ERROR;
+      bannerErrorEl.style.display = "block";
+      loadingEl.classList.add("hidden");
+      signedInEl.classList.add("hidden");
+      signedOutEl.classList.remove("hidden");
+    }, 8000);
+  </script>
+</body>
+</html>
