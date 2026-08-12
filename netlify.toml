@@ -30,6 +30,11 @@
   to = "/404.html"
   force = true
 
+[[redirects]]
+  from = "/committee-volunteer"
+  to = "/committee-volunteer.html"
+  status = 200
+
 [functions.scan-inbox]
   timeout = 300
 

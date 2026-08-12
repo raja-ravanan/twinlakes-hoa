@@ -1,0 +1,425 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Committee Volunteer Interest Form — Twin Lakes HOA</title>
+  <meta name="description" content="Volunteer for a Twin Lakes at Floyds Fork HOA committee — apply online or download the printable form."/>
+  <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&display=swap" rel="stylesheet"/>
+  <style>
+    :root {
+      --navy:#1B4B7A; --navy-dark:#0F2D4A; --gold:#C9A84C; --gold-deep:#B8973E;
+      --cream:#FAF7F2; --cream-note:#FBF8F0; --gold-border:#dfc07a; --text-m:#5a6a7a;
+      --white:#fff; --line:#ddd; --red-light:#fdf0f0; --red-border:#f5c6c6; --red-dark:#6b1a1a;
+      --green-light:#eafaf1; --green-border:#bfe8cf; --green-dark:#1e5631;
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body { font-family: Georgia, serif; background: var(--cream); color:#2c3e50; }
+    a { color: var(--navy); }
+
+    .topbar { background:var(--navy-dark); padding:16px 24px; display:flex; align-items:center; justify-content:space-between; }
+    .topbar-brand { display:flex; align-items:center; gap:10px; text-decoration:none; }
+    .topbar-logo { width:36px; height:36px; background:linear-gradient(135deg,var(--navy),var(--navy-dark)); border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; font-size:14px; font-style:italic; color:var(--gold); }
+    .topbar-name { color:var(--cream); font-size:15px; font-family:sans-serif; letter-spacing:0.5px; }
+    .topbar-back { color:var(--cream); opacity:0.8; font-size:13px; font-family:sans-serif; text-decoration:none; }
+    .topbar-back:hover { opacity:1; text-decoration:underline; }
+
+    .hero { max-width:760px; margin:0 auto; padding:48px 24px 8px; text-align:center; }
+    .eyebrow { font-size:11px; font-family:sans-serif; letter-spacing:3px; text-transform:uppercase; color:var(--gold-deep); margin-bottom:10px; font-weight:700; }
+    h1 { font-size:32px; color:var(--navy); font-weight:normal; margin-bottom:8px; }
+    .subtitle { font-size:15px; color:var(--text-m); font-style:italic; margin-bottom:24px; }
+    .intro { font-family:sans-serif; font-size:15px; color:#3d4a58; line-height:1.7; margin-bottom:20px; }
+    .notice { background:var(--cream-note); border:1px solid var(--gold-border); border-left:3px solid var(--gold); border-radius:4px; padding:14px 18px; margin-bottom:28px; font-size:13px; font-family:sans-serif; color:#5a4a1a; text-align:left; line-height:1.6; }
+
+    .cta-row { display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-bottom:48px; }
+    .btn { font-family:sans-serif; font-weight:700; font-size:14px; letter-spacing:0.5px; padding:14px 28px; border-radius:8px; text-decoration:none; display:inline-block; cursor:pointer; border:none; transition:all 0.2s; }
+    .btn-primary { background:linear-gradient(135deg,var(--navy),var(--navy-dark)); color:var(--cream); }
+    .btn-primary:hover { background:linear-gradient(135deg,var(--gold),var(--gold-deep)); color:var(--navy); }
+    .btn-outline { background:var(--white); color:var(--navy); border:2px solid var(--navy); }
+    .btn-outline:hover { background:var(--navy); color:var(--cream); }
+
+    .form-wrap { max-width:720px; margin:0 auto; padding:0 24px 64px; }
+    .card { background:var(--white); border-radius:16px; padding:36px 32px; box-shadow:0 10px 40px rgba(27,75,122,0.08); border-top:4px solid var(--gold); }
+    .fsection { margin-bottom:34px; padding-bottom:30px; border-bottom:1px solid #eee0c8; }
+    .fsection:last-of-type { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+    .fsection-num { font-family:sans-serif; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--gold-deep); font-weight:700; margin-bottom:4px; }
+    .fsection h2 { font-size:20px; color:var(--navy); font-weight:normal; margin-bottom:14px; }
+    .fsection-sub { font-family:sans-serif; font-size:13px; color:var(--text-m); line-height:1.6; margin:-8px 0 16px; }
+
+    .form-group { margin-bottom:18px; text-align:left; }
+    label { display:block; font-size:11px; font-family:sans-serif; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; color:#2c3e50; margin-bottom:7px; }
+    input[type=text], input[type=email], input[type=tel], select, textarea {
+      width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:6px; font-size:15px;
+      font-family:sans-serif; outline:none; transition:border-color 0.2s; resize:vertical; background:var(--white);
+    }
+    input:focus, select:focus, textarea:focus { border-color:var(--gold); }
+    .name-row { display:flex; gap:12px; }
+    .name-row .form-group { flex:1; }
+    .optional-tag { font-weight:400; text-transform:none; letter-spacing:0; color:var(--text-m); }
+    .field-help { font-family:sans-serif; font-size:12px; color:var(--text-m); margin-top:-4px; margin-bottom:14px; line-height:1.5; }
+
+    .committee-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px 20px; margin-bottom:16px; }
+    .committee-check { display:flex; align-items:flex-start; gap:9px; font-family:sans-serif; font-size:14px; color:#2c3e50; }
+    .committee-check input { margin-top:3px; width:16px; height:16px; flex-shrink:0; }
+    .other-row { display:flex; align-items:center; gap:10px; margin-top:4px; }
+    .other-row input[type=text] { flex:1; }
+
+    .radio-row { display:flex; gap:24px; font-family:sans-serif; font-size:14px; color:#2c3e50; margin-bottom:10px; }
+    .radio-row label { display:flex; align-items:center; gap:7px; font-size:14px; font-weight:400; text-transform:none; letter-spacing:0; margin-bottom:0; text-transform:none; }
+    .radio-row input { width:16px; height:16px; }
+    .conditional { display:none; margin-top:10px; }
+    .conditional.show { display:block; }
+
+    .info-block { background:var(--cream-note); border:1px solid var(--gold-border); border-radius:8px; padding:18px 20px; font-family:sans-serif; font-size:13px; color:#3d4a58; line-height:1.7; }
+    .info-block p + p { margin-top:12px; }
+    .info-block strong { color:var(--navy); }
+
+    .ack-block { background:var(--cream-note); border:1px solid var(--gold-border); border-radius:8px; padding:18px 20px; font-family:sans-serif; font-size:13px; color:#3d4a58; line-height:1.7; margin-bottom:18px; }
+    .ack-check { display:flex; align-items:flex-start; gap:10px; font-family:sans-serif; font-size:14px; color:#2c3e50; margin:16px 0; }
+    .ack-check input { margin-top:3px; width:17px; height:17px; flex-shrink:0; }
+
+    .hp-field { position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+
+    #submit-btn { width:100%; margin-top:8px; }
+    #submit-btn:disabled { opacity:0.65; cursor:not-allowed; }
+
+    .error { background:var(--red-light); border:1px solid var(--red-border); border-radius:6px; padding:12px; font-size:13px; font-family:sans-serif; color:var(--red-dark); margin-top:16px; display:none; }
+    .success-card { background:var(--white); border-radius:16px; padding:48px 40px; box-shadow:0 10px 40px rgba(27,75,122,0.08); border-top:4px solid var(--gold); text-align:center; display:none; }
+    .success-card h2 { color:var(--navy); font-weight:normal; margin-bottom:10px; }
+    .success-card p { font-family:sans-serif; font-size:14px; color:var(--text-m); line-height:1.6; }
+
+    footer { text-align:center; padding:32px 24px; font-family:sans-serif; font-size:13px; color:var(--text-m); }
+    footer a { color:var(--navy); }
+
+    a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline:3px solid var(--gold); outline-offset:2px; border-radius:4px; }
+
+    @media (max-width: 600px) {
+      h1 { font-size:26px; }
+      .card { padding:26px 18px; }
+      .name-row { flex-direction:column; gap:0; }
+      .committee-grid { grid-template-columns:1fr; }
+      .cta-row { flex-direction:column; align-items:stretch; }
+      .btn { text-align:center; }
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <a class="topbar-brand" href="/">
+      <div class="topbar-logo">TL</div>
+      <span class="topbar-name">Twin Lakes at Floyds Fork</span>
+    </a>
+    <a class="topbar-back" href="/">&larr; Back to Twin Lakes HOA</a>
+  </div>
+
+  <div class="hero">
+    <div class="eyebrow">Get Involved</div>
+    <h1>Committee Volunteer Interest Form</h1>
+    <p class="subtitle">Twin Lakes Homeowners Association</p>
+    <p class="intro">Help shape our community. The Twin Lakes HOA Board of Directors is inviting residents to volunteer their time, experience, and ideas through HOA committees. Committees help research issues and support projects.</p>
+    <div class="notice">Submitting this form expresses interest only and does not guarantee appointment. Committee membership is subject to appointment or approval in accordance with the HOA governing documents and applicable Board procedures.</div>
+    <div class="cta-row">
+      <a href="#volunteer-form" class="btn btn-primary">Apply Online</a>
+      <a href="/Twin-Lakes-Committee-Volunteer-Interest-Form.pdf" class="btn btn-outline" target="_blank" rel="noopener noreferrer">Download Printable Form</a>
+    </div>
+  </div>
+
+  <div class="form-wrap" id="volunteer-form">
+    <form class="card" id="vol-form" novalidate>
+
+      <div class="fsection">
+        <div class="fsection-num">Section 1</div>
+        <h2>Resident Information</h2>
+        <div class="form-group">
+          <label for="name">Name</label>
+          <input type="text" id="name" name="name" maxlength="80" autocomplete="name" required/>
+        </div>
+        <div class="form-group">
+          <label for="address">Property Address</label>
+          <input type="text" id="address" name="address" maxlength="200" autocomplete="street-address" required/>
+        </div>
+        <div class="name-row">
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input type="email" id="email" name="email" maxlength="200" autocomplete="email" required/>
+          </div>
+          <div class="form-group">
+            <label for="phone">Phone <span class="optional-tag">(optional)</span></label>
+            <input type="tel" id="phone" name="phone" maxlength="30" autocomplete="tel"/>
+          </div>
+        </div>
+      </div>
+
+      <div class="fsection">
+        <div class="fsection-num">Section 2</div>
+        <h2>Committee Interest</h2>
+        <p class="fsection-sub">Check all committees you would be interested in supporting.</p>
+        <div class="committee-grid" id="committee-grid">
+          <label class="committee-check"><input type="checkbox" name="committee" value="Nomination Committee"/> Nomination Committee</label>
+          <label class="committee-check"><input type="checkbox" name="committee" value="Social / Events Committee"/> Social / Events Committee</label>
+          <label class="committee-check"><input type="checkbox" name="committee" value="Architectural Review Committee (ARC)"/> Architectural Review Committee (ARC)</label>
+          <label class="committee-check"><input type="checkbox" name="committee" value="Beautification Committee"/> Beautification Committee</label>
+          <label class="committee-check"><input type="checkbox" name="committee" value="Bylaw Committee"/> Bylaw Committee</label>
+          <label class="committee-check"><input type="checkbox" name="committee" value="Landscape & Grounds Committee"/> Landscape &amp; Grounds Committee</label>
+          <label class="committee-check"><input type="checkbox" name="committee" value="Irrigation Committee"/> Irrigation Committee</label>
+          <label class="committee-check"><input type="checkbox" name="committee" value="Pond / Water Management Committee"/> Pond / Water Management Committee</label>
+        </div>
+        <label class="committee-check"><input type="checkbox" id="other-check" value="Other"/> Other</label>
+        <div class="other-row">
+          <input type="text" id="otherCommittee" placeholder="Describe the committee or area of interest" maxlength="100" disabled/>
+        </div>
+
+        <div class="name-row" style="margin-top:20px;">
+          <div class="form-group">
+            <label for="firstChoice">First Choice <span class="optional-tag">(optional)</span></label>
+            <select id="firstChoice" name="firstChoice">
+              <option value="">— Select —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="secondChoice">Second Choice <span class="optional-tag">(optional)</span></label>
+            <select id="secondChoice" name="secondChoice">
+              <option value="">— Select —</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="fsection">
+        <div class="fsection-num">Section 3</div>
+        <h2>Skills &amp; Experience</h2>
+        <div class="form-group">
+          <label for="skills">Skills, knowledge, or professional experience <span class="optional-tag">(optional)</span></label>
+          <textarea id="skills" name="skills" rows="3" maxlength="2000" placeholder="Examples: landscaping, irrigation, engineering, construction, contracts, legal, project management, communications, events, technology, environmental/pond management, vendor management, governance, or other relevant experience."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Prior HOA, nonprofit, neighborhood, professional, school, or other volunteer committee experience?</label>
+          <div class="radio-row">
+            <label><input type="radio" name="priorExperience" value="Yes"/> Yes</label>
+            <label><input type="radio" name="priorExperience" value="No"/> No</label>
+          </div>
+          <div class="conditional" id="prior-experience-detail">
+            <label for="priorExperienceDetails">If yes, briefly describe</label>
+            <textarea id="priorExperienceDetails" name="priorExperienceDetails" rows="2" maxlength="1000"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div class="fsection">
+        <div class="fsection-num">Section 4</div>
+        <h2>Interest &amp; Contribution</h2>
+        <div class="form-group">
+          <label for="interest">Why are you interested in volunteering, and where do you believe you could contribute?</label>
+          <textarea id="interest" name="interest" rows="4" maxlength="2000"></textarea>
+        </div>
+      </div>
+
+      <div class="fsection">
+        <div class="fsection-num">Section 5</div>
+        <h2>Committee Member Expectations</h2>
+        <div class="info-block">
+          <p>Residents selected to serve are expected to participate constructively, make a reasonable effort to attend meetings and complete accepted assignments, work collaboratively, protect confidential or non-public HOA/homeowner information, avoid circulating speculation or presenting matters under Board consideration as final decisions, and disclose actual or potential conflicts of interest.</p>
+          <p><strong>Committee role and authority:</strong> Committees generally research, assist, and make recommendations to the Board unless authority is specifically delegated. Committee service does not make a volunteer a Board member or independently authorize the volunteer to act or speak for the Association.</p>
+          <p>Committee members may not independently commit HOA funds, enter into agreements, direct vendors, promise Board action, issue violations or directives, modify common-area property, or represent themselves as having HOA authority unless specifically authorized in accordance with the HOA governing documents and applicable Board procedures.</p>
+        </div>
+      </div>
+
+      <div class="fsection">
+        <div class="fsection-num">Section 6</div>
+        <h2>Conflict of Interest Disclosure</h2>
+        <div class="form-group">
+          <label>Do you have any financial, business, family, vendor, or other relationship that could potentially create a conflict relating to the committee(s) selected?</label>
+          <div class="radio-row">
+            <label><input type="radio" name="conflict" value="No"/> No</label>
+            <label><input type="radio" name="conflict" value="Yes"/> Yes</label>
+          </div>
+          <div class="conditional" id="conflict-detail">
+            <label for="conflictDetails">If yes, briefly explain</label>
+            <textarea id="conflictDetails" name="conflictDetails" rows="2" maxlength="1000"></textarea>
+          </div>
+        </div>
+        <p class="field-help">Disclosure of a potential conflict does not automatically prevent participation; it allows the Board to evaluate and manage the conflict appropriately.</p>
+      </div>
+
+      <div class="fsection">
+        <div class="fsection-num">Section 7</div>
+        <h2>Acknowledgment</h2>
+        <div class="ack-block">
+          I understand that submitting this form expresses my interest in volunteering and does not guarantee appointment. Committee membership and assignments are subject to appointment or approval in accordance with the HOA governing documents and applicable Board procedures, based on community needs, committee composition, experience, availability, and other relevant considerations. I certify that the information provided is accurate to the best of my knowledge.
+        </div>
+        <label class="ack-check"><input type="checkbox" id="acknowledged" required/> I acknowledge and certify the above.</label>
+        <div class="form-group">
+          <label for="typedName">Resident Name (typed)</label>
+          <input type="text" id="typedName" name="typedName" maxlength="80" required/>
+        </div>
+        <p class="field-help">The submission date and time are recorded automatically — no need to enter a date.</p>
+      </div>
+
+      <div class="form-group hp-field" aria-hidden="true">
+        <label for="website">Website</label>
+        <input type="text" id="website" name="website" tabindex="-1" autocomplete="off"/>
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="submit-btn">Submit Application</button>
+      <div class="error" id="error" role="alert" aria-live="polite"></div>
+    </form>
+
+    <div class="success-card" id="success">
+      <h2>Thank you!</h2>
+      <p id="success-message">Your submission has been received and the Board will review it.</p>
+    </div>
+  </div>
+
+  <footer>
+    Questions? Contact the board at <a href="mailto:hoa.twinlakes.board@gmail.com">hoa.twinlakes.board@gmail.com</a>
+  </footer>
+
+  <script>
+    var COMMITTEES = [
+      "Nomination Committee", "Social / Events Committee",
+      "Architectural Review Committee (ARC)", "Beautification Committee",
+      "Bylaw Committee", "Landscape & Grounds Committee",
+      "Irrigation Committee", "Pond / Water Management Committee"
+    ];
+
+    // Populate First/Second Choice dropdowns from the same committee list
+    // (plus "Other") so the choices always match the checkboxes above.
+    ["firstChoice", "secondChoice"].forEach(function (id) {
+      var select = document.getElementById(id);
+      COMMITTEES.concat(["Other"]).forEach(function (name) {
+        var opt = document.createElement("option");
+        opt.value = name; opt.textContent = name;
+        select.appendChild(opt);
+      });
+    });
+
+    var otherCheck = document.getElementById("other-check");
+    var otherText = document.getElementById("otherCommittee");
+    otherCheck.addEventListener("change", function () {
+      otherText.disabled = !otherCheck.checked;
+      if (!otherCheck.checked) otherText.value = "";
+    });
+
+    function wireConditional(radioName, yesValue, containerId) {
+      var container = document.getElementById(containerId);
+      document.querySelectorAll('input[name="' + radioName + '"]').forEach(function (r) {
+        r.addEventListener("change", function () {
+          container.classList.toggle("show", r.value === yesValue && r.checked);
+        });
+      });
+    }
+    wireConditional("priorExperience", "Yes", "prior-experience-detail");
+    wireConditional("conflict", "Yes", "conflict-detail");
+
+    var DEFAULT_ERROR = "We could not submit your form right now. Please try again later.";
+    var form = document.getElementById("vol-form");
+    var submitBtn = document.getElementById("submit-btn");
+    var errEl = document.getElementById("error");
+    var successEl = document.getElementById("success");
+    var successMsgEl = document.getElementById("success-message");
+
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      errEl.style.display = "none";
+
+      var committees = Array.from(document.querySelectorAll('input[name="committee"]:checked')).map(function (c) { return c.value; });
+      if (otherCheck.checked) committees.push("Other");
+
+      if (committees.length === 0) {
+        errEl.textContent = "Please select at least one committee.";
+        errEl.style.display = "block";
+        return;
+      }
+      if (otherCheck.checked && !otherText.value.trim()) {
+        errEl.textContent = "Please describe the 'Other' committee or area of interest.";
+        errEl.style.display = "block";
+        return;
+      }
+
+      var firstChoiceVal = document.getElementById("firstChoice").value;
+      var secondChoiceVal = document.getElementById("secondChoice").value;
+      if (firstChoiceVal && committees.indexOf(firstChoiceVal) === -1) {
+        errEl.textContent = "First Choice must be one of the committees you checked above.";
+        errEl.style.display = "block";
+        return;
+      }
+      if (secondChoiceVal && committees.indexOf(secondChoiceVal) === -1) {
+        errEl.textContent = "Second Choice must be one of the committees you checked above.";
+        errEl.style.display = "block";
+        return;
+      }
+      if (firstChoiceVal && secondChoiceVal && firstChoiceVal === secondChoiceVal) {
+        errEl.textContent = "First Choice and Second Choice must be different.";
+        errEl.style.display = "block";
+        return;
+      }
+
+      var conflictCheckEl = document.querySelector('input[name="conflict"]:checked');
+      if (!conflictCheckEl) {
+        errEl.textContent = "Please answer the conflict of interest question.";
+        errEl.style.display = "block";
+        return;
+      }
+      if (!document.getElementById("acknowledged").checked) {
+        errEl.textContent = "Please check the acknowledgment box to submit.";
+        errEl.style.display = "block";
+        return;
+      }
+
+      var priorExperienceEl = document.querySelector('input[name="priorExperience"]:checked');
+
+      var payload = {
+        name: document.getElementById("name").value,
+        address: document.getElementById("address").value,
+        email: document.getElementById("email").value,
+        phone: document.getElementById("phone").value,
+        committees: committees,
+        otherCommittee: otherText.value,
+        firstChoice: document.getElementById("firstChoice").value,
+        secondChoice: document.getElementById("secondChoice").value,
+        skills: document.getElementById("skills").value,
+        priorExperience: priorExperienceEl ? priorExperienceEl.value : "",
+        priorExperienceDetails: document.getElementById("priorExperienceDetails").value,
+        interest: document.getElementById("interest").value,
+        conflict: conflictCheckEl.value,
+        conflictDetails: document.getElementById("conflictDetails").value,
+        acknowledged: document.getElementById("acknowledged").checked,
+        typedName: document.getElementById("typedName").value,
+        website: document.getElementById("website").value
+      };
+
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Submitting…";
+      form.setAttribute("aria-busy", "true");
+
+      try {
+        var res = await fetch("/.netlify/functions/submit-committee-volunteer", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        var body = {};
+        try { body = await res.json(); } catch (parseErr) {}
+
+        if (res.ok) {
+          form.style.display = "none";
+          successMsgEl.textContent = (body && body.message) || "Your submission has been received and the Board will review it.";
+          successEl.style.display = "block";
+          successEl.scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+
+        errEl.textContent = (body && body.error) || DEFAULT_ERROR;
+        errEl.style.display = "block";
+      } catch (networkErr) {
+        errEl.textContent = "Connection error. Please try again.";
+        errEl.style.display = "block";
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Submit Application";
+        form.removeAttribute("aria-busy");
+      }
+    });
+  </script>
+</body>
+</html>
