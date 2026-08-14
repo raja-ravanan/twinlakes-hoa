@@ -33,6 +33,10 @@ const EXPECTED = {
   addRequestNote:            "member",
   updateAccessRequestStatus: "member",
   addAccessRequestNote:      "member",
+  getCommitteeVolunteers:            "member",
+  updateCommitteeVolunteerStatus:    "member",
+  updateCommitteeVolunteerNotes:     "member",
+  updateCommitteeVolunteerPublicListing: "member",
   addComment:                "member",
   updateStatus:              "member",
   castVote:                  "member",
@@ -108,7 +112,7 @@ test("adminSetVotes is pinned to Raja and Yashu by name", () => {
 test("every state-changing action is marked as mutating", () => {
   const readOnly = ["getPublicAnnouncements", "getPublicMinutes", "getPublicSettings",
     "getDashboard", "getResidents", "getAccessRequests", "getAccessRequestPreview",
-    "getEmailPreview", "viewDiagnostics"];
+    "getEmailPreview", "viewDiagnostics", "getCommitteeVolunteers"];
   for (const [action, p] of Object.entries(auth.PERMISSIONS)) {
     assert.strictEqual(p.mutates, !readOnly.includes(action), `${action}.mutates`);
   }

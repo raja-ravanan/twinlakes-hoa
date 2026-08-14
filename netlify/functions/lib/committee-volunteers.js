@@ -51,6 +51,21 @@ const HEADERS = [
   "Acknowledgment", "Typed Name", "Status",
 ];
 
+// Board-only extension columns (R:S) added for Committee Volunteer Interest
+// tracking. Kept separate from HEADERS/A:Q rather than folded in, so a sheet
+// that already has live resident submissions under the original 17-column
+// header never fails ensureVolunteersTab's check — see
+// ensureVolunteerExtHeaders, which self-heals these the same way
+// board-api.js self-heals Announcements!G1:O1 / Minutes!H1.
+const EXT_HEADERS = ["Notes", "Public Listing"];
+
+// Suggested Board workflow statuses. "Interested" is the default a fresh
+// submission is written with (see buildVolunteerRow) — a row may still carry
+// the older literal "New" if it was submitted before this status existed;
+// that's a legacy value, not an error, and the Board can move it forward.
+const STATUSES = ["Interested", "Contacted", "Confirmed", "Not Selected", "Withdrew"];
+function isValidStatus(v) { return STATUSES.includes(v); }
+
 const MAX_NAME_LEN = 80;
 const MAX_ADDRESS_LEN = 200;
 const MAX_EMAIL_LEN = 200;
@@ -264,7 +279,7 @@ function buildVolunteerRow(fields) {
     sanitizeForSpreadsheet(boundedText(fields.conflictDetails || "", MAX_CONFLICT_DETAILS_LEN)),
     "Yes",
     sanitizeForSpreadsheet(boundedText(fields.typedName, MAX_NAME_LEN)),
-    "New",
+    "Interested",
   ];
 }
 
@@ -310,18 +325,39 @@ async function ensureVolunteersTab(token) {
     return;
   }
 
-  const headerMatches =
-    existingHeader.length === HEADERS.length &&
-    HEADERS.every((h, i) => existingHeader[i] === h);
+  // Prefix match, not exact-length match: the Board-only extension columns
+  // (R:S, see EXT_HEADERS) live past column Q and are self-healed separately
+  // by ensureVolunteerExtHeaders, so their presence/absence here must never
+  // fail this check — a live sheet with real resident submissions already
+  // has exactly the base A:Q header and nothing past it.
+  const headerMatches = HEADERS.every((h, i) => existingHeader[i] === h);
   if (!headerMatches) {
     throw new Error("committee_volunteers_header_mismatch");
   }
   tabEnsured = true;
 }
 
+// Self-heals the R1:S1 extension header (Notes, Public Listing) the same way
+// board-api.js self-heals Announcements!G1:O1 / Minutes!H1 — called before
+// any board-portal read or write that touches these columns, never by the
+// public submission endpoint. Idempotent; cheap enough to call on every
+// admin request rather than caching like ensureVolunteersTab's tabEnsured.
+async function ensureVolunteerExtHeaders(token) {
+  const range = `'${TAB_NAME}'!R1:S1`;
+  const result = await sheetsGet(token, range);
+  const existing = (result.values && result.values[0]) || [];
+  const matches = existing.length === EXT_HEADERS.length && EXT_HEADERS.every((h, i) => existing[i] === h);
+  if (!matches) {
+    await sheetsUpdate(token, range, [EXT_HEADERS]);
+  }
+}
+
 module.exports = {
   TAB_NAME,
   HEADERS,
+  EXT_HEADERS,
+  STATUSES,
+  isValidStatus,
   COMMITTEES,
   OTHER_VALUE,
   MAX_NAME_LEN,
@@ -345,5 +381,6 @@ module.exports = {
   sheetsUpdate,
   sheetsAppend,
   ensureVolunteersTab,
+  ensureVolunteerExtHeaders,
   withTimeout,
 };

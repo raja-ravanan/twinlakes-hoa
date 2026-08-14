@@ -1,5 +1,6 @@
 const https = require("https");
 const accessRequestsLib = require("./lib/access-requests");
+const committeeVolunteersLib = require("./lib/committee-volunteers");
 const auth = require("./lib/board-auth");
 const members = require("./lib/board-members");
 const sheetsWrite = require("./lib/sheets-write");
@@ -767,6 +768,75 @@ async function handleRequest(event) {
     await sheetsUpdate(googleToken, `'${TAB}'!A${row}:${lastCol}${row}`, [Array(accessRequestsLib.HEADERS.length).fill("")]);
     await logActivity(googleToken, session.username, "deleted_access_request", itemId, "access_request", "");
     return { statusCode: 200, body: JSON.stringify({ success: true }) };
+  }
+
+  // ── COMMITTEE VOLUNTEER INTERESTS (Board review of committee-volunteer.html
+  // submissions) ── Same shared "Committee_Volunteers" sheet the public
+  // submission endpoint (submit-committee-volunteer.js) writes to — this is
+  // the single Board-facing view of that data, gated behind the same AUTH
+  // CHECK as everything else above. Row identity is the Timestamp column
+  // (millisecond-precision ISO string set server-side at submission time,
+  // never resident-supplied) rather than a synthetic ID column — collisions
+  // would require two submissions in the same millisecond.
+  if (action === "getCommitteeVolunteers") {
+    await committeeVolunteersLib.ensureVolunteersTab(googleToken);
+    await committeeVolunteersLib.ensureVolunteerExtHeaders(googleToken);
+    const items = await getSheetData(googleToken, committeeVolunteersLib.TAB_NAME);
+    const volunteers = items.filter(v => v["Timestamp"]);
+    // PII read, same convention as getResidents.
+    await logActivity(googleToken, session.username, "viewed_committee_volunteers", "-", "committee_volunteers",
+      `access=${session.access} records=${volunteers.length}`);
+    return { statusCode: 200, body: JSON.stringify({ volunteers }) };
+  }
+
+  if (action === "updateCommitteeVolunteerStatus") {
+    const { itemId, status } = data || {};
+    if (!committeeVolunteersLib.isValidStatus(status)) {
+      return { statusCode: 400, body: JSON.stringify({ error: "Invalid status" }) };
+    }
+    await committeeVolunteersLib.ensureVolunteersTab(googleToken);
+    const items = await getSheetData(googleToken, committeeVolunteersLib.TAB_NAME);
+    const rowIndex = items.findIndex(r => r["Timestamp"] === itemId);
+    if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+    const row = rowIndex + 2;
+    const TAB = committeeVolunteersLib.TAB_NAME;
+    await sheetsUpdate(googleToken, `'${TAB}'!Q${row}`, [[status]]);
+    await logActivity(googleToken, session.username, `committee_volunteer_status_${status.replace(/ /g, "_")}`, itemId, "committee_volunteer", "");
+    return { statusCode: 200, body: JSON.stringify({ success: true }) };
+  }
+
+  if (action === "updateCommitteeVolunteerNotes") {
+    const { itemId, notes } = data || {};
+    const cleanNotes = (notes || "").trim();
+    if (cleanNotes.length > 2000) return { statusCode: 400, body: JSON.stringify({ error: "Notes are too long" }) };
+    await committeeVolunteersLib.ensureVolunteersTab(googleToken);
+    await committeeVolunteersLib.ensureVolunteerExtHeaders(googleToken);
+    const items = await getSheetData(googleToken, committeeVolunteersLib.TAB_NAME);
+    const rowIndex = items.findIndex(r => r["Timestamp"] === itemId);
+    if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+    const row = rowIndex + 2;
+    const TAB = committeeVolunteersLib.TAB_NAME;
+    await sheetsUpdate(googleToken, `'${TAB}'!R${row}`, [[cleanNotes]]);
+    await logActivity(googleToken, session.username, "added_committee_volunteer_note", itemId, "committee_volunteer", cleanNotes.slice(0, 100));
+    return { statusCode: 200, body: JSON.stringify({ success: true, notes: cleanNotes }) };
+  }
+
+  // Controls whether a resident's name is shown on the Resident Portal's
+  // Community Committees page — off by default (see buildVolunteerRow /
+  // ensureVolunteerExtHeaders), only ever flipped on here by a Board member.
+  if (action === "updateCommitteeVolunteerPublicListing") {
+    const { itemId, publicListing } = data || {};
+    await committeeVolunteersLib.ensureVolunteersTab(googleToken);
+    await committeeVolunteersLib.ensureVolunteerExtHeaders(googleToken);
+    const items = await getSheetData(googleToken, committeeVolunteersLib.TAB_NAME);
+    const rowIndex = items.findIndex(r => r["Timestamp"] === itemId);
+    if (rowIndex === -1) return { statusCode: 404, body: JSON.stringify({ error: "Not found" }) };
+    const row = rowIndex + 2;
+    const value = publicListing === true ? "yes" : "no";
+    const TAB = committeeVolunteersLib.TAB_NAME;
+    await sheetsUpdate(googleToken, `'${TAB}'!S${row}`, [[value]]);
+    await logActivity(googleToken, session.username, `committee_volunteer_public_listing_${value}`, itemId, "committee_volunteer", "");
+    return { statusCode: 200, body: JSON.stringify({ success: true, publicListing: value }) };
   }
 
   // ── CAST VOTE ──

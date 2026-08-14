@@ -166,6 +166,13 @@
     .status-Denied { background:#fdf0f0; color:var(--red); }
     .status-Conditional { background:#fef9e7; color:#b7770d; }
     .status-Tie { background:#f3e5f5; color:#6a1b9a; }
+    /* Committee Volunteer Interest statuses (see lib/committee-volunteers.js STATUSES) */
+    .status-Interested { background:#EEF3F8; color:var(--navy); }
+    .status-New { background:#EEF3F8; color:var(--navy); } /* legacy pre-status value */
+    .status-Contacted { background:#fef9e7; color:#b7770d; }
+    .status-Confirmed { background:#eafaf1; color:var(--green); }
+    .status-NotSelected { background:#fdf0f0; color:var(--red); }
+    .status-Withdrew { background:#f3e5f5; color:#6a1b9a; }
     .conflict-flag { font-size:11px; font-family:sans-serif; background:#fef9e7; color:#b7770d; border:1px solid #f0d060; padding:3px 10px; border-radius:12px; margin-top:6px; display:inline-block; }
 
     /* ── ARC BODY ── */
@@ -297,6 +304,32 @@
     .add-comment { display:flex; gap:10px; margin-top:12px; }
     .add-comment input { flex:1; padding:9px 12px; border:1px solid var(--line); border-radius:6px; font-size:13px; font-family:sans-serif; outline:none; }
     .add-comment input:focus { border-color:var(--gold); }
+
+    /* ── Committee Volunteer Interests ── */
+    .cv-chip-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:18px; }
+    .cv-chip { background:#fff; border:1px solid var(--line); border-radius:20px; padding:6px 14px; font-size:12px; font-family:sans-serif; font-weight:700; color:var(--text-d); cursor:pointer; }
+    .cv-chip:hover { border-color:var(--gold); }
+    .cv-chip.active { background:var(--navy); color:#fff; border-color:var(--navy); }
+    .cv-chip .n { color:var(--gold-dark); margin-left:4px; }
+    .cv-chip.active .n { color:var(--gold); }
+    .cv-grid td { vertical-align:top; }
+    .cv-name-btn { background:none; border:none; padding:0; font:inherit; color:var(--navy); font-weight:700; cursor:pointer; text-align:left; }
+    .cv-name-btn:hover { text-decoration:underline; }
+    .cv-committees { display:flex; flex-wrap:wrap; gap:4px; }
+    .cv-committee-pill { font-size:10.5px; font-family:sans-serif; background:#EEF3F8; color:var(--navy); padding:2px 8px; border-radius:10px; white-space:nowrap; }
+    .cv-notes-row { display:flex; gap:6px; align-items:flex-start; min-width:180px; }
+    .cv-notes-row input { flex:1; padding:6px 9px; border:1px solid var(--line); border-radius:6px; font-size:12px; font-family:sans-serif; outline:none; }
+    .cv-notes-row input:focus { border-color:var(--gold); }
+    .cv-notes-row button { padding:6px 9px; font-size:12px; }
+    .cv-detail-row td { background:#FAFAFA; border-top:none; padding:0; }
+    .cv-detail { padding:18px 22px; font-family:sans-serif; font-size:13px; color:var(--text-d); }
+    .cv-detail-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:14px; }
+    .cv-detail-field { }
+    .cv-detail-label { font-size:10.5px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; color:var(--text-m); margin-bottom:4px; }
+    .cv-detail-value { white-space:pre-wrap; line-height:1.5; }
+    .cv-public-toggle { display:flex; align-items:center; gap:8px; border-top:1px solid var(--line-soft); padding-top:14px; margin-top:4px; }
+    .cv-public-toggle input { width:auto; }
+    @media(max-width:640px){ .cv-detail-grid{ grid-template-columns:1fr; } }
     .btn-comment { background:var(--navy); color:var(--cream); border:none; padding:9px 18px; border-radius:6px; font-size:13px; font-family:sans-serif; font-weight:600; cursor:pointer; white-space:nowrap; }
 
     /* Other Items */
@@ -427,6 +460,7 @@
       <button class="tab" onclick="switchTab('announcements')">📣 Announcements <span class="tab-badge" id="annBadge">0</span></button>
       <button class="tab" onclick="switchTab('minutes')">📝 Post Public Minutes <span class="tab-badge" id="minBadge">0</span></button>
       <button class="tab" onclick="switchTab('residents')">📇 Residents <span class="tab-badge" id="resBadge">0</span></button>
+      <button class="tab" onclick="switchTab('committeevolunteers')">🗳️ Committee Volunteer Interests <span class="tab-badge" id="cvBadge">0</span></button>
       <button class="tab" onclick="switchTab('map')">🗺️ Community Map</button>
       <div class="nav-sec">Documents</div>
       <button class="tab" onclick="switchTab('resources')">📁 Documents</button>
@@ -570,6 +604,31 @@
       </select>
     </div>
     <div id="accReqList"><div class="loading"><div class="spinner"></div>Loading access requests...</div></div>
+  </div>
+
+  <div id="tab-committeevolunteers" style="display:none">
+    <p style="font-size:13px;font-family:sans-serif;color:var(--text-m);margin:0 0 16px;">Residents who submitted the <a href="/committee-volunteer.html" target="_blank" rel="noopener noreferrer">Committee Volunteer Interest Form</a>. Click a name for the full submission. A resident's name only appears on the Resident Portal's Community Committees page once <strong>Show on Resident Portal</strong> is turned on below.</p>
+    <div class="cv-chip-row" id="cvChipRow"></div>
+    <div class="filter-bar">
+      <input type="text" class="search-input" id="cvSearch" placeholder="Search by name, address, or email..." oninput="renderCommitteeVolunteers()"/>
+      <select class="filter-select" id="cvCommitteeFilter" onchange="renderCommitteeVolunteers()">
+        <option value="all">All Committees</option>
+      </select>
+      <select class="filter-select" id="cvStatusFilter" onchange="renderCommitteeVolunteers()">
+        <option value="all">All Statuses</option>
+        <option value="Interested">Interested</option>
+        <option value="Contacted">Contacted</option>
+        <option value="Confirmed">Confirmed</option>
+        <option value="Not Selected">Not Selected</option>
+        <option value="Withdrew">Withdrew</option>
+      </select>
+      <select class="filter-select" id="cvPreferenceFilter" onchange="renderCommitteeVolunteers()">
+        <option value="all">Any Preference</option>
+        <option value="first">1st Choice only</option>
+        <option value="second">2nd Choice only</option>
+      </select>
+    </div>
+    <div id="cvList"><div class="loading"><div class="spinner"></div>Loading committee volunteer interests...</div></div>
   </div>
 
   <div id="tab-announcements" style="display:none">
@@ -1330,6 +1389,10 @@
   let selectedVotes = {};
   let accessRequestsData = [];
   let accessRequestsLoaded = false;
+  let committeeVolunteersData = [];
+  let committeeVolunteersLoaded = false;
+  let cvDetailOpen = new Set();
+  let cvCommitteeFilterChip = "all";
   let currentAccessRequestId = null;
 
   // ── Init ──────────────────────────────────────────────
@@ -1405,6 +1468,9 @@
     "open-access-response": (el) => openAccessResponseModal(el.dataset.id),
     "add-accreq-note":(el) => addAccessRequestNote(el.dataset.id),
     "delete-accreq":  (el) => deleteAccessRequest(el.dataset.id),
+    "toggle-cv-detail": (el) => toggleCvDetail(el.dataset.id),
+    "save-cv-notes":  (el) => saveCommitteeVolunteerNotes(el.dataset.id),
+    "cv-chip":        (el) => setCvCommitteeChip(el.dataset.committee),
     "edit-ann":       (el) => editAnnouncement(el.dataset.id),
     "toggle-ann":     (el) => toggleAnnouncement(el.dataset.id, el.dataset.publish === "true"),
     "toggle-ann-banner": (el) => toggleAnnouncementBanner(el.dataset.id, el.dataset.banner === "yes"),
@@ -1421,11 +1487,14 @@
     "vio-status":     (el) => updateStatus(el.dataset.id, "violation", el.value),
     "req-status":     (el) => updateRequestStatus(el.dataset.id, el.value),
     "accreq-status":  (el) => updateAccessRequestStatus(el.dataset.id, el.value),
+    "cv-status":      (el) => updateCommitteeVolunteerStatus(el.dataset.id, el.value),
+    "cv-public-toggle": (el) => toggleCommitteeVolunteerPublicListing(el.dataset.id, el.checked),
   };
   const DELEGATED_ENTER = {
     "comment-input":     (el) => addComment(el.dataset.id),
     "req-note-input":    (el) => addRequestNote(el.dataset.id),
     "accreq-note-input": (el) => addAccessRequestNote(el.dataset.id),
+    "cv-notes-input":    (el) => saveCommitteeVolunteerNotes(el.dataset.id),
   };
 
   document.addEventListener("click", (e) => {
@@ -1935,9 +2004,10 @@
 
   // ── Tabs ──────────────────────────────────────────────
   function switchTab(tab) {
-    const tabs = ["arc","concerns","violations","other","requests","accessrequests","announcements","minutes","residents","map","resources","meetingrecords","specialmtg","financials","budget","activity"];
+    const tabs = ["arc","concerns","violations","other","requests","accessrequests","announcements","minutes","residents","committeevolunteers","map","resources","meetingrecords","specialmtg","financials","budget","activity"];
     if (tab === "residents" && !residentsLoaded) loadResidents();
     if (tab === "accessrequests" && !accessRequestsLoaded) loadAccessRequests();
+    if (tab === "committeevolunteers" && !committeeVolunteersLoaded) loadCommitteeVolunteers();
     if (tab === "map") loadMap();
     if (tab === "financials") loadFinancialsToggle();
     if (tab === "budget") renderBudget();
@@ -2577,6 +2647,184 @@
     } else {
       showToast((d && d.error) || "Delete failed", "error");
     }
+  }
+
+  // ── Committee Volunteer Interests ─────────────────────
+  // Mirrors lib/committee-volunteers.js COMMITTEES exactly (the finalized
+  // PDF is the source of truth there) — duplicated here because this is a
+  // static frontend file with no server-side require, same convention as
+  // resident-financials.js's duplicated BUDGET_DATA.
+  const CV_COMMITTEES = [
+    "Nomination Committee", "Social / Events Committee",
+    "Architectural Review Committee (ARC)", "Beautification Committee",
+    "Bylaw Committee", "Landscape & Grounds Committee",
+    "Irrigation Committee", "Pond / Water Management Committee",
+  ];
+  function cvStatusClass(status) {
+    return "status-" + (status || "Interested").replace(/\s+/g, "");
+  }
+  function cvCommitteeBucket(selection) {
+    return selection.startsWith("Other:") || selection === "Other" ? "Other" : selection;
+  }
+
+  async function loadCommitteeVolunteers() {
+    let data;
+    try { data = await api({ action: "getCommitteeVolunteers" }); }
+    catch (e) { showToast((e && e.userMessage) || "Could not load committee volunteer interests.", "error"); return; }
+    if (!data) return;
+    committeeVolunteersData = data.volunteers || [];
+    committeeVolunteersLoaded = true;
+    document.getElementById("cvBadge").textContent = committeeVolunteersData.length;
+    const sel = document.getElementById("cvCommitteeFilter");
+    sel.innerHTML = '<option value="all">All Committees</option>' +
+      CV_COMMITTEES.concat(["Other"]).map(c => `<option value="${esc(c)}">${esc(c)}</option>`).join("");
+    renderCvChips();
+    renderCommitteeVolunteers();
+  }
+
+  // Per-committee interest counts — click a chip to filter the table below.
+  // Purely a convenience on top of the same filters; the dropdown remains
+  // the source of truth for what's currently applied.
+  function renderCvChips() {
+    const counts = new Map();
+    committeeVolunteersData.forEach(v => {
+      (v["Committees Selected"] || "").split(";").map(s => s.trim()).filter(Boolean).forEach(sel => {
+        const bucket = cvCommitteeBucket(sel);
+        counts.set(bucket, (counts.get(bucket) || 0) + 1);
+      });
+    });
+    const chips = CV_COMMITTEES.concat(["Other"]).filter(c => counts.get(c));
+    document.getElementById("cvChipRow").innerHTML = chips.map(c =>
+      `<button type="button" class="cv-chip${cvCommitteeFilterChip === c ? ' active' : ''}" data-act="cv-chip" data-committee="${esc(c)}">${esc(c)}<span class="n">${counts.get(c)}</span></button>`
+    ).join("");
+  }
+
+  function setCvCommitteeChip(committee) {
+    cvCommitteeFilterChip = cvCommitteeFilterChip === committee ? "all" : committee;
+    document.getElementById("cvCommitteeFilter").value = cvCommitteeFilterChip;
+    renderCvChips();
+    renderCommitteeVolunteers();
+  }
+
+  function renderCommitteeVolunteers() {
+    const q = (document.getElementById("cvSearch")?.value || "").toLowerCase();
+    const committeeFilterEl = document.getElementById("cvCommitteeFilter");
+    // A chip click drives the dropdown; a manual dropdown change should win
+    // on its own next render, so keep the two in sync from whichever fired.
+    const cf = committeeFilterEl?.value || "all";
+    if (cf !== cvCommitteeFilterChip) cvCommitteeFilterChip = cf;
+    const sf = document.getElementById("cvStatusFilter")?.value || "all";
+    const pf = document.getElementById("cvPreferenceFilter")?.value || "all";
+
+    const filtered = committeeVolunteersData.filter(v => {
+      const selections = (v["Committees Selected"] || "").split(";").map(s => s.trim()).filter(Boolean);
+      const buckets = selections.map(cvCommitteeBucket);
+      if (cf !== "all" && !buckets.includes(cf)) return false;
+      const status = v["Status"] || "Interested";
+      if (sf !== "all" && status !== sf) return false;
+      // With a committee filter active, "1st/2nd Choice only" narrows to
+      // rows where THAT committee is ranked at that preference. Without one,
+      // it's a simple "has any first/second choice set" filter.
+      if (pf === "first") {
+        if (cf !== "all") { if (cvCommitteeBucket(v["First Choice"] || "") !== cf) return false; }
+        else if (!v["First Choice"]) return false;
+      }
+      if (pf === "second") {
+        if (cf !== "all") { if (cvCommitteeBucket(v["Second Choice"] || "") !== cf) return false; }
+        else if (!v["Second Choice"]) return false;
+      }
+      if (q) {
+        const hay = `${v["Name"]} ${v["Property Address"]} ${v["Email"]}`.toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+      return true;
+    }).slice().reverse(); // newest first
+
+    document.getElementById("cvList").innerHTML = filtered.length
+      ? `<div class="arc-grid-wrap"><table class="arc-grid">
+          <thead><tr><th>Resident</th><th>Address</th><th>Contact</th><th>Committee(s)</th><th>Preference</th><th>Submitted</th><th>Status</th><th>Notes</th></tr></thead>
+          <tbody>${filtered.map(renderCvRow).join("")}</tbody>
+        </table></div>`
+      : '<div class="empty-state"><div class="empty-title">No committee volunteer interests match</div></div>';
+  }
+
+  function renderCvRow(v) {
+    const id = v["Timestamp"];
+    const rowKey = esc(id);
+    const open = cvDetailOpen.has(id);
+    const status = v["Status"] || "Interested";
+    const submitted = v["Timestamp"] ? new Date(v["Timestamp"]).toLocaleDateString() : "";
+    const committees = (v["Committees Selected"] || "").split(";").map(s => s.trim()).filter(Boolean);
+    const pref = [v["First Choice"] ? `1st: ${esc(v["First Choice"])}` : "", v["Second Choice"] ? `2nd: ${esc(v["Second Choice"])}` : ""]
+      .filter(Boolean).join(" · ") || '<span style="color:#bbb">—</span>';
+    const publicListing = (v["Public Listing"] || "").trim().toLowerCase() === "yes";
+
+    const main = `<tr>
+      <td><button type="button" class="cv-name-btn" data-act="toggle-cv-detail" data-id="${rowKey}">${open ? "▾" : "▸"} ${esc(v["Name"])}</button></td>
+      <td>${esc(v["Property Address"])}</td>
+      <td><a href="mailto:${esc(v["Email"])}">${esc(v["Email"])}</a>${v["Phone"] ? "<br>" + esc(v["Phone"]) : ""}</td>
+      <td><div class="cv-committees">${committees.map(c => `<span class="cv-committee-pill">${esc(c)}</span>`).join("")}</div></td>
+      <td>${pref}</td>
+      <td>${submitted}</td>
+      <td><select class="status-select" data-act="cv-status" data-id="${rowKey}">
+        ${["Interested","Contacted","Confirmed","Not Selected","Withdrew"].map(s => `<option ${status===s?'selected':''}>${s}</option>`).join("")}
+        ${!["Interested","Contacted","Confirmed","Not Selected","Withdrew"].includes(status) ? `<option selected>${esc(status)}</option>` : ""}
+      </select></td>
+      <td><div class="cv-notes-row">
+        <input type="text" value="${esc(v["Notes"] || "")}" placeholder="Add a note..." maxlength="2000" data-act="cv-notes-input" data-id="${rowKey}" id="cvNotesInput-${rowKey}"/>
+        <button type="button" class="btn-edit" data-act="save-cv-notes" data-id="${rowKey}">💾</button>
+      </div></td>
+    </tr>`;
+
+    if (!open) return main;
+
+    const field = (label, value) => `<div class="cv-detail-field"><div class="cv-detail-label">${label}</div><div class="cv-detail-value">${esc(value) || '<span style="color:#bbb">(none provided)</span>'}</div></div>`;
+    const detail = `<tr class="cv-detail-row"><td colspan="8"><div class="cv-detail">
+      <div class="cv-detail-grid">
+        ${field("Skills / Experience", v["Skills / Experience"])}
+        ${field("Prior Committee Experience", v["Prior Committee Experience"] + (v["Prior Experience Details"] ? " — " + v["Prior Experience Details"] : ""))}
+        ${field("Interest / Contribution", v["Interest / Contribution"])}
+        ${field("Conflict of Interest", v["Conflict of Interest"] + (v["Conflict Details"] ? " — " + v["Conflict Details"] : ""))}
+      </div>
+      <div class="cv-detail-field">${field("Typed Name / Acknowledgment", v["Typed Name"] + " (acknowledged)")}</div>
+      <div class="cv-public-toggle">
+        <input type="checkbox" id="cvPublic-${rowKey}" ${publicListing ? "checked" : ""} data-act="cv-public-toggle" data-id="${rowKey}"/>
+        <label for="cvPublic-${rowKey}" style="margin:0;">Show resident name under "Expressed Interest" in Resident Portal</label>
+      </div>
+      <p style="font-size:12px;font-family:sans-serif;color:var(--text-m);margin:4px 0 0;">This displays the resident as interested only and does not mean they have been appointed to the committee.</p>
+    </div></td></tr>`;
+    return main + detail;
+  }
+
+  function toggleCvDetail(id) {
+    if (cvDetailOpen.has(id)) cvDetailOpen.delete(id); else cvDetailOpen.add(id);
+    renderCommitteeVolunteers();
+  }
+
+  async function updateCommitteeVolunteerStatus(id, status) {
+    const data = await api({ action: "updateCommitteeVolunteerStatus", data: { itemId: id, status } });
+    if (!data) return;
+    const v = committeeVolunteersData.find(r => r["Timestamp"] === id);
+    if (v) v["Status"] = status;
+    showToast(`Status updated to ${status}`, "success");
+  }
+
+  async function saveCommitteeVolunteerNotes(id) {
+    const input = document.getElementById("cvNotesInput-" + id);
+    const notes = (input?.value || "").trim();
+    const data = await api({ action: "updateCommitteeVolunteerNotes", data: { itemId: id, notes } });
+    if (!data) return;
+    const v = committeeVolunteersData.find(r => r["Timestamp"] === id);
+    if (v) v["Notes"] = data.notes || "";
+    showToast("Note saved", "success");
+  }
+
+  async function toggleCommitteeVolunteerPublicListing(id, checked) {
+    const data = await api({ action: "updateCommitteeVolunteerPublicListing", data: { itemId: id, publicListing: checked } });
+    if (!data) return;
+    const v = committeeVolunteersData.find(r => r["Timestamp"] === id);
+    if (v) v["Public Listing"] = data.publicListing || "no";
+    showToast(checked ? "Now visible on the Resident Portal" : "Removed from the Resident Portal", "success");
   }
 
   // ── Reply to Resident modal ───────────────────────────

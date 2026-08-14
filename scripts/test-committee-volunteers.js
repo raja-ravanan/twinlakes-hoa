@@ -181,11 +181,11 @@ test("validateSubmission: valid full submission returns normalized fields", () =
 });
 
 console.log("\nRow construction (spreadsheet-injection protection)");
-test("buildVolunteerRow: matches HEADERS length, Status defaults to New", () => {
+test("buildVolunteerRow: matches HEADERS length, Status defaults to Interested", () => {
   const r = lib.validateSubmission(baseSubmission());
   const row = lib.buildVolunteerRow(r.fields);
   assert.strictEqual(row.length, lib.HEADERS.length);
-  assert.strictEqual(row[row.length - 1], "New");
+  assert.strictEqual(row[row.length - 1], "Interested");
 });
 test("buildVolunteerRow: neutralizes leading =, +, -, @ (spreadsheet-formula injection)", () => {
   const r = lib.validateSubmission(baseSubmission({
@@ -204,7 +204,7 @@ test("buildVolunteerRow: neutralizes leading =, +, -, @ (spreadsheet-formula inj
 test("buildVolunteerRow: Status column is never resident-controlled", () => {
   const r = lib.validateSubmission(baseSubmission());
   const row = lib.buildVolunteerRow(r.fields);
-  assert.strictEqual(row[16], "New");
+  assert.strictEqual(row[16], "Interested");
   assert.ok(!("status" in r.fields), "validateSubmission must never accept a client-supplied status");
 });
 
@@ -345,7 +345,7 @@ const TAB = lib.TAB_NAME;
       assert.deepStrictEqual(state.headers.get(TAB), lib.HEADERS);
       const rows = state.rows.get(TAB) || [];
       assert.strictEqual(rows.length, 1);
-      assert.strictEqual(rows[0][16], "New");
+      assert.strictEqual(rows[0][16], "Interested");
 
       assert.strictEqual(state.gmailSent.length, 2, "one board+Mulloy notification, one resident confirmation");
       const notification = state.gmailSent[0].decoded;

@@ -71,6 +71,21 @@
     .fin-note { font-size:12px; color:#999; font-style:italic; font-family:sans-serif; margin-top:8px; line-height:1.5; }
     .fin-error { font-family:sans-serif; color:#6b1a1a; background:#fdf0f0; border:1px solid #f5c6c6; border-radius:8px; padding:16px; }
     @media(max-width:640px){ .fin-row{grid-template-columns:30px 1fr auto;} .fin-bar-wrap{grid-column:1/-1;order:3;} }
+
+    #committees-view { display:none; }
+    .cmt-title { font-size:22px; color:var(--navy); font-weight:normal; margin-bottom:4px; }
+    .cmt-sub { font-size:13px; font-family:sans-serif; color:var(--text-m); margin-bottom:24px; }
+    .cmt-grid { display:grid; gap:18px; }
+    .cmt-card { background:var(--white); border-radius:14px; padding:22px 24px; box-shadow:0 6px 20px rgba(15,45,74,0.08); border-top:3px solid var(--gold); }
+    .cmt-name { font-size:18px; color:var(--navy); font-weight:normal; margin-bottom:6px; }
+    .cmt-desc { font-size:13.5px; font-family:sans-serif; color:var(--text-m); line-height:1.6; margin-bottom:16px; }
+    .cmt-section { margin-top:14px; }
+    .cmt-section:first-of-type { margin-top:0; }
+    .cmt-section-label { font-size:11px; font-family:sans-serif; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:var(--gold-deep); margin-bottom:8px; }
+    .cmt-names { list-style:none; font-family:sans-serif; font-size:14px; color:#2c3e50; display:flex; flex-direction:column; gap:5px; }
+    .cmt-names li { padding:2px 0; }
+    .cmt-empty { font-family:sans-serif; font-size:13px; color:#999; font-style:italic; }
+    .cmt-note { font-size:12px; color:#999; font-style:italic; font-family:sans-serif; margin-top:24px; line-height:1.5; }
   </style>
 </head>
 <body>
@@ -100,7 +115,7 @@
           <div class="card"><h3>Resident Directory</h3><span class="soon-pill">Coming soon</span></div>
           <div class="card"><h3>Resident Documents</h3><span class="soon-pill">Coming soon</span></div>
           <div class="card"><h3>Meeting Information</h3><span class="soon-pill">Coming soon</span></div>
-          <div class="card"><h3>Committees</h3><span class="soon-pill">Coming soon</span></div>
+          <button class="card" type="button" id="committees-card"><h3>Committees</h3><span class="live-pill">Community Committees</span></button>
         </div>
 
         <p class="back-link"><a href="/">← Back to Twin Lakes website</a></p>
@@ -111,6 +126,13 @@
         <div class="fin-title">Financials — Budget vs Actual</div>
         <p class="fin-sub" id="financials-subtitle">Loading…</p>
         <div id="financials-body"></div>
+      </div>
+
+      <div id="committees-view">
+        <button class="fin-back" type="button" id="committees-back">← Back to Portal</button>
+        <div class="cmt-title">Community Committees</div>
+        <p class="cmt-sub" id="committees-subtitle">Loading…</p>
+        <div id="committees-body"></div>
       </div>
     </main>
   </div>
@@ -141,7 +163,71 @@
     var financialsBody = document.getElementById("financials-body");
     var financialsLoaded = false;
 
+    var committeesCard = document.getElementById("committees-card");
+    var committeesView = document.getElementById("committees-view");
+    var committeesBack = document.getElementById("committees-back");
+    var committeesSubtitle = document.getElementById("committees-subtitle");
+    var committeesBody = document.getElementById("committees-body");
+    var committeesLoaded = false;
+
     function money(n) { return "$" + Math.round(n).toLocaleString(); }
+
+    // The one HTML-escaping function on this page — committee/resident names
+    // come from the Committee Volunteer Interest sheet (server-normalized,
+    // but still resident-supplied text) and must never be interpolated raw.
+    function esc(s) {
+      return String(s == null ? "" : s)
+        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+    }
+
+    function namesList(names) {
+      if (!names || !names.length) return '<p class="cmt-empty">None yet.</p>';
+      return '<ul class="cmt-names">' + names.map(function (n) { return "<li>" + esc(n) + "</li>"; }).join("") + "</ul>";
+    }
+
+    function renderCommitteeCard(c) {
+      return '<div class="cmt-card">' +
+        '<div class="cmt-name">' + esc(c.name) + '</div>' +
+        (c.description ? '<div class="cmt-desc">' + esc(c.description) + '</div>' : '') +
+        '<div class="cmt-section"><div class="cmt-section-label">Current Committee Members</div>' + namesList(c.members) + '</div>' +
+        '<div class="cmt-section"><div class="cmt-section-label">Residents Who Have Expressed Interest</div>' + namesList(c.interested) + '</div>' +
+        '</div>';
+    }
+
+    async function loadCommittees() {
+      if (committeesLoaded) return;
+      try {
+        var res = await fetch("/.netlify/functions/resident-committees", { method: "GET" });
+        var data = await res.json();
+        if (!res.ok) {
+          committeesSubtitle.textContent = "";
+          committeesBody.innerHTML = '<p class="fin-error">Committee information could not be loaded right now. Please try again shortly.</p>';
+          return;
+        }
+        committeesSubtitle.textContent = "Get involved — see who's already serving and who's expressed interest.";
+        var committees = (data && data.committees) || [];
+        committeesBody.innerHTML = '<div class="cmt-grid">' + committees.map(renderCommitteeCard).join("") + '</div>' +
+          '<p class="cmt-note">Expressing interest does not guarantee appointment — committee membership is subject to Board approval. Only residents who\'ve opted in are listed here; <a href="/committee-volunteer.html">volunteer for a committee</a> to be considered.</p>';
+        committeesLoaded = true;
+      } catch (err) {
+        committeesSubtitle.textContent = "";
+        committeesBody.innerHTML = '<p class="fin-error">Committee information could not be loaded right now. Please try again shortly.</p>';
+      }
+    }
+
+    committeesCard.addEventListener("click", function () {
+      homeView.style.display = "none";
+      committeesView.style.display = "block";
+      window.scrollTo(0, 0);
+      loadCommittees();
+    });
+
+    committeesBack.addEventListener("click", function () {
+      committeesView.style.display = "none";
+      homeView.style.display = "block";
+      window.scrollTo(0, 0);
+    });
 
     function renderAssociation(a) {
       var rem = a.budget - a.spent;
